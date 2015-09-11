@@ -7,7 +7,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.parse.LogInCallback;
 import com.parse.ParseException;
@@ -17,7 +16,7 @@ import com.parse.ParseUser;
  * Activity that allows users to login to the application
  *
  * @author Steven Briggs
- * @version 2015.09.10
+ * @version 2015.09.11
  */
 public class LoginActivity extends AppCompatActivity {
 
@@ -52,8 +51,8 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         else {
-                            Toast.makeText(LoginActivity.this, "Invalid username and/or password",
-                                    Toast.LENGTH_LONG).show();
+                            usernameEditText.setError("Username and password not found!");
+                            passwordEditText.setError("Username and password not found!");
                         }
                     }
                 });

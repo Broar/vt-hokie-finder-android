@@ -1,7 +1,6 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -18,11 +17,9 @@ import com.parse.SignUpCallback;
  * Activity that allows a user to register themselves for the application
  *
  * @author Steven Briggs
- * @version 2015.09.09
+ * @version 2015.09.11
  */
 public class RegisterActivity extends AppCompatActivity {
-
-    private static final String INVALID_FIELD_COLOR = "#80F44336";
 
     private EditText usernameEditText;
     private EditText passwordEditText;
@@ -52,7 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
                 String email = emailEditText.getText().toString().trim();
 
                 // Perform field validation. Return early if there is an issue
-                if (!verifyPassword(password, passwordConfirm) || !verifyEmail(email)) {
+                if (!verifyFields(username, password, passwordConfirm, email)) {
                     return;
                 }
 
@@ -90,6 +87,36 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
+     * Verify the registration fields: username, password, and email.
+     *
+     * @param username the username
+     * @param password the password
+     * @param passwordConfirm the password confirmation
+     * @param email the email
+     * @return true if all the fields were validated, false if not
+     */
+    private boolean verifyFields(String username, String password, String passwordConfirm, String email) {
+        return verifyUsername(username) && verifyPassword(password, passwordConfirm) && verifyEmail(email);
+    }
+
+    /**
+     * Determine if the username is set correctly
+     *
+     * @param username the username to verify
+     * @return true if the username is correct, false if not
+     */
+    private boolean verifyUsername(String username) {
+        if (username.isEmpty()) {
+            usernameEditText.setError("Enter your username!");
+            return false;
+        }
+
+        else {
+            return true;
+        }
+    }
+
+    /**
      * Determine whether the password and password confirmation match
      *
      * @param password the password of the user
@@ -97,10 +124,15 @@ public class RegisterActivity extends AppCompatActivity {
      * @return true if the passwords match, false if not
      */
     private boolean verifyPassword(String password, String passwordConfirm) {
-        if (!password.equals(passwordConfirm)) {
-            Toast.makeText(this, "Passwords don't match!", Toast.LENGTH_SHORT).show();
-            passwordEditText.setBackgroundColor(Color.parseColor(INVALID_FIELD_COLOR));
-            passwordConfirmEditText.setBackgroundColor(Color.parseColor(INVALID_FIELD_COLOR));
+        if (password.isEmpty() || passwordConfirm.isEmpty()) {
+            passwordEditText.setError("Enter your password!");
+            passwordConfirmEditText.setError("Confirm your password!");
+            return false;
+        }
+
+        else if (!password.equals(passwordConfirm)) {
+            passwordEditText.setError("Passwords didn't match!");
+            passwordConfirmEditText.setError("Passwords didn't match!");
             return false;
         }
 
@@ -116,9 +148,13 @@ public class RegisterActivity extends AppCompatActivity {
      * @return true if the email is a VT email, false if not
      */
     private boolean verifyEmail(String email) {
-        if (!email.contains("@vt.edu")) {
-            Toast.makeText(this, "Email must be @vt.edu", Toast.LENGTH_SHORT).show();
-            emailEditText.setBackgroundColor(Color.parseColor(INVALID_FIELD_COLOR));
+        if (email.isEmpty()) {
+            emailEditText.setError("Enter your email!");
+            return false;
+        }
+
+        else if (!email.contains("@vt.edu")) {
+            emailEditText.setError("Email must be @vt.edu");
             return false;
         }
 

@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,32 +22,33 @@ import com.parse.SignUpCallback;
  */
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText usernameEditText;
-    private EditText passwordEditText;
-    private EditText passwordConfirmEditText;
-    private EditText emailEditText;
-    private Button registerButton;
-    private TextView signInTextView;
+    private EditText mUsername;
+    private EditText mPassword;
+    private EditText mPasswordConfirmation;
+    private EditText mEmail;
+    private Button mRegister;
+    private TextView mBackToLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        usernameEditText = (EditText) findViewById(R.id.usernameRegisterEditText);
-        passwordEditText = (EditText) findViewById(R.id.passwordRegisterEditText);
-        passwordConfirmEditText = (EditText) findViewById(R.id.passwordConfirmRegisterEditText);
-        emailEditText = (EditText) findViewById(R.id.emailRegisterEditText);
-        registerButton = (Button) findViewById(R.id.registerButton);
-        signInTextView = (TextView) findViewById(R.id.signInTextView);
+        mUsername = (EditText) findViewById(R.id.username);
+        mPassword = (EditText) findViewById(R.id.password);
+        mPasswordConfirmation = (EditText) findViewById(R.id.passwordConfirmation);
+        mEmail = (EditText) findViewById(R.id.email);
+        mRegister = (Button) findViewById(R.id.register);
+        mBackToLogin = (TextView) findViewById(R.id.backToLogin);
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        registerButton.setOnClickListener(new View.OnClickListener() {
+        mRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String username = usernameEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString().trim();
-                String passwordConfirm = passwordConfirmEditText.getText().toString().trim();
-                String email = emailEditText.getText().toString().trim();
+                String username = mUsername.getText().toString().trim();
+                String password = mPassword.getText().toString().trim();
+                String passwordConfirm = mPasswordConfirmation.getText().toString().trim();
+                String email = mEmail.getText().toString().trim();
 
                 // Perform field validation. Return early if there is an issue
                 if (!verifyFields(username, password, passwordConfirm, email)) {
@@ -78,7 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         // Transition the user back to the login screen
-        signInTextView.setOnClickListener(new View.OnClickListener() {
+        mBackToLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -107,7 +109,7 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private boolean verifyUsername(String username) {
         if (username.isEmpty()) {
-            usernameEditText.setError("Enter your username!");
+            mUsername.setError("Enter your username!");
             return false;
         }
 
@@ -125,14 +127,14 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private boolean verifyPassword(String password, String passwordConfirm) {
         if (password.isEmpty() || passwordConfirm.isEmpty()) {
-            passwordEditText.setError("Enter your password!");
-            passwordConfirmEditText.setError("Confirm your password!");
+            mPassword.setError("Enter your password!");
+            mPasswordConfirmation.setError("Confirm your password!");
             return false;
         }
 
         else if (!password.equals(passwordConfirm)) {
-            passwordEditText.setError("Passwords didn't match!");
-            passwordConfirmEditText.setError("Passwords didn't match!");
+            mPassword.setError("Passwords didn't match!");
+            mPasswordConfirmation.setError("Passwords didn't match!");
             return false;
         }
 
@@ -149,12 +151,12 @@ public class RegisterActivity extends AppCompatActivity {
      */
     private boolean verifyEmail(String email) {
         if (email.isEmpty()) {
-            emailEditText.setError("Enter your email!");
+            mEmail.setError("Enter your email!");
             return false;
         }
 
         else if (!email.contains("@vt.edu")) {
-            emailEditText.setError("Email must be @vt.edu");
+            mEmail.setError("Email must be @vt.edu");
             return false;
         }
 

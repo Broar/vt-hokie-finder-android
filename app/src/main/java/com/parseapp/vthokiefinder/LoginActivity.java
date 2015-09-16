@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,26 +21,27 @@ import com.parse.ParseUser;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText usernameEditText;
-    private EditText passwordEditText;
-    private Button loginButton;
-    private TextView newUserTextView;
+    private EditText mUsername;
+    private EditText mPassword;
+    private Button mLogin;
+    private TextView mToCreateAccount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        usernameEditText = (EditText) findViewById(R.id.usernameLoginEditText);
-        passwordEditText = (EditText) findViewById(R.id.passwordLoginEditText);
-        loginButton = (Button) findViewById(R.id.loginButton);
-        newUserTextView = (TextView) findViewById(R.id.newUserTextView);
+        mUsername = (EditText) findViewById(R.id.username);
+        mPassword = (EditText) findViewById(R.id.password);
+        mLogin = (Button) findViewById(R.id.login);
+        mToCreateAccount = (TextView) findViewById(R.id.toCreateAccount);
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
+        mLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String username = usernameEditText.getText().toString().trim();
-                String password = passwordEditText.getText().toString().trim();
+                String username = mUsername.getText().toString().trim();
+                String password = mPassword.getText().toString().trim();
 
                 // Perform a login attempt. Move to the application's homepage if successful
                 ParseUser.logInInBackground(username, password, new LogInCallback() {
@@ -48,18 +50,16 @@ public class LoginActivity extends AppCompatActivity {
                         if (e == null) {
                             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                             finish();
-                        }
-
-                        else {
-                            usernameEditText.setError("Username and password not found!");
-                            passwordEditText.setError("Username and password not found!");
+                        } else {
+                            mUsername.setError("Username and password not found!");
+                            mPassword.setError("Username and password not found!");
                         }
                     }
                 });
             }
         });
 
-        newUserTextView.setOnClickListener(new View.OnClickListener() {
+        mToCreateAccount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(LoginActivity.this, RegisterActivity.class));

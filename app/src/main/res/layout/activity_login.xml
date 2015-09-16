@@ -5,11 +5,11 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".LoginActivity">
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:text="VT Hokie Finder"/>
+
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,26 +17,26 @@
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/usernameLoginEditText"
+            android:id="@+id/username"
             android:hint="Username"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/usernameLoginEditText"
-            android:id="@+id/passwordLoginEditText"
+            android:layout_below="@id/username"
+            android:id="@+id/password"
             android:inputType="textWebPassword"
             android:hint="Password"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:id="@+id/loginButton"
+            android:id="@+id/login"
             android:text="Login"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:id="@+id/newUserTextView"
+            android:id="@+id/toCreateAccount"
             android:text="New user? Create an account here."/>
     </LinearLayout>
 </LinearLayout>

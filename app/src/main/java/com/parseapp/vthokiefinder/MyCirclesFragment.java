@@ -1,7 +1,5 @@
 package com.parseapp.vthokiefinder;
 
-import android.view.View;
-
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;

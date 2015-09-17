@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
@@ -44,41 +46,24 @@ public class FindCirclesFragment extends CircleListFragment {
         mRecyclerView.setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                joinCircle(mCircles.get(position));
+                openCircle(mCircles.get(position));
             }
         }));
     }
 
     /**
-     * Join the current ParseUser to the specified circle
+     * Open a detailed view of a Circle
      *
-     * @param circle the circle to add the user to
+     * @param circle the circle to be opened
      */
-    private void joinCircle(final Circle circle) {
+    private void openCircle(final Circle circle) {
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
         query.getInBackground(circle.getObjectId(), new GetCallback<ParseObject>() {
             @Override
             public void done(ParseObject object, ParseException e) {
-                // Success! Let's try to add the current user to the circle
+                // Success! Open the view of the Circle
                 if (e == null) {
-                    ParseRelation<ParseObject> relation = object.getRelation("members");
-                    relation.add(ParseUser.getCurrentUser());
-                    object.saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            // Success! Let's inform the user they have joined
-                            if (e == null) {
-                                String msg = "Successfully joined " + circle.getName();
-                                Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
-                                refreshCircles();
-                            }
-
-                            // Failure! Let's let the user know about what went wrong
-                            else {
-                                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
+                    startCircleActivity(circle);
                 }
 
                 // Failure! Let's let the user know about what went wrong
@@ -87,5 +72,19 @@ public class FindCirclesFragment extends CircleListFragment {
                 }
             }
         });
+    }
+
+    /**
+     * Start a new CircleActivity
+     *
+     * @param circle the circle to be displayed in the CircleActivity
+     */
+    private void startCircleActivity(Circle circle) {
+        Intent intent = new Intent(getContext(), CircleActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(CircleActivity.CIRCLE_OBJECT_ID_KEY, circle.getObjectId());
+        bundle.putString(CircleActivity.CIRCLE_NAME_KEY, circle.getName());
+        intent.putExtras(bundle);
+        getActivity().startActivity(intent);
     }
 }

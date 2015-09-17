@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import java.util.ArrayList;
+
 /**
  * A POJO representing a HokieFinder Circle
  *
@@ -9,10 +11,12 @@ package com.parseapp.vthokiefinder;
 public class Circle {
     private String mObjectId;
     private String mName;
+    private ArrayList<String> mMembers;
 
     public Circle(String objectId, String name) {
         mObjectId = objectId;
         mName = name;
+        mMembers = new ArrayList<String>();
     }
 
     public String getObjectId() {
@@ -29,5 +33,13 @@ public class Circle {
 
     public void setName(String mName) {
         this.mName = mName;
+    }
+
+    public ArrayList<String> getMembers() {
+        return mMembers;
+    }
+
+    public void setMembers(ArrayList<String> members) {
+        mMembers = members;
     }
 }

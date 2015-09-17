@@ -46,45 +46,8 @@ public class FindCirclesFragment extends CircleListFragment {
         mRecyclerView.setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                openCircle(mCircles.get(position));
+                openCircle(mCircles.get(position), CircleActivity.JOIN_ACTION);
             }
         }));
-    }
-
-    /**
-     * Open a detailed view of a Circle
-     *
-     * @param circle the circle to be opened
-     */
-    private void openCircle(final Circle circle) {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
-        query.getInBackground(circle.getObjectId(), new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                // Success! Open the view of the Circle
-                if (e == null) {
-                    startCircleActivity(circle);
-                }
-
-                // Failure! Let's let the user know about what went wrong
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-    }
-
-    /**
-     * Start a new CircleActivity
-     *
-     * @param circle the circle to be displayed in the CircleActivity
-     */
-    private void startCircleActivity(Circle circle) {
-        Intent intent = new Intent(getContext(), CircleActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(CircleActivity.CIRCLE_OBJECT_ID_KEY, circle.getObjectId());
-        bundle.putString(CircleActivity.CIRCLE_NAME_KEY, circle.getName());
-        intent.putExtras(bundle);
-        getActivity().startActivity(intent);
     }
 }

@@ -1,5 +1,12 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import com.parse.GetCallback;
+import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -32,6 +39,11 @@ public class MyCirclesFragment extends CircleListFragment {
 
     @Override
     protected void setCircleAdapter() {
-        mRecyclerView.setAdapter(new CircleAdapter(mCircles, null));
+        mRecyclerView.setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                openCircle(mCircles.get(position), CircleActivity.LEAVE_ACTION);
+            }
+        }));
     }
 }

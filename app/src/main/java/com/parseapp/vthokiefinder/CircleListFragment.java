@@ -1,5 +1,6 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -106,5 +108,45 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
                 }
             }
         });
+    }
+
+    /**
+     * Open a detailed view of a Circle
+     *
+     * @param circle the circle to be opened
+     * @param action the circle action the user can perform
+     */
+    protected void openCircle(final Circle circle, final int action) {
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
+        query.getInBackground(circle.getObjectId(), new GetCallback<ParseObject>() {
+            @Override
+            public void done(ParseObject object, ParseException e) {
+                // Success! Open the view of the Circle
+                if (e == null) {
+                    startCircleActivity(circle, action);
+                }
+
+                // Failure! Let's let the user know about what went wrong
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Start a new CircleActivity
+     *
+     * @param circle the circle to be displayed in the CircleActivity
+     * @param action the circle action to be passed to the CircleActivity
+     */
+    private void startCircleActivity(Circle circle, int action) {
+        Intent intent = new Intent(getContext(), CircleActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(CircleActivity.CIRCLE_OBJECT_ID_KEY, circle.getObjectId());
+        bundle.putString(CircleActivity.CIRCLE_NAME_KEY, circle.getName());
+        bundle.putInt(CircleActivity.CIRCLE_ACTION_KEY, action);
+        intent.putExtras(bundle);
+        getActivity().startActivity(intent);
     }
 }

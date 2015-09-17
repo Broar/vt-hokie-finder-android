@@ -20,7 +20,7 @@ import com.parse.SignUpCallback;
  * @author Steven Briggs
  * @version 2015.09.11
  */
-public class RegisterActivity extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity {
 
     private EditText mUsername;
     private EditText mPassword;
@@ -66,13 +66,13 @@ public class RegisterActivity extends AppCompatActivity {
                     public void done(ParseException e) {
                         // Successful sign up. Transition to application's main activity
                         if (e == null) {
-                            startActivity(new Intent(RegisterActivity.this, HomeActivity.class));
+                            startActivity(new Intent(SignUpActivity.this, HomeActivity.class));
                             finish();
                         }
 
                         // Something went wrong! Communicate the error to the user
                         else {
-                            Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
                 });

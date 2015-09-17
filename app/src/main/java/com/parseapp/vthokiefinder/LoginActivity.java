@@ -24,18 +24,20 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mUsername;
     private EditText mPassword;
     private Button mLogin;
-    private TextView mToCreateAccount;
+    private Button mSignUp;
+    private TextView mForgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
         mUsername = (EditText) findViewById(R.id.username);
         mPassword = (EditText) findViewById(R.id.password);
         mLogin = (Button) findViewById(R.id.login);
-        mToCreateAccount = (TextView) findViewById(R.id.toCreateAccount);
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        mSignUp = (Button) findViewById(R.id.signUp);
+        mForgotPassword = (TextView) findViewById(R.id.forgotPassword);
 
         mLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,7 +52,9 @@ public class LoginActivity extends AppCompatActivity {
                         if (e == null) {
                             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                             finish();
-                        } else {
+                        }
+
+                        else {
                             mUsername.setError("Username and password not found!");
                             mPassword.setError("Username and password not found!");
                         }
@@ -59,10 +63,17 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        mToCreateAccount.setOnClickListener(new View.OnClickListener() {
+        mSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+            }
+        });
+
+        mForgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, PasswordRecoveryActivity.class));
             }
         });
     }

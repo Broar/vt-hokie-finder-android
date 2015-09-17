@@ -20,31 +20,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A fragment that displays all of the circles the current user is not a part of
+ * An abstract fragment that displays Circles in a list
  *
  * @author Steven Briggs
- * @version 2015.09.15
+ * @version 2015.09.16
  */
-public class CirclesFragment extends Fragment implements OnRefreshListener {
-    public static final String TAG = CirclesFragment.class.getSimpleName();
+public abstract class CircleListFragment extends Fragment implements OnRefreshListener {
 
-    private RecyclerView mRecyclerView;
-    private SwipeRefreshLayout mSwipeContainer;
-    private ArrayList<String> mCircles;
-
-    /**
-     * Factory method to return a new CircleFragment object
-     *
-     * @return a CircleFragment object
-     */
-    public static CirclesFragment newInstance() {
-        return new CirclesFragment();
-    }
+    protected RecyclerView mRecyclerView;
+    protected SwipeRefreshLayout mSwipeContainer;
+    protected ArrayList<Circle> mCircles;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mCircles = new ArrayList<String>();
+        mCircles = new ArrayList<Circle>();
     }
 
     @Override
@@ -61,7 +51,7 @@ public class CirclesFragment extends Fragment implements OnRefreshListener {
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new CirclesAdapter(mCircles));
+        setCircleAdapter();
         refreshCircles();
 
         return view;
@@ -73,25 +63,33 @@ public class CirclesFragment extends Fragment implements OnRefreshListener {
     }
 
     /**
-     * Perform an update on the list of circle names
+     * Construct a new ParseQuery to search for Circles
+     *
+     * @return a configured ParseQuery that searches for Circles
      */
-    private void refreshCircles() {
-        mCircles.clear();
+    protected abstract ParseQuery<ParseObject> makeQuery();
 
-        // Perform a query that searches for all available circles
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
+    /**
+     * Set the CircleAdapter for the RecyclerView
+     */
+    protected abstract void setCircleAdapter();
+
+    /**
+     * Refresh the list of circles
+     */
+    protected void refreshCircles() {
+        // Construct a new ParseQuery according to subclass implementation
+        ParseQuery<ParseObject> query = makeQuery();
+
+        // Perform the query on the Parse class of Circles
+        mCircles.clear();
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
                 // Success! Let's add the results to our collection of circles and display them
                 if (e == null) {
                     for (ParseObject o : objects) {
-                        mCircles.add(o.getString("name"));
-                    }
-
-                    // Stop the refresh animation if necessary
-                    if (mSwipeContainer.isRefreshing()) {
-                        mSwipeContainer.setRefreshing(false);
+                        mCircles.add(new Circle(o.getObjectId(), o.getString("name")));
                     }
 
                     mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -100,6 +98,11 @@ public class CirclesFragment extends Fragment implements OnRefreshListener {
                 // Failure! Let's inform the user about what went wrong
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+
+                // Stop the refresh animation if necessary
+                if (mSwipeContainer.isRefreshing()) {
+                    mSwipeContainer.setRefreshing(false);
                 }
             }
         });

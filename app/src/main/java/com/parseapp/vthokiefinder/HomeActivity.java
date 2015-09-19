@@ -20,6 +20,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.parse.ParseUser;
 import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 
 /**
@@ -74,6 +75,9 @@ public class HomeActivity extends AppCompatActivity implements
             case R.id.action_broadcast:
                 broadcastLocation();
                 return true;
+            case R.id.action_logout:
+                logout();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -126,6 +130,20 @@ public class HomeActivity extends AppCompatActivity implements
 
             Snackbar.make(mPager, "Public broadcast off!", Snackbar.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Log the current user out of the application
+     */
+    private void logout() {
+        // Ensure the user is not broadcasting their location after logout
+        if (mGoogleApiClient.isConnected() && mIsBroadcasting) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mBroadcastIntent);
+        }
+
+        ParseUser.logOut();
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
     }
 
     /**

@@ -34,6 +34,12 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
 
+        // Skip login procedures if a current user already exists
+        if (ParseUser.getCurrentUser() != null) {
+            startActivity(new Intent(this, HomeActivity.class));
+            finish();
+        }
+
         mUsername = (EditText) findViewById(R.id.username);
         mPassword = (EditText) findViewById(R.id.password);
         mLogin = (Button) findViewById(R.id.login);
@@ -53,9 +59,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (e == null) {
                             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                             finish();
-                        }
-
-                        else {
+                        } else {
                             mUsername.setError("Username and password not found!");
                             mPassword.setError("Username and password not found!");
                         }

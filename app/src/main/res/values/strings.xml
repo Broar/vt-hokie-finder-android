@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">VTHokieFinder</string>
     <string name="action_broadcast">Broadcast</string>
+    <string name="action_logout">Logout</string>
 </resources>

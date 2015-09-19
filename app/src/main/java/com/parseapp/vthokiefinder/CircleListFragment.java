@@ -135,17 +135,17 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
     }
 
     /**
-     * Start a new CircleActivity
+     * Start a new CircleDetailActivity
      *
-     * @param circle the circle to be displayed in the CircleActivity
-     * @param action the circle action to be passed to the CircleActivity
+     * @param circle the circle to be displayed in the CircleDetailActivity
+     * @param action the circle action to be passed to the CircleDetailActivity
      */
     private void startCircleActivity(Circle circle, int action) {
-        Intent intent = new Intent(getContext(), CircleActivity.class);
+        Intent intent = new Intent(getContext(), CircleDetailActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putString(CircleActivity.CIRCLE_OBJECT_ID_KEY, circle.getObjectId());
-        bundle.putString(CircleActivity.CIRCLE_NAME_KEY, circle.getName());
-        bundle.putInt(CircleActivity.CIRCLE_ACTION_KEY, action);
+        bundle.putString(CircleDetailActivity.CIRCLE_OBJECT_ID_KEY, circle.getObjectId());
+        bundle.putString(CircleDetailActivity.CIRCLE_NAME_KEY, circle.getName());
+        bundle.putInt(CircleDetailActivity.CIRCLE_ACTION_KEY, action);
         intent.putExtras(bundle);
         getActivity().startActivity(intent);
     }

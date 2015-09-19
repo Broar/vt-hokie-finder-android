@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">VTHokieFinder</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_broadcast">Broadcast</string>
 </resources>

@@ -1,19 +1,10 @@
 package com.parseapp.vthokiefinder;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
-import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Toast;
 
-import com.parse.GetCallback;
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ParseRelation;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 /**
  * A fragment that displays the circles the current user can possibly join
@@ -46,7 +37,7 @@ public class FindCirclesFragment extends CircleListFragment {
         mRecyclerView.setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                openCircle(mCircles.get(position), CircleActivity.JOIN_ACTION);
+                openCircle(mCircles.get(position), CircleDetailActivity.JOIN_ACTION);
             }
         }));
     }

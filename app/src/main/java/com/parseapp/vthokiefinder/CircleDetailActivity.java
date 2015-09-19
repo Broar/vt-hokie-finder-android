@@ -28,7 +28,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.09.17
  */
-public class CircleActivity extends AppCompatActivity {
+public class CircleDetailActivity extends AppCompatActivity {
     public static final String CIRCLE_OBJECT_ID_KEY = "circle_object_id";
     public static final String CIRCLE_NAME_KEY = "circle_name";
     public static final String CIRCLE_ACTION_KEY = "circle_action";
@@ -113,12 +113,12 @@ public class CircleActivity extends AppCompatActivity {
                                 mCircle.getMembers().add(ParseUser.getCurrentUser().getUsername());
                                 mRecyclerView.getAdapter().notifyDataSetChanged();
                                 setupCircleAction(LEAVE_ACTION);
-                                Toast.makeText(CircleActivity.this, "Successfully joined!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(CircleDetailActivity.this, "Successfully joined!", Toast.LENGTH_LONG).show();
                             }
 
                             // Failure! Let's let the user know about what went wrong
                             else {
-                                Toast.makeText(CircleActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -126,7 +126,7 @@ public class CircleActivity extends AppCompatActivity {
 
                 // Failure! Let's let the user know about what went wrong
                 else {
-                    Toast.makeText(CircleActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -152,12 +152,12 @@ public class CircleActivity extends AppCompatActivity {
                                 mCircle.getMembers().remove(ParseUser.getCurrentUser().getUsername());
                                 mRecyclerView.getAdapter().notifyDataSetChanged();
                                 setupCircleAction(JOIN_ACTION);
-                                Toast.makeText(CircleActivity.this, "Successfully left!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(CircleDetailActivity.this, "Successfully left!", Toast.LENGTH_LONG).show();
                             }
 
                             // Failure! Let's let the user know about what went wrong
                             else {
-                                Toast.makeText(CircleActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -165,7 +165,7 @@ public class CircleActivity extends AppCompatActivity {
 
                 // Failure! Let's let the user know about what went wrong
                 else {
-                    Toast.makeText(CircleActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -204,7 +204,7 @@ public class CircleActivity extends AppCompatActivity {
 
                             // Failure! Let the user know what went wrong
                             else {
-                                Toast.makeText(CircleActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
+                                Toast.makeText(CircleDetailActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -212,7 +212,7 @@ public class CircleActivity extends AppCompatActivity {
 
                 // Failure! Let the user know what went wrong
                 else {
-                    Toast.makeText(CircleActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(CircleDetailActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
                 }
             }
         });

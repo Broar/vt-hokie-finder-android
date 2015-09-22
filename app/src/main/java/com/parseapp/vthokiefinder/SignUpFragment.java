@@ -83,6 +83,9 @@ public class SignUpFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Setup the Register button
+     */
     private void initializeRegister() {
         mRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,6 +95,9 @@ public class SignUpFragment extends Fragment {
         });
     }
 
+    /**
+     * Setup the Back to Login link
+     */
     private void initializeBackToLogin() {
         mBackToLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,7 +107,9 @@ public class SignUpFragment extends Fragment {
         });
     }
 
-
+    /**
+     * Register a new user for the application on the Parse backend
+     */
     private void registerUser() {
         String username = mUsername.getText().toString().trim();
         String password = mPassword.getText().toString().trim();

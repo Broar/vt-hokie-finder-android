@@ -50,6 +50,15 @@ public class PasswordRecoveryFragment extends Fragment {
         mRecoveryEmail = (EditText) view.findViewById(R.id.recoveryEmail);
         mSubmitRecovery = (Button) view.findViewById(R.id.submitRecovery);
 
+        initializeSubmit();
+
+        return view;
+    }
+
+    /**
+     * Setup the Submit button
+     */
+    private void initializeSubmit() {
         mSubmitRecovery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,7 +79,5 @@ public class PasswordRecoveryFragment extends Fragment {
                 });
             }
         });
-
-        return view;
     }
 }

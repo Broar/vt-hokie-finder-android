@@ -80,6 +80,12 @@ public class LoginActivity extends AppCompatActivity implements
         replaceFragment(mLoginFragment, LoginFragment.TAG);
     }
 
+    /**
+     * Replace the existing fragment with the specified one
+     *
+     * @param fragment the fragment to be shown
+     * @param tag the fragment's associated tag
+     */
     private void replaceFragment(Fragment fragment, String tag) {
         // LoginFragment is the lowest level fragment in the Activity, so only need to pop a
         // fragment off to show return to it
@@ -87,6 +93,7 @@ public class LoginActivity extends AppCompatActivity implements
             getSupportFragmentManager().popBackStack();
         }
 
+        // Just replace the existing fragment
         else {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragmentContainer, fragment, tag)

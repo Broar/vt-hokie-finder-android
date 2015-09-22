@@ -81,6 +81,9 @@ public class LoginFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Setup the Login button
+     */
     private void initializeLogin() {
         mLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,6 +108,9 @@ public class LoginFragment extends Fragment {
         });
     }
 
+    /**
+     * Setup the Sign Up button
+     */
     private void initializeSignUp() {
         mSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,6 +120,9 @@ public class LoginFragment extends Fragment {
         });
     }
 
+    /**
+     * Setup the Forgot Password link
+     */
     private void initializeForgotPassword() {
         mForgotPassword.setOnClickListener(new View.OnClickListener() {
             @Override

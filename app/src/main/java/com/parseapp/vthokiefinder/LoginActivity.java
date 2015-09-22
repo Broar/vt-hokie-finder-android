@@ -1,32 +1,27 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.parse.LogInCallback;
-import com.parse.ParseException;
 import com.parse.ParseUser;
 
 /**
  * Activity that allows users to login to the application
  *
  * @author Steven Briggs
- * @version 2015.09.11
+ * @version 2015.09.21
  */
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements
+        LoginFragment.Callbacks,
+        SignUpFragment.Callbacks {
 
-    private EditText mUsername;
-    private EditText mPassword;
-    private Button mLogin;
-    private Button mSignUp;
-    private TextView mForgotPassword;
+    private LoginFragment mLoginFragment;
+    private SignUpFragment mSignUpFragment;
+    private PasswordRecoveryFragment mPasswordRecoveryFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,46 +35,63 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         }
 
-        mUsername = (EditText) findViewById(R.id.username);
-        mPassword = (EditText) findViewById(R.id.password);
-        mLogin = (Button) findViewById(R.id.login);
-        mSignUp = (Button) findViewById(R.id.signUp);
-        mForgotPassword = (TextView) findViewById(R.id.forgotPassword);
+        FragmentManager fm = getSupportFragmentManager();
 
-        mLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String username = mUsername.getText().toString().trim();
-                String password = mPassword.getText().toString().trim();
+        if (savedInstanceState == null) {
+            mLoginFragment = LoginFragment.newInstance();
+            mSignUpFragment = SignUpFragment.newInstance();
+            mPasswordRecoveryFragment = PasswordRecoveryFragment.newInstance();
 
-                // Perform a login attempt. Move to the application's homepage if successful
-                ParseUser.logInInBackground(username, password, new LogInCallback() {
-                    @Override
-                    public void done(ParseUser user, ParseException e) {
-                        if (e == null) {
-                            startActivity(new Intent(LoginActivity.this, HomeActivity.class));
-                            finish();
-                        } else {
-                            mUsername.setError("Username and password not found!");
-                            mPassword.setError("Username and password not found!");
-                        }
-                    }
-                });
-            }
-        });
+            fm.beginTransaction()
+                    .add(R.id.fragmentContainer, mLoginFragment, LoginFragment.TAG)
+                    .commit();
+        }
 
-        mSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
-            }
-        });
+        else {
+            mLoginFragment = (LoginFragment) fm.findFragmentByTag(LoginFragment.TAG);
+            mSignUpFragment = (SignUpFragment) fm.findFragmentByTag(SignUpFragment.TAG);
+            mPasswordRecoveryFragment = (PasswordRecoveryFragment) fm.findFragmentByTag(PasswordRecoveryFragment.TAG);
+        }
+    }
 
-        mForgotPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, PasswordRecoveryActivity.class));
-            }
-        });
+    @Override
+    public void onSignUpClicked() {
+        if (mSignUpFragment == null) {
+            mSignUpFragment = SignUpFragment.newInstance();
+        }
+
+        replaceFragment(mSignUpFragment, SignUpFragment.TAG);
+    }
+
+    @Override
+    public void onForgotPasswordClicked() {
+        if (mPasswordRecoveryFragment == null) {
+            mPasswordRecoveryFragment = PasswordRecoveryFragment.newInstance();
+        }
+
+        replaceFragment(mPasswordRecoveryFragment, PasswordRecoveryFragment.TAG);
+    }
+    @Override
+    public void onBackToLoginClicked() {
+        if (mLoginFragment == null) {
+            mLoginFragment = LoginFragment.newInstance();
+        }
+
+        replaceFragment(mLoginFragment, LoginFragment.TAG);
+    }
+
+    private void replaceFragment(Fragment fragment, String tag) {
+        // LoginFragment is the lowest level fragment in the Activity, so only need to pop a
+        // fragment off to show return to it
+        if (tag.equals(LoginFragment.TAG)) {
+            getSupportFragmentManager().popBackStack();
+        }
+
+        else {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, fragment, tag)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 }

@@ -88,7 +88,7 @@ public class LoginActivity extends AppCompatActivity implements
      */
     private void replaceFragment(Fragment fragment, String tag) {
         // LoginFragment is the lowest level fragment in the Activity, so only need to pop a
-        // fragment off to show return to it
+        // fragment off to return to it
         if (tag.equals(LoginFragment.TAG)) {
             getSupportFragmentManager().popBackStack();
         }

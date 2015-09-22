@@ -8,7 +8,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
  * A simple ViewPager required to utilize the SlidingTabLayout
  *
  * @author Steven Briggs
- * @version 2015.09.16
+ * @version 2015.09.22
  */
 public class ViewPagerAdapter extends FragmentStatePagerAdapter {
 
@@ -27,8 +27,12 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
             return MyCirclesFragment.newInstance();
         }
 
-        else {
+        else if (position == 1) {
             return FindCirclesFragment.newInstance();
+        }
+
+        else {
+            return CircleMapFragment.newInstance();
         }
     }
 

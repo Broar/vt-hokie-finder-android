@@ -33,8 +33,8 @@ import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 public class HomeActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private static final int NUM_OF_TABS = 2;
-    private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES" };
+    private static final int NUM_OF_TABS = 3;
+    private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "MAP" };
 
     private GoogleApiClient mGoogleApiClient;
     private PendingIntent mBroadcastIntent;
@@ -175,6 +175,7 @@ public class HomeActivity extends AppCompatActivity implements
      */
     private void initializeSupportActionBar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        assert getSupportActionBar() != null;
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }

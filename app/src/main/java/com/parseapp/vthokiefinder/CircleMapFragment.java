@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,9 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A fragment that displays a Google Map to user that indicates the location of
@@ -32,8 +36,11 @@ public class CircleMapFragment extends Fragment {
 
     public static final String TAG = CircleMapFragment.class.getSimpleName();
 
-    private MapView mapView;
-    private GoogleMap map;
+    private ScheduledThreadPoolExecutor mScheduler;
+    private ScheduledFuture mFuture;
+
+    private MapView mMapView;
+    private GoogleMap mMap;
 
     /**
      * A factory method to return a new CircleMapFragment that has been configured
@@ -47,20 +54,21 @@ public class CircleMapFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mScheduler =  new ScheduledThreadPoolExecutor(1);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_map, container, false);
-        mapView = (MapView) view.findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
+        mMapView = (MapView) view.findViewById(R.id.mapView);
+        mMapView.onCreate(savedInstanceState);
 
         // Get an instance of a GoogleMap and perform any setup
-        mapView.getMapAsync(new OnMapReadyCallback() {
+        mMapView.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
-                map = googleMap;
-                addUserLocations();
+                mMap = googleMap;
+                mFuture = scheduleLocationPull();
             }
         });
 
@@ -70,32 +78,39 @@ public class CircleMapFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mapView.onResume();
+        mMapView.onResume();
+
+        // Reschedule the location pull tasks upon return to this Fragment
+        if (mFuture == null) {
+            mFuture = scheduleLocationPull();
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mapView.onPause();
+        mMapView.onPause();
+        mFuture.cancel(false);
     }
 
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mapView.onDestroy();
+        mMapView.onDestroy();
+        mFuture.cancel(false);
     }
 
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        mapView.onLowMemory();
+        mMapView.onLowMemory();
     }
 
     /**
-     * Add Markers to the GoogleMap that represent the lat/long location of each user
+     * Pull the lat/long locations of each user. Add these to the GoogleMaps as Markers
      */
-    private void addUserLocations() {
+    private void pullLocations() {
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("User");
         ParseUser.getQuery().findInBackground(new FindCallback<ParseUser>() {
             @Override
@@ -106,17 +121,33 @@ public class CircleMapFragment extends Fragment {
                         ParseGeoPoint location = o.getParseGeoPoint("location");
 
                         if (location != null) {
-                            map.addMarker(new MarkerOptions().position(
+                            mMap.addMarker(new MarkerOptions().position(
                                     new LatLng(location.getLatitude(), location.getLongitude())));
                         }
                     }
+
+                    Log.d(TAG, "Pulled locations!");
                 }
 
                 // Failure! Let the user know what went wrong
                 else {
-                    Snackbar.make(mapView, e.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(mMapView, e.getMessage(), Snackbar.LENGTH_LONG).show();
                 }
             }
         });
+    }
+
+    /**
+     * Schedule a location pull to occur at a delayed rate of 10s
+     *
+     * @return a future for the tasks to be completed by the thread pool
+     */
+    private ScheduledFuture scheduleLocationPull() {
+        return mScheduler.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                pullLocations();
+            }
+        }, 5000L, 10000L, TimeUnit.MILLISECONDS);
     }
 }

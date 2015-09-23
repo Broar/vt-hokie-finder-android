@@ -68,7 +68,10 @@ public class CircleMapFragment extends Fragment {
             @Override
             public void onMapReady(GoogleMap googleMap) {
                 mMap = googleMap;
-                mFuture = scheduleLocationPull();
+
+                if (mFuture == null) {
+                    mFuture = scheduleLocationPull();
+                }
             }
         });
 
@@ -91,6 +94,7 @@ public class CircleMapFragment extends Fragment {
         super.onPause();
         mMapView.onPause();
         mFuture.cancel(false);
+        mFuture = null;
     }
 
 
@@ -98,7 +102,6 @@ public class CircleMapFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
-        mFuture.cancel(false);
     }
 
     @Override

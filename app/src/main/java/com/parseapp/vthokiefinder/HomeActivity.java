@@ -1,11 +1,14 @@
 package com.parseapp.vthokiefinder;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -35,6 +38,7 @@ public class HomeActivity extends AppCompatActivity implements
 
     private static final int NUM_OF_TABS = 3;
     private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "MAP" };
+    public static final int BROADCAST_NOTIFICATION_ID = 0;
 
     private GoogleApiClient mGoogleApiClient;
     private PendingIntent mBroadcastIntent;
@@ -118,18 +122,46 @@ public class HomeActivity extends AppCompatActivity implements
         // Switch broadcasting on
         if (mGoogleApiClient.isConnected() && !mIsBroadcasting) {
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, mBroadcastIntent);
+            issueNotification();
             mIsBroadcasting = true;
 
             Snackbar.make(mPager, "Public broadcast on!", Snackbar.LENGTH_LONG).show();
         }
 
-        // Switch broadcasting off
+        // Switch broadcasting off and cancel the ongoing notification
         else if (mGoogleApiClient.isConnected() && mIsBroadcasting) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mBroadcastIntent);
+            NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+            manager.cancel(BROADCAST_NOTIFICATION_ID);
             mIsBroadcasting = false;
 
             Snackbar.make(mPager, "Public broadcast off!", Snackbar.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Issue a status notification that the user is broadcasting their location
+     */
+    private void issueNotification() {
+        // The activity should be brought back to the front if it already exists
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent openHomeIntent = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Build a sticky notification
+        Notification notification = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_stat_fighting_gobbler)
+                .setContentTitle("Location broadcast")
+                .setContentText("Your location is being broadcast to circles")
+                .setContentIntent(openHomeIntent)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .build();
+
+        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+        manager.notify(BROADCAST_NOTIFICATION_ID, notification);
     }
 
     /**

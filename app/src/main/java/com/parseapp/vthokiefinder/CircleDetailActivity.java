@@ -1,6 +1,7 @@
 package com.parseapp.vthokiefinder;
 
 import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -50,8 +51,11 @@ public class CircleDetailActivity extends AppCompatActivity {
         String objectId = getIntent().getStringExtra(CIRCLE_OBJECT_ID_KEY);
         String name = getIntent().getStringExtra(CIRCLE_NAME_KEY);
         mCircle = new Circle(objectId, name);
-        mCircleName = (TextView) findViewById(R.id.circleName);
-        mCircleName.setText(name);
+        //mCircleName = (TextView) findViewById(R.id.circleName);
+        //mCircleName.setText(name);
+
+        CollapsingToolbarLayout toolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsingToolbarLayout);
+        toolbarLayout.setTitle(name);
 
         // Initialize the Join Button
         mCircleAction = (Button) findViewById(R.id.circleAction);

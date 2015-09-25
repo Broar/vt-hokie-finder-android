@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -8,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -17,7 +20,6 @@ import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.util.List;
@@ -30,17 +32,23 @@ import java.util.concurrent.TimeUnit;
  * members in a circle who are broadcasting their location.
  *
  * @author Steven Briggs
- * @version 2015.09.22
+ * @version 2015.09.25
  */
 public class CircleMapFragment extends Fragment {
 
     public static final String TAG = CircleMapFragment.class.getSimpleName();
+
+    private Callbacks mListener;
 
     private ScheduledThreadPoolExecutor mScheduler;
     private ScheduledFuture mFuture;
 
     private MapView mMapView;
     private GoogleMap mMap;
+
+    public interface Callbacks {
+        GoogleApiClient requestGoogleApi();
+    }
 
     /**
      * A factory method to return a new CircleMapFragment that has been configured
@@ -49,6 +57,20 @@ public class CircleMapFragment extends Fragment {
      */
     public static CircleMapFragment newInstance() {
         return new CircleMapFragment();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+
+        try {
+            mListener = (Callbacks) activity;
+        }
+
+        catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement Callbacks");
+        }
     }
 
     @Override
@@ -63,15 +85,16 @@ public class CircleMapFragment extends Fragment {
         mMapView = (MapView) view.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
 
-        // Get an instance of a GoogleMap and perform any setup
-        mMapView.getMapAsync(new OnMapReadyCallback() {
+        // Temporary method of determining if GoogleApiClient is connected
+        mListener.requestGoogleApi().registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
             @Override
-            public void onMapReady(GoogleMap googleMap) {
-                mMap = googleMap;
+            public void onConnected(Bundle bundle) {
+                getGoogleMap();
+            }
 
-                if (mFuture == null) {
-                    mFuture = scheduleLocationPull();
-                }
+            @Override
+            public void onConnectionSuspended(int i) {
+                // Space purposefully left empty
             }
         });
 
@@ -111,10 +134,24 @@ public class CircleMapFragment extends Fragment {
     }
 
     /**
+     * Get a GoogleMap instance and perform any additional setup
+     */
+    public void getGoogleMap() {
+        mMapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap googleMap) {
+                mMap = googleMap;
+                if (mFuture == null) {
+                    mFuture = scheduleLocationPull();
+                }
+            }
+        });
+    }
+
+    /**
      * Pull the lat/long locations of each user. Add these to the GoogleMaps as Markers
      */
     private void pullLocations() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("User");
         ParseUser.getQuery().findInBackground(new FindCallback<ParseUser>() {
             @Override
             public void done(List<ParseUser> objects, ParseException e) {

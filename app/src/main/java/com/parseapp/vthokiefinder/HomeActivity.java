@@ -1,12 +1,16 @@
 package com.parseapp.vthokiefinder;
 
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
@@ -20,6 +24,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -34,13 +39,20 @@ import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
  * @version 2015.09.15
  */
 public class HomeActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        CircleMapFragment.Callbacks {
 
     private static final int NUM_OF_TABS = 3;
     private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "MAP" };
-    public static final int BROADCAST_NOTIFICATION_ID = 0;
+    private static final int BROADCAST_NOTIFICATION_ID = 0;
+    private static final int REQUEST_RESOLVE_ERROR = 1001;
+    private static final String DIALOG_ERROR = "dialog_error";
+    private static final String STATE_RESOLVING_ERROR = "resolving_error";
 
     private GoogleApiClient mGoogleApiClient;
+    private boolean mIsResolvingError;
+
     private PendingIntent mBroadcastIntent;
     private LocationRequest mLocationRequest;
     private boolean mIsBroadcasting;
@@ -55,6 +67,10 @@ public class HomeActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        mIsResolvingError = savedInstanceState != null
+                && savedInstanceState.getBoolean(STATE_RESOLVING_ERROR, false);
+
         buildGoogleApiClient();
         initializeBroadcast();
         initializeSupportActionBar();
@@ -90,7 +106,9 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+        if (!mIsResolvingError) {
+            mGoogleApiClient.connect();
+        }
     }
 
     @Override
@@ -99,6 +117,25 @@ public class HomeActivity extends AppCompatActivity implements
         super.onStop();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_RESOLVE_ERROR) {
+            mIsResolvingError = false;
+
+            // Make sure the app is not already connected or attempting to connect
+            if (resultCode == RESULT_OK) {
+                if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.connect();
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_RESOLVING_ERROR, mIsResolvingError);
+    }
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -111,8 +148,34 @@ public class HomeActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        // Space purposefully left empty
+    public void onConnectionFailed(ConnectionResult result) {
+        // Already handling the error
+        if (mIsResolvingError) {
+            return;
+        }
+
+        else if (result.hasResolution()) {
+            try {
+                mIsResolvingError = true;
+                result.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
+            }
+
+            // There was an error. Try again
+            catch (IntentSender.SendIntentException e) {
+                mGoogleApiClient.connect();
+            }
+        }
+
+        // Show dialog using GoogleApiAvailability.getErrorDialog()
+        else {
+            showErrorDialog(result.getErrorCode());
+            mIsResolvingError = true;
+        }
+    }
+
+    @Override
+    public GoogleApiClient requestGoogleApi() {
+        return mGoogleApiClient;
     }
 
     /**
@@ -150,7 +213,7 @@ public class HomeActivity extends AppCompatActivity implements
         PendingIntent openHomeIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Build a sticky notification
+        // Build a sticky notificationß
         Notification notification = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_stat_fighting_gobbler)
                 .setContentTitle("Location broadcast")
@@ -255,5 +318,53 @@ public class HomeActivity extends AppCompatActivity implements
                 Snackbar.make(mPager, "Clicked FAB!", Snackbar.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Display an ErrorDialogFragment
+     *
+     * https://developers.google.com/android/guides/api-client#handle_connection_failures
+     *
+     * @param errorCode the error code that prompted the dialog
+     */
+    private void showErrorDialog(int errorCode) {
+        // Create a fragment for the error dialog
+        ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
+        // Pass the error that should be displayed
+        Bundle args = new Bundle();
+        args.putInt(DIALOG_ERROR, errorCode);
+        dialogFragment.setArguments(args);
+        dialogFragment.show(getSupportFragmentManager(), "errordialog");
+    }
+
+    /**
+     * Callback method when an ErrorDialogFragment is dismissed
+     *
+     * https://developers.google.com/android/guides/api-client#handle_connection_failures
+     */
+    public void onDialogDismissed() {
+        mIsResolvingError = false;
+    }
+
+    /**
+     * A DialogFragment to prompt the user to update Google Play Services
+     *
+     * https://developers.google.com/android/guides/api-client#handle_connection_failures
+     */
+    public static class ErrorDialogFragment extends DialogFragment {
+        public ErrorDialogFragment() { }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Get the error code and retrieve the appropriate dialog
+            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
+            return GoogleApiAvailability.getInstance().getErrorDialog(
+                    this.getActivity(), errorCode, REQUEST_RESOLVE_ERROR);
+        }
+
+        @Override
+        public void onDismiss(DialogInterface dialog) {
+            ((HomeActivity) getActivity()).onDialogDismissed();
+        }
     }
 }

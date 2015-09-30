@@ -236,6 +236,8 @@ public class HomeActivity extends AppCompatActivity implements
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mBroadcastIntent);
         }
 
+        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+        manager.cancel(BROADCAST_NOTIFICATION_ID);
         ParseUser.logOut();
         startActivity(new Intent(this, LoginActivity.class));
         finish();

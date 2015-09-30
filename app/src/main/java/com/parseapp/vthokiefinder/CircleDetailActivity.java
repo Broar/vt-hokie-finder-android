@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -101,31 +102,23 @@ public class CircleDetailActivity extends AppCompatActivity {
      * Add the logged in ParseUser to this circle
      */
     private void joinCircle() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
-        query.getInBackground(mCircle.getObjectId(), new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                // Success! Let's try to add the current user to the circle
-                if (e == null) {
-                    ParseRelation<ParseObject> relation = object.getRelation("members");
-                    relation.add(ParseUser.getCurrentUser());
-                    object.saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            // Success! Let's inform the user they have joined
-                            if (e == null) {
-                                mCircle.getMembers().add(ParseUser.getCurrentUser().getUsername());
-                                mRecyclerView.getAdapter().notifyDataSetChanged();
-                                setupCircleAction(LEAVE_ACTION);
-                                Toast.makeText(CircleDetailActivity.this, "Successfully joined!", Toast.LENGTH_LONG).show();
-                            }
 
-                            // Failure! Let's let the user know about what went wrong
-                            else {
-                                Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
+        // Create a UserCircle object to represent the new relationship
+        ParseObject userCircle = new ParseObject("UserCircle");
+        userCircle.put("user", ParseUser.getCurrentUser());
+        userCircle.put("circle", ParseObject.createWithoutData("Circle", mCircle.getObjectId()));
+
+        // Save the UserCircle object to the Parse backend
+        userCircle.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+
+                // Success! Let's inform the user they have joined
+                if (e == null) {
+                    mCircle.getMembers().add(ParseUser.getCurrentUser().getUsername());
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
+                    setupCircleAction(LEAVE_ACTION);
+                    Toast.makeText(CircleDetailActivity.this, "Successfully joined!", Toast.LENGTH_LONG).show();
                 }
 
                 // Failure! Let's let the user know about what went wrong
@@ -140,18 +133,20 @@ public class CircleDetailActivity extends AppCompatActivity {
      * Remove the logged in ParseUser from this Circle
      */
     private void leaveCircle() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
-        query.getInBackground(mCircle.getObjectId(), new GetCallback<ParseObject>() {
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
+        query.whereEqualTo("user", ParseUser.getCurrentUser());
+        query.whereEqualTo("circle", ParseObject.createWithoutData("Circle", mCircle.getObjectId()));
+
+        query.findInBackground(new FindCallback<ParseObject>() {
             @Override
-            public void done(ParseObject object, ParseException e) {
+            public void done(List<ParseObject> objects, ParseException e) {
+
                 // Success! Let's try to remove the current user to the circle
                 if (e == null) {
-                    ParseRelation<ParseObject> relation = object.getRelation("members");
-                    relation.remove(ParseUser.getCurrentUser());
-                    object.saveInBackground(new SaveCallback() {
+                    objects.get(0).deleteInBackground(new DeleteCallback() {
                         @Override
                         public void done(ParseException e) {
-                            // Success! Let's inform the user they have joined
+
                             if (e == null) {
                                 mCircle.getMembers().remove(ParseUser.getCurrentUser().getUsername());
                                 mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -159,7 +154,6 @@ public class CircleDetailActivity extends AppCompatActivity {
                                 Toast.makeText(CircleDetailActivity.this, "Successfully left!", Toast.LENGTH_LONG).show();
                             }
 
-                            // Failure! Let's let the user know about what went wrong
                             else {
                                 Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                             }
@@ -184,37 +178,33 @@ public class CircleDetailActivity extends AppCompatActivity {
         final ArrayList<String> members = new ArrayList<String>();
 
         // Get all of the members of the Circle
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
-        query.getInBackground(mCircle.getObjectId(), new GetCallback<ParseObject>() {
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
+        ParseObject circle = ParseObject.createWithoutData("Circle", mCircle.getObjectId());
+        query.whereEqualTo("circle", circle);
+        query.findInBackground(new FindCallback<ParseObject>() {
             @Override
-            public void done(ParseObject object, ParseException e) {
+            public void done(List<ParseObject> objects, ParseException e) {
 
-                // Success! Try to query all of the members belonging to this Circle
                 if (e == null) {
-                    ParseRelation<ParseObject> relation = object.getRelation("members");
-                    relation.getQuery().findInBackground(new FindCallback<ParseObject>() {
+                    for (ParseObject o : objects) {
+                        o.getParseObject("user").fetchInBackground(new GetCallback<ParseObject>() {
+                            @Override
+                            public void done(ParseObject object, ParseException e) {
+                                if (e == null) {
+                                    members.add(object.getString("username"));
 
-                        @Override
-                        public void done(List<ParseObject> objects, ParseException e) {
-                            // Success! Collect all of the names of the members
-                            if (e == null) {
-                                for (ParseObject o : objects) {
-                                    members.add(o.getString("username"));
+                                    // Be sure to update the RecyclerView
+                                    mRecyclerView.getAdapter().notifyDataSetChanged();
                                 }
 
-                                // Be sure to update the RecyclerView
-                                mRecyclerView.getAdapter().notifyDataSetChanged();
+                                else {
+                                    Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
                             }
-
-                            // Failure! Let the user know what went wrong
-                            else {
-                                Toast.makeText(CircleDetailActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
+                        });
+                    }
                 }
 
-                // Failure! Let the user know what went wrong
                 else {
                     Toast.makeText(CircleDetailActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
                 }

@@ -27,8 +27,8 @@ public class FindCirclesFragment extends CircleListFragment {
 
     @Override
     protected ParseQuery<ParseObject> makeQuery() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
-        query.whereNotEqualTo("members", ParseUser.getCurrentUser());
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
+        query.whereNotEqualTo("user", ParseUser.getCurrentUser());
         return query;
     }
 

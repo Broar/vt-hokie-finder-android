@@ -83,7 +83,7 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
         // Construct a new ParseQuery according to subclass implementation
         ParseQuery<ParseObject> query = makeQuery();
 
-        // Perform the query on the Parse class of Circles
+        // Perform the query on the Parse class of UserCircle
         mCircles.clear();
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
@@ -91,7 +91,12 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
                 // Success! Let's add the results to our collection of circles and display them
                 if (e == null) {
                     for (ParseObject o : objects) {
-                        mCircles.add(new Circle(o.getObjectId(), o.getString("name")));
+                        o.getParseObject("circle").fetchInBackground(new GetCallback<ParseObject>() {
+                            @Override
+                            public void done(ParseObject object, ParseException e) {
+                                mCircles.add(new Circle(object.getObjectId(), object.getString("name")));
+                            }
+                        });
                     }
 
                     mRecyclerView.getAdapter().notifyDataSetChanged();

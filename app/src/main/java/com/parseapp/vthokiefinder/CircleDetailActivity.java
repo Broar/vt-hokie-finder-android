@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,7 +14,9 @@ import android.widget.Toast;
 
 import com.parse.DeleteCallback;
 import com.parse.FindCallback;
+import com.parse.FunctionCallback;
 import com.parse.GetCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -22,7 +25,9 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * An activity that presents information about a specific Circle to the user
@@ -38,7 +43,6 @@ public class CircleDetailActivity extends AppCompatActivity {
     public static final int LEAVE_ACTION = 1;
 
     private Circle mCircle;
-    private TextView mCircleName;
     private Button mCircleAction;
     private RecyclerView mRecyclerView;
 
@@ -52,8 +56,6 @@ public class CircleDetailActivity extends AppCompatActivity {
         String objectId = getIntent().getStringExtra(CIRCLE_OBJECT_ID_KEY);
         String name = getIntent().getStringExtra(CIRCLE_NAME_KEY);
         mCircle = new Circle(objectId, name);
-        //mCircleName = (TextView) findViewById(R.id.circleName);
-        //mCircleName.setText(name);
 
         CollapsingToolbarLayout toolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsingToolbarLayout);
         toolbarLayout.setTitle(name);
@@ -139,26 +141,26 @@ public class CircleDetailActivity extends AppCompatActivity {
 
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
-            public void done(List<ParseObject> objects, ParseException e) {
+            public void done(List<ParseObject> userCircles, ParseException e) {
 
                 // Success! Let's try to remove the current user to the circle
                 if (e == null) {
-                    objects.get(0).deleteInBackground(new DeleteCallback() {
-                        @Override
-                        public void done(ParseException e) {
 
-                            if (e == null) {
-                                mCircle.getMembers().remove(ParseUser.getCurrentUser().getUsername());
-                                mRecyclerView.getAdapter().notifyDataSetChanged();
-                                setupCircleAction(JOIN_ACTION);
-                                Toast.makeText(CircleDetailActivity.this, "Successfully left!", Toast.LENGTH_LONG).show();
-                            }
+                    try {
+                        userCircles.get(0).delete();
+                    }
 
-                            else {
-                                Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
+                    catch (ParseException e1) {
+                        // Display an error message and exit out of the function early
+                        Toast.makeText(CircleDetailActivity.this, e1.getMessage(), Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // Update the list of current users for the circle
+                    mCircle.getMembers().remove(ParseUser.getCurrentUser().getUsername());
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
+                    setupCircleAction(JOIN_ACTION);
+                    Toast.makeText(CircleDetailActivity.this, "Successfully left!", Toast.LENGTH_LONG).show();
                 }
 
                 // Failure! Let's let the user know about what went wrong
@@ -181,28 +183,16 @@ public class CircleDetailActivity extends AppCompatActivity {
         ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
         ParseObject circle = ParseObject.createWithoutData("Circle", mCircle.getObjectId());
         query.whereEqualTo("circle", circle);
+        query.include("user");
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
-            public void done(List<ParseObject> objects, ParseException e) {
-
+            public void done(List<ParseObject> userCircles, ParseException e) {
                 if (e == null) {
-                    for (ParseObject o : objects) {
-                        o.getParseObject("user").fetchInBackground(new GetCallback<ParseObject>() {
-                            @Override
-                            public void done(ParseObject object, ParseException e) {
-                                if (e == null) {
-                                    members.add(object.getString("username"));
-
-                                    // Be sure to update the RecyclerView
-                                    mRecyclerView.getAdapter().notifyDataSetChanged();
-                                }
-
-                                else {
-                                    Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            }
-                        });
+                    for (ParseObject uc : userCircles) {
+                        members.add(uc.getParseObject("user").getString("username"));
                     }
+
+                    mRecyclerView.getAdapter().notifyDataSetChanged();
                 }
 
                 else {

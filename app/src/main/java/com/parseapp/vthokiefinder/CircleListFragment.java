@@ -65,11 +65,13 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
     }
 
     /**
-     * Construct a new ParseQuery to search for Circles
-     *
-     * @return a configured ParseQuery that searches for Circles
+     * Stop the refresh animation if necessary
      */
-    protected abstract ParseQuery<ParseObject> makeQuery();
+    protected void stopRefresh() {
+        if (mSwipeContainer.isRefreshing()) {
+            mSwipeContainer.setRefreshing(false);
+        }
+    }
 
     /**
      * Set the CircleAdapter for the RecyclerView
@@ -79,41 +81,7 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
     /**
      * Refresh the list of circles
      */
-    protected void refreshCircles() {
-        // Construct a new ParseQuery according to subclass implementation
-        ParseQuery<ParseObject> query = makeQuery();
-
-        // Perform the query on the Parse class of UserCircle
-        mCircles.clear();
-        query.findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> objects, ParseException e) {
-                // Success! Let's add the results to our collection of circles and display them
-                if (e == null) {
-                    for (ParseObject o : objects) {
-                        o.getParseObject("circle").fetchInBackground(new GetCallback<ParseObject>() {
-                            @Override
-                            public void done(ParseObject object, ParseException e) {
-                                mCircles.add(new Circle(object.getObjectId(), object.getString("name")));
-                            }
-                        });
-                    }
-
-                    mRecyclerView.getAdapter().notifyDataSetChanged();
-                }
-
-                // Failure! Let's inform the user about what went wrong
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-
-                // Stop the refresh animation if necessary
-                if (mSwipeContainer.isRefreshing()) {
-                    mSwipeContainer.setRefreshing(false);
-                }
-            }
-        });
-    }
+    protected abstract void refreshCircles();
 
     /**
      * Open a detailed view of a Circle
@@ -153,5 +121,13 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
         bundle.putInt(CircleDetailActivity.CIRCLE_ACTION_KEY, action);
         intent.putExtras(bundle);
         getActivity().startActivity(intent);
+    }
+
+    protected RecyclerView getRecyclerView() {
+        return mRecyclerView;
+    }
+
+    protected ArrayList<Circle> getCircles() {
+        return mCircles;
     }
 }

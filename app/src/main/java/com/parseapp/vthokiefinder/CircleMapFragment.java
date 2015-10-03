@@ -154,11 +154,11 @@ public class CircleMapFragment extends Fragment {
     private void pullLocations() {
         ParseUser.getQuery().findInBackground(new FindCallback<ParseUser>() {
             @Override
-            public void done(List<ParseUser> objects, ParseException e) {
+            public void done(List<ParseUser> users, ParseException e) {
                 // Success! Create Markers for each user and pin them to the map
                 if (e == null) {
-                    for (ParseObject o : objects) {
-                        ParseGeoPoint location = o.getParseGeoPoint("location");
+                    for (ParseObject u : users) {
+                        ParseGeoPoint location = u.getParseGeoPoint("location");
 
                         if (location != null) {
                             mMap.addMarker(new MarkerOptions().position(

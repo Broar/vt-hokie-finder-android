@@ -1,10 +1,16 @@
 package com.parseapp.vthokiefinder;
 
-import android.view.View;
+        import android.view.View;
 
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.ParseUser;
+        import com.parse.FunctionCallback;
+        import com.parse.ParseCloud;
+        import com.parse.ParseException;
+        import com.parse.ParseObject;
+        import com.parse.ParseQuery;
+        import com.parse.ParseUser;
+
+        import java.util.HashMap;
+        import java.util.List;
 
 /**
  * A fragment that displays the circles the current user can possibly join
@@ -26,19 +32,31 @@ public class FindCirclesFragment extends CircleListFragment {
     }
 
     @Override
-    protected ParseQuery<ParseObject> makeQuery() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
-        query.whereNotEqualTo("user", ParseUser.getCurrentUser());
-        return query;
+    protected void setCircleAdapter() {
+        getRecyclerView().setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                openCircle(getCircles().get(position), CircleDetailActivity.JOIN_ACTION);
+            }
+        }));
     }
 
     @Override
-    protected void setCircleAdapter() {
-        mRecyclerView.setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
+    protected void refreshCircles() {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", ParseUser.getCurrentUser().getObjectId());
+        ParseCloud.callFunctionInBackground("getCirclesToJoin", params, new FunctionCallback<List<ParseObject>>() {
             @Override
-            public void onItemClick(View itemView, int position) {
-                openCircle(mCircles.get(position), CircleDetailActivity.JOIN_ACTION);
+            public void done(List<ParseObject> circles, ParseException e) {
+                getCircles().clear();
+
+                for (ParseObject c : circles) {
+                    getCircles().add(new Circle(c.getObjectId(), c.getString("name")));
+                }
+
+                getRecyclerView().getAdapter().notifyDataSetChanged();
+                stopRefresh();
             }
-        }));
+        });
     }
 }

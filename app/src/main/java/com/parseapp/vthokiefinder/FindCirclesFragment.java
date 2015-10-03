@@ -1,26 +1,43 @@
 package com.parseapp.vthokiefinder;
 
-        import android.view.View;
+import android.app.Activity;
+import android.content.Context;
+import android.view.View;
 
-        import com.parse.FunctionCallback;
-        import com.parse.ParseCloud;
-        import com.parse.ParseException;
-        import com.parse.ParseObject;
-        import com.parse.ParseQuery;
-        import com.parse.ParseUser;
+import com.parse.FunctionCallback;
+import com.parse.ParseCloud;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseUser;
 
-        import java.util.HashMap;
-        import java.util.List;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * A fragment that displays the circles the current user can possibly join
  *
  * @author Steven Briggs
- * @version 2015.09.16
+ * @version 2015.10.03
  */
 public class FindCirclesFragment extends CircleListFragment {
 
     public static final String TAG = FindCirclesFragment.class.getSimpleName();
+
+    private Callbacks mListener;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+
+        try {
+            mListener = (Callbacks) activity;
+        }
+
+        catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement Callbacks");
+        }
+    }
 
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
@@ -36,7 +53,7 @@ public class FindCirclesFragment extends CircleListFragment {
         getRecyclerView().setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                openCircle(getCircles().get(position), CircleDetailActivity.JOIN_ACTION);
+                mListener.onCircleClicked(getCircles().get(position), false);
             }
         }));
     }

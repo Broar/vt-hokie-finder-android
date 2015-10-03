@@ -25,13 +25,17 @@ import java.util.List;
  * An abstract fragment that displays Circles in a list
  *
  * @author Steven Briggs
- * @version 2015.09.16
+ * @version 2015.
  */
 public abstract class CircleListFragment extends Fragment implements OnRefreshListener {
 
     protected RecyclerView mRecyclerView;
     protected SwipeRefreshLayout mSwipeContainer;
     protected ArrayList<Circle> mCircles;
+
+    public interface Callbacks {
+        void onCircleClicked(Circle circle, boolean isMember);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,46 +86,6 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
      * Refresh the list of circles
      */
     protected abstract void refreshCircles();
-
-    /**
-     * Open a detailed view of a Circle
-     *
-     * @param circle the circle to be opened
-     * @param action the circle action the user can perform
-     */
-    protected void openCircle(final Circle circle, final int action) {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("Circle");
-        query.getInBackground(circle.getObjectId(), new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                // Success! Open the view of the Circle
-                if (e == null) {
-                    startCircleActivity(circle, action);
-                }
-
-                // Failure! Let's let the user know about what went wrong
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-    }
-
-    /**
-     * Start a new CircleDetailActivity
-     *
-     * @param circle the circle to be displayed in the CircleDetailActivity
-     * @param action the circle action to be passed to the CircleDetailActivity
-     */
-    private void startCircleActivity(Circle circle, int action) {
-        Intent intent = new Intent(getContext(), CircleDetailActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(CircleDetailActivity.CIRCLE_OBJECT_ID_KEY, circle.getObjectId());
-        bundle.putString(CircleDetailActivity.CIRCLE_NAME_KEY, circle.getName());
-        bundle.putInt(CircleDetailActivity.CIRCLE_ACTION_KEY, action);
-        intent.putExtras(bundle);
-        getActivity().startActivity(intent);
-    }
 
     protected RecyclerView getRecyclerView() {
         return mRecyclerView;

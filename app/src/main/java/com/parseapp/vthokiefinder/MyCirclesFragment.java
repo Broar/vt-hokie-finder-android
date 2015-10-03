@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 
 import com.parse.FindCallback;
@@ -8,7 +10,6 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,6 +22,8 @@ public class MyCirclesFragment extends CircleListFragment {
 
     public static final String TAG = MyCirclesFragment.class.getSimpleName();
 
+    private Callbacks mListener;
+
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
      *
@@ -31,11 +34,25 @@ public class MyCirclesFragment extends CircleListFragment {
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+
+        try {
+            mListener = (Callbacks) activity;
+        }
+
+        catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement Callbacks");
+        }
+    }
+
+    @Override
     protected void setCircleAdapter() {
         getRecyclerView().setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                openCircle(getCircles().get(position), CircleDetailActivity.LEAVE_ACTION);
+                mListener.onCircleClicked(getCircles().get(position), true);
             }
         }));
     }

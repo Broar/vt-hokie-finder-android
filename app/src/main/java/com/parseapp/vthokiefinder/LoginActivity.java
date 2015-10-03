@@ -37,6 +37,7 @@ public class LoginActivity extends AppCompatActivity implements
 
         FragmentManager fm = getSupportFragmentManager();
 
+        // Create new Fragments for the Activity
         if (savedInstanceState == null) {
             mLoginFragment = LoginFragment.newInstance();
             mSignUpFragment = SignUpFragment.newInstance();
@@ -47,6 +48,7 @@ public class LoginActivity extends AppCompatActivity implements
                     .commit();
         }
 
+        // Retrieve existing Fragments
         else {
             mLoginFragment = (LoginFragment) fm.findFragmentByTag(LoginFragment.TAG);
             mSignUpFragment = (SignUpFragment) fm.findFragmentByTag(SignUpFragment.TAG);

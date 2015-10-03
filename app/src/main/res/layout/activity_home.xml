@@ -8,6 +8,7 @@
     android:id="@+id/drawerLayout">
 
     <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/coordinatorLayout"
         android:layout_height="match_parent"
         android:layout_width="match_parent">
 
@@ -15,27 +16,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <android.support.design.widget.AppBarLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/appBarLayout">
+
                 <include
                     android:id="@+id/toolbar"
                     layout="@layout/toolbar"/>
-            </android.support.design.widget.AppBarLayout>
 
-            <com.parseapp.vthokiefinder.widgets.SlidingTabLayout
-                android:id="@+id/tabs"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/appBarLayout"
-                android:background="?attr/colorPrimary"/>
-
-            <android.support.v4.view.ViewPager
-                android:id="@+id/viewPager"
+            <FrameLayout
+                android:id="@+id/fragmentContainer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_below="@id/tabs"/>
+                android:layout_below="@id/toolbar"/>
+
         </RelativeLayout>
 
         <android.support.design.widget.FloatingActionButton

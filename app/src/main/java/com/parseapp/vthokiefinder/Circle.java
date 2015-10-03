@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import com.parse.ParseClassName;
+
 import java.util.ArrayList;
 
 /**

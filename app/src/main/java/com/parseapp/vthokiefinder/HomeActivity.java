@@ -7,10 +7,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
@@ -36,15 +39,14 @@ import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
  * an interface to access the main features of HokieFinder.
  *
  * @author Steven Briggs
- * @version 2015.09.15
+ * @version 2015.10.03
  */
 public class HomeActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
+        CircleListFragment.Callbacks,
         CircleMapFragment.Callbacks {
 
-    private static final int NUM_OF_TABS = 3;
-    private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "MAP" };
     private static final int BROADCAST_NOTIFICATION_ID = 0;
     private static final int REQUEST_RESOLVE_ERROR = 1001;
     private static final String DIALOG_ERROR = "dialog_error";
@@ -58,10 +60,10 @@ public class HomeActivity extends AppCompatActivity implements
     private boolean mIsBroadcasting;
 
     private DrawerLayout mDrawerLayout;
-    private NavigationView mNavigationView;
-    private SlidingTabLayout mTabs;
-    private ViewPager mPager;
-    private FloatingActionButton mFab;
+    private CoordinatorLayout mCoordinatorLayout;
+
+    private HomeFragment mHomeFragment;
+    private CircleDetailFragment mCircleDetailFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,12 +73,51 @@ public class HomeActivity extends AppCompatActivity implements
         mIsResolvingError = savedInstanceState != null
                 && savedInstanceState.getBoolean(STATE_RESOLVING_ERROR, false);
 
+        FragmentManager fm = getSupportFragmentManager();
+
+        // Create new Fragments for the Activity
+        if (savedInstanceState == null) {
+            mHomeFragment = HomeFragment.newInstance();
+            fm.beginTransaction()
+                    .add(R.id.fragmentContainer, mHomeFragment, HomeFragment.TAG)
+                    .commit();
+        }
+
+        // Retrieve existing Fragments
+        else {
+            mHomeFragment = (HomeFragment) fm.findFragmentByTag(HomeFragment.TAG);
+            mCircleDetailFragment = (CircleDetailFragment) fm.findFragmentByTag(CircleDetailFragment.TAG);
+        }
+
+        // Initialize all elements of the Activity
+        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
         buildGoogleApiClient();
         initializeBroadcast();
         initializeSupportActionBar();
         initializeDrawerLayout();
-        initializeTabs();
         initializeFloatingActionButton();
+    }
+
+    /**
+     * Replace the existing fragment with the specified one
+     *
+     * @param fragment the fragment to be shown
+     * @param tag the fragment's associated tag
+     */
+    private void replaceFragment(Fragment fragment, String tag) {
+        // LoginFragment is the lowest level fragment in the Activity, so only need to pop a
+        // fragment off to return to it
+        if (tag.equals(HomeFragment.TAG)) {
+            getSupportFragmentManager().popBackStack();
+        }
+
+        // Just replace the existing fragment
+        else {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, fragment, tag)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     @Override
@@ -174,6 +215,12 @@ public class HomeActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onCircleClicked(Circle circle, boolean isMember) {
+        mCircleDetailFragment = CircleDetailFragment.newInstance(circle, isMember);
+        replaceFragment(mCircleDetailFragment, CircleDetailFragment.TAG);
+    }
+
+    @Override
     public GoogleApiClient requestGoogleApi() {
         return mGoogleApiClient;
     }
@@ -188,7 +235,7 @@ public class HomeActivity extends AppCompatActivity implements
             issueNotification();
             mIsBroadcasting = true;
 
-            Snackbar.make(mPager, "Public broadcast on!", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(mCoordinatorLayout, "Public broadcast on!", Snackbar.LENGTH_LONG).show();
         }
 
         // Switch broadcasting off and cancel the ongoing notification
@@ -198,7 +245,7 @@ public class HomeActivity extends AppCompatActivity implements
             manager.cancel(BROADCAST_NOTIFICATION_ID);
             mIsBroadcasting = false;
 
-            Snackbar.make(mPager, "Public broadcast off!", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(mCoordinatorLayout, "Public broadcast off!", Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -213,7 +260,7 @@ public class HomeActivity extends AppCompatActivity implements
         PendingIntent openHomeIntent = PendingIntent.getActivity(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Build a sticky notificationß
+        // Build a sticky notification to inform the user they are broadcasting
         Notification notification = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_stat_fighting_gobbler)
                 .setContentTitle("Location broadcast")
@@ -282,7 +329,7 @@ public class HomeActivity extends AppCompatActivity implements
      */
     private void initializeDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        mNavigationView = (NavigationView) findViewById(R.id.navigationView);
+        NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigationView);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -293,31 +340,14 @@ public class HomeActivity extends AppCompatActivity implements
     }
 
     /**
-     * Setup tabular navigation for this screen
-     */
-    private void initializeTabs() {
-        mPager = (ViewPager) findViewById(R.id.viewPager);
-        mPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(), TAB_TITLES, NUM_OF_TABS));
-        mTabs = (SlidingTabLayout) findViewById(R.id.tabs);
-        mTabs.setDistributeEvenly(true);
-        mTabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
-            @Override
-            public int getIndicatorColor(int position) {
-                return R.color.tabs_scroll_color;
-            }
-        });
-        mTabs.setViewPager(mPager);
-    }
-
-    /**
      * Setup the FloatingActionButton to transition to a "Create Circle" screen
      */
     private void initializeFloatingActionButton() {
-        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Snackbar.make(mPager, "Clicked FAB!", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(mCoordinatorLayout, "Clicked FAB!", Snackbar.LENGTH_SHORT).show();
             }
         });
     }

@@ -3,10 +3,10 @@ package com.parseapp.vthokiefinder;
 import android.app.Activity;
 import android.content.Context;
 import android.view.View;
+import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.ParseException;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -59,20 +59,25 @@ public class MyCirclesFragment extends CircleListFragment {
 
     @Override
     protected void refreshCircles() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
-        query.whereEqualTo("user", ParseUser.getCurrentUser());
-        query.include("circle");
-        query.findInBackground(new FindCallback<ParseObject>() {
+        ParseQuery<UserCircle> query = UserCircle.getQuery();
+        query.whereEqualTo("user", ParseUser.getCurrentUser()).include("circle");
+        query.findInBackground(new FindCallback<UserCircle>() {
             @Override
-            public void done(List<ParseObject> userCircles, ParseException e) {
-                getCircles().clear();
+            public void done(List<UserCircle> userCircles, ParseException e) {
+                if (e == null) {
+                    getCircles().clear();
 
-                for (ParseObject uc : userCircles) {
-                    ParseObject circle = uc.getParseObject("circle");
-                    getCircles().add(new Circle(circle.getObjectId(), circle.getString("name")));
+                    for (UserCircle uc : userCircles) {
+                        getCircles().add(uc.getCircle());
+                    }
+
+                    getRecyclerView().getAdapter().notifyDataSetChanged();
                 }
 
-                getRecyclerView().getAdapter().notifyDataSetChanged();
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+
                 stopRefresh();
             }
         });

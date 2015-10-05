@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -37,6 +38,7 @@ public class CircleDetailFragment extends Fragment {
     private static final String IS_MEMBER_KEY = "isMember";
 
     private Circle mCircle;
+    private ArrayList<ParseUser> mMembers;
     private RecyclerView mRecyclerView;
     private Button mActionButton;
 
@@ -60,8 +62,6 @@ public class CircleDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle args = getArguments();
-        mCircle = new Circle(args.getString(CIRCLE_ID_KEY), args.getString(CIRCLE_NAME_KEY));
     }
 
     @Nullable
@@ -69,15 +69,26 @@ public class CircleDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_circle_detail, container, false);
 
+        Bundle args = getArguments();
+        ParseQuery<Circle> query = new ParseQuery<Circle>("Circle");
+
+        try {
+            mCircle = query.get(args.getString(CIRCLE_ID_KEY));
+        }
+
+        catch (ParseException e) {
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+
         CollapsingToolbarLayout toolbarLayout = (CollapsingToolbarLayout) view.findViewById(R.id.collapsingToolbarLayout);
         toolbarLayout.setTitle(mCircle.getName());
 
-        mCircle.setMembers(getCircleMembers());
+        mMembers = getMembers();
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
         LinearLayoutManager manager = new LinearLayoutManager(getContext());
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new MemberAdapter(mCircle.getMembers()));
+        mRecyclerView.setAdapter(new MemberAdapter(mMembers));
 
         mActionButton = (Button) view.findViewById(R.id.action);
         initializeActionButton(getArguments().getBoolean(IS_MEMBER_KEY));
@@ -90,20 +101,20 @@ public class CircleDetailFragment extends Fragment {
      *
      * @return a list of all members within the Circle
      */
-    private ArrayList<String> getCircleMembers() {
-        final ArrayList<String> members = new ArrayList<String>();
+    private ArrayList<ParseUser> getMembers() {
+        final ArrayList<ParseUser> members = new ArrayList<ParseUser>();
 
         // Get all of the members of the Circle
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
-        ParseObject circle = ParseObject.createWithoutData("Circle", mCircle.getObjectId());
-        query.whereEqualTo("circle", circle);
-        query.include("user");
-        query.findInBackground(new FindCallback<ParseObject>() {
+        // TODO: Make sure this query still works
+        ParseQuery<UserCircle> query = UserCircle.getQuery();
+        //ParseObject circle = ParseObject.createWithoutData("Circle", mCircle.getObjectId());
+        query.whereEqualTo("circle", mCircle).include("user");
+        query.findInBackground(new FindCallback<UserCircle>() {
             @Override
-            public void done(List<ParseObject> userCircles, ParseException e) {
+            public void done(List<UserCircle> userCircles, ParseException e) {
                 if (e == null) {
-                    for (ParseObject uc : userCircles) {
-                        members.add(uc.getParseObject("user").getString("username"));
+                    for (UserCircle uc : userCircles) {
+                        members.add(uc.getParseUser("user"));
                     }
 
                     mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -151,9 +162,12 @@ public class CircleDetailFragment extends Fragment {
     private void joinCircle() {
 
         // Create a UserCircle object to represent the new relationship
-        ParseObject userCircle = new ParseObject("UserCircle");
+        // TODO: Make sure this still works
+        ParseObject userCircle = ParseObject.create(UserCircle.class);
         userCircle.put("user", ParseUser.getCurrentUser());
-        userCircle.put("circle", ParseObject.createWithoutData("Circle", mCircle.getObjectId()));
+        userCircle.put("circle", mCircle);
+        userCircle.put("isBroadcasting", false);
+        userCircle.put("pending", false);
 
         // Save the UserCircle object to the Parse backend
         userCircle.saveInBackground(new SaveCallback() {
@@ -162,7 +176,7 @@ public class CircleDetailFragment extends Fragment {
 
                 // Success! Let's inform the user they have joined
                 if (e == null) {
-                    mCircle.getMembers().add(ParseUser.getCurrentUser().getUsername());
+                    mMembers.add(ParseUser.getCurrentUser());
                     mRecyclerView.getAdapter().notifyDataSetChanged();
                     initializeActionButton(true);
                     Toast.makeText(getContext(), "Successfully joined!", Toast.LENGTH_LONG).show();
@@ -180,15 +194,16 @@ public class CircleDetailFragment extends Fragment {
      * Remove the current user as a member from the circle
      */
     private void leaveCircle() {
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("UserCircle");
+        // TODO: Make sure this query still works
+        ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("user", ParseUser.getCurrentUser());
-        query.whereEqualTo("circle", ParseObject.createWithoutData("Circle", mCircle.getObjectId()));
+        query.whereEqualTo("circle", mCircle);
 
-        query.findInBackground(new FindCallback<ParseObject>() {
+        query.findInBackground(new FindCallback<UserCircle>() {
             @Override
-            public void done(List<ParseObject> userCircles, ParseException e) {
+            public void done(List<UserCircle> userCircles, ParseException e) {
 
-                // Success! Let's try to remove the current user to the circle
+                // Success! Let's try to remove the current user from the circle
                 if (e == null) {
 
                     try {
@@ -202,7 +217,7 @@ public class CircleDetailFragment extends Fragment {
                     }
 
                     // Update the list of current users for the circle
-                    mCircle.getMembers().remove(ParseUser.getCurrentUser().getUsername());
+                    mMembers.remove(ParseUser.getCurrentUser());
                     mRecyclerView.getAdapter().notifyDataSetChanged();
                     initializeActionButton(false);
                     Toast.makeText(getContext(), "Successfully left!", Toast.LENGTH_LONG).show();

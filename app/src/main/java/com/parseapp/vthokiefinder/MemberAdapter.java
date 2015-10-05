@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.parse.ParseUser;
+
 import java.util.List;
 
 /**
@@ -16,14 +18,14 @@ import java.util.List;
  */
 public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder> {
 
-    private List<String> mMembers;
+    private List<ParseUser> mMembers;
 
     /**
      * Create a new MemberAdapter object.
      *
      * @param members the users to be displayed
      */
-    public MemberAdapter(List<String> members) {
+    public MemberAdapter(List<ParseUser> members) {
         mMembers = members;
     }
 
@@ -35,7 +37,7 @@ public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(MemberAdapter.ViewHolder holder, int position) {
-        holder.mUsername.setText(mMembers.get(position));
+        holder.mUsername.setText(mMembers.get(position).getString("username"));
     }
 
     @Override

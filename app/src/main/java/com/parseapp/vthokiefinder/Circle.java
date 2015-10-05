@@ -1,8 +1,10 @@
 package com.parseapp.vthokiefinder;
 
 import com.parse.ParseClassName;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 
-import java.util.ArrayList;
 
 /**
  * A POJO representing a HokieFinder Circle
@@ -10,38 +12,38 @@ import java.util.ArrayList;
  * @author Steven Briggs
  * @version 2015.09.16
  */
-public class Circle {
-    private String mObjectId;
-    private String mName;
-    private ArrayList<String> mMembers;
+@ParseClassName("Circle")
+public class Circle extends ParseObject {
 
-    public Circle(String objectId, String name) {
-        mObjectId = objectId;
-        mName = name;
-        mMembers = new ArrayList<String>();
-    }
-
-    public String getObjectId() {
-        return mObjectId;
-    }
-
-    public void setObjectId(String mObjectId) {
-        this.mObjectId = mObjectId;
+    public Circle() {
+        // Default constructor is required
     }
 
     public String getName() {
-        return mName;
+        return getString("name");
     }
 
-    public void setName(String mName) {
-        this.mName = mName;
+    public void setName(String name) {
+        put("name", name);
     }
 
-    public ArrayList<String> getMembers() {
-        return mMembers;
+    public String getDescription() {
+        return getString("description");
     }
 
-    public void setMembers(ArrayList<String> members) {
-        mMembers = members;
+    public void setDescription(String description) {
+        put("description", description);
+    }
+
+    public ParseFile getIcon() {
+        return getParseFile("icon");
+    }
+
+    public void setIcon(ParseFile icon) {
+        put("icon", icon);
+    }
+
+    public static ParseQuery<Circle> getQuery() {
+        return new ParseQuery<Circle>(Circle.class);
     }
 }

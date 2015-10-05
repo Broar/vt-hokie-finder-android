@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.app.Activity;
 import android.content.Context;
 import android.view.View;
+import android.widget.Toast;
 
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
@@ -62,16 +63,23 @@ public class FindCirclesFragment extends CircleListFragment {
     protected void refreshCircles() {
         HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("userId", ParseUser.getCurrentUser().getObjectId());
-        ParseCloud.callFunctionInBackground("getCirclesToJoin", params, new FunctionCallback<List<ParseObject>>() {
+        ParseCloud.callFunctionInBackground("getCirclesToJoin", params, new FunctionCallback<List<Circle>>() {
             @Override
-            public void done(List<ParseObject> circles, ParseException e) {
-                getCircles().clear();
+            public void done(List<Circle> circles, ParseException e) {
+                if (e == null) {
+                    getCircles().clear();
 
-                for (ParseObject c : circles) {
-                    getCircles().add(new Circle(c.getObjectId(), c.getString("name")));
+                    for (Circle c : circles) {
+                        getCircles().add(c);
+                    }
+
+                    getRecyclerView().getAdapter().notifyDataSetChanged();
                 }
 
-                getRecyclerView().getAdapter().notifyDataSetChanged();
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+
                 stopRefresh();
             }
         });

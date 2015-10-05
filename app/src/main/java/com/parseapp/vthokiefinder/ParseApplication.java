@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.app.Application;
 
 import com.parse.Parse;
+import com.parse.ParseObject;
 
 /**
  * Application subclass required by Parse framework to initialize global state
@@ -16,6 +17,8 @@ public class ParseApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Parse.enableLocalDatastore(this);
+        ParseObject.registerSubclass(Circle.class);
+        ParseObject.registerSubclass(UserCircle.class);
         Parse.initialize(this, "Bugsei9yjtBNjH51JSerSEniB895r1zLA3NwFDUO", "ilswrJMAc26LQCRptGaMn5XiH5uVTIHrkfLP82W3");
     }
 }

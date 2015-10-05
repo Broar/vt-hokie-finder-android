@@ -105,9 +105,7 @@ public class CircleDetailFragment extends Fragment {
         final ArrayList<ParseUser> members = new ArrayList<ParseUser>();
 
         // Get all of the members of the Circle
-        // TODO: Make sure this query still works
         ParseQuery<UserCircle> query = UserCircle.getQuery();
-        //ParseObject circle = ParseObject.createWithoutData("Circle", mCircle.getObjectId());
         query.whereEqualTo("circle", mCircle).include("user");
         query.findInBackground(new FindCallback<UserCircle>() {
             @Override
@@ -162,7 +160,6 @@ public class CircleDetailFragment extends Fragment {
     private void joinCircle() {
 
         // Create a UserCircle object to represent the new relationship
-        // TODO: Make sure this still works
         ParseObject userCircle = ParseObject.create(UserCircle.class);
         userCircle.put("user", ParseUser.getCurrentUser());
         userCircle.put("circle", mCircle);
@@ -194,7 +191,6 @@ public class CircleDetailFragment extends Fragment {
      * Remove the current user as a member from the circle
      */
     private void leaveCircle() {
-        // TODO: Make sure this query still works
         ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("user", ParseUser.getCurrentUser());
         query.whereEqualTo("circle", mCircle);

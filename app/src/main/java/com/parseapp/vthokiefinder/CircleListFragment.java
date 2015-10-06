@@ -33,9 +33,6 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
     protected SwipeRefreshLayout mSwipeContainer;
     protected ArrayList<Circle> mCircles;
 
-    public interface Callbacks {
-        void onCircleClicked(Circle circle, boolean isMember);
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,6 +83,21 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
      * Refresh the list of circles
      */
     protected abstract void refreshCircles();
+
+    /**
+     * Open a detailed view of the circle specified by circleId
+     *
+     * @param circleId the id of the circle to be viewed
+     * @param isMember determines whether the current user is member of the circle
+     */
+    protected void openCircleDetails(String circleId, boolean isMember) {
+        Intent intent = new Intent(getContext(), CircleDetailActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(CircleDetailActivity.CIRCLE_ID_KEY, circleId);
+        bundle.putBoolean(CircleDetailActivity.IS_MEMBER_KEY, isMember);
+        intent.putExtras(bundle);
+        getActivity().startActivity(intent);
+    }
 
     protected RecyclerView getRecyclerView() {
         return mRecyclerView;

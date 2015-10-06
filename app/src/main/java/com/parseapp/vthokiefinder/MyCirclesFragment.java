@@ -22,7 +22,6 @@ public class MyCirclesFragment extends CircleListFragment {
 
     public static final String TAG = MyCirclesFragment.class.getSimpleName();
 
-    private Callbacks mListener;
 
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
@@ -34,25 +33,11 @@ public class MyCirclesFragment extends CircleListFragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        Activity activity = (Activity) context;
-
-        try {
-            mListener = (Callbacks) activity;
-        }
-
-        catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement Callbacks");
-        }
-    }
-
-    @Override
     protected void setCircleAdapter() {
         getRecyclerView().setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                mListener.onCircleClicked(getCircles().get(position), true);
+                openCircleDetails(getCircles().get(position).getObjectId(), true);
             }
         }));
     }

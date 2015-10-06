@@ -17,7 +17,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -32,7 +31,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.parse.ParseUser;
-import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 
 /**
  * An activity that acts as the applications "homepage". Provides the user with
@@ -44,7 +42,6 @@ import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 public class HomeActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        CircleListFragment.Callbacks,
         CircleMapFragment.Callbacks {
 
     private static final int BROADCAST_NOTIFICATION_ID = 0;
@@ -63,7 +60,6 @@ public class HomeActivity extends AppCompatActivity implements
     private CoordinatorLayout mCoordinatorLayout;
 
     private HomeFragment mHomeFragment;
-    private CircleDetailFragment mCircleDetailFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +82,6 @@ public class HomeActivity extends AppCompatActivity implements
         // Retrieve existing Fragments
         else {
             mHomeFragment = (HomeFragment) fm.findFragmentByTag(HomeFragment.TAG);
-            mCircleDetailFragment = (CircleDetailFragment) fm.findFragmentByTag(CircleDetailFragment.TAG);
         }
 
         // Initialize all elements of the Activity
@@ -212,12 +207,6 @@ public class HomeActivity extends AppCompatActivity implements
             showErrorDialog(result.getErrorCode());
             mIsResolvingError = true;
         }
-    }
-
-    @Override
-    public void onCircleClicked(Circle circle, boolean isMember) {
-        mCircleDetailFragment = CircleDetailFragment.newInstance(circle, isMember);
-        replaceFragment(mCircleDetailFragment, CircleDetailFragment.TAG);
     }
 
     @Override

@@ -31,12 +31,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:freezesText="true"
+            android:maxLines="1"
+            android:nextFocusDown="@+id/password"
             android:id="@+id/username"
             android:hint="Username"/>
         <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:freezesText="true"
+            android:nextFocusDown="@null"
             android:id="@+id/password"
             android:inputType="textWebPassword"
             android:hint="Password"/>

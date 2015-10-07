@@ -336,7 +336,7 @@ public class HomeActivity extends AppCompatActivity implements
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Snackbar.make(mCoordinatorLayout, "Clicked FAB!", Snackbar.LENGTH_SHORT).show();
+                startActivity(new Intent(HomeActivity.this, CreateCircleActivity.class));
             }
         });
     }

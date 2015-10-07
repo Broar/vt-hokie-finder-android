@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/circleIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:maxHeight="240dp"
+        android:maxWidth="180dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/fighting_gobblers_medium" />
+
+    <EditText
+        android:id="@+id/circleName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:freezesText="true"
+        android:maxLines="1"
+        android:nextFocusDown="@+id/circleDescription"
+        android:hint="Name"/>
+
+    <EditText
+        android:id="@+id/circleDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:maxLines="2"
+        android:maxLength="128"
+        android:nextFocusDown="@null"
+        android:hint="Description"/>
+
+    <Button
+        android:id="@+id/inviteFriends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Invite Friends"/>
+
+    <Button
+        android:id="@+id/saveCircle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Save"/>
+
+</LinearLayout>

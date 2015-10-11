@@ -48,4 +48,11 @@
         android:layout_height="match_parent"
         android:layout_gravity="start" />
 
+    <FrameLayout
+        android:id="@+id/circleSelect"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="#ffffff" />
+
 </android.support.v4.widget.DrawerLayout>

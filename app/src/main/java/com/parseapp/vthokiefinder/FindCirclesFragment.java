@@ -2,7 +2,10 @@ package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.parse.FunctionCallback;
@@ -35,13 +38,19 @@ public class FindCirclesFragment extends CircleListFragment {
     }
 
     @Override
-    protected void setCircleAdapter() {
-        getRecyclerView().setAdapter(new CircleAdapter(mCircles, new CircleAdapter.OnItemClickListener() {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflateFragment(R.layout.fragment_circles_list, inflater, container);
+
+        getRecyclerView().setAdapter(new CircleAdapter(getCircles(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
                 openCircleDetails(getCircles().get(position).getObjectId(), false);
             }
         }));
+
+        refreshCircles();
+
+        return view;
     }
 
     @Override
@@ -58,7 +67,9 @@ public class FindCirclesFragment extends CircleListFragment {
                         getCircles().add(c);
                     }
 
-                    getRecyclerView().getAdapter().notifyDataSetChanged();
+                    if (getRecyclerView().getAdapter() != null) {
+                        getRecyclerView().getAdapter().notifyDataSetChanged();
+                    }
                 }
 
                 else {

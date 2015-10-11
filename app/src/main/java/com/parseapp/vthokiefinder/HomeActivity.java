@@ -16,7 +16,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -24,6 +23,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -56,10 +56,14 @@ public class HomeActivity extends AppCompatActivity implements
     private LocationRequest mLocationRequest;
     private boolean mIsBroadcasting;
 
-    private DrawerLayout mDrawerLayout;
     private CoordinatorLayout mCoordinatorLayout;
+    private FloatingActionButton mFab;
+    private DrawerLayout mDrawerLayout;
+    private NavigationView mNavigationView;
+    private FrameLayout mCircleSelect;
 
     private HomeFragment mHomeFragment;
+    private CircleBroadcastFragment mCircleBroadcastFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,11 +81,18 @@ public class HomeActivity extends AppCompatActivity implements
             fm.beginTransaction()
                     .add(R.id.fragmentContainer, mHomeFragment, HomeFragment.TAG)
                     .commit();
+
+            mCircleBroadcastFragment = CircleBroadcastFragment.newInstance();
+            fm.beginTransaction()
+                    .add(R.id.circleSelect, mCircleBroadcastFragment, CircleBroadcastFragment.TAG)
+                    .commit();
         }
 
         // Retrieve existing Fragments
         else {
             mHomeFragment = (HomeFragment) fm.findFragmentByTag(HomeFragment.TAG);
+            mCircleBroadcastFragment =
+                    (CircleBroadcastFragment) fm.findFragmentByTag(CircleBroadcastFragment.TAG);
         }
 
         // Initialize all elements of the Activity
@@ -126,7 +137,18 @@ public class HomeActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case android.R.id.home:
-                mDrawerLayout.openDrawer(GravityCompat.START);
+                if (mDrawerLayout.isDrawerOpen(mCircleSelect)) {
+                    mDrawerLayout.closeDrawer(mCircleSelect);
+                }
+
+                mDrawerLayout.openDrawer(mNavigationView);
+                return true;
+            case R.id.action_show_circles:
+                if (mDrawerLayout.isDrawerOpen(mNavigationView)) {
+                    mDrawerLayout.closeDrawer(mNavigationView);
+                }
+
+                mDrawerLayout.openDrawer(mCircleSelect);
                 return true;
             case R.id.action_broadcast:
                 broadcastLocation();
@@ -272,8 +294,7 @@ public class HomeActivity extends AppCompatActivity implements
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mBroadcastIntent);
         }
 
-        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
-        manager.cancel(BROADCAST_NOTIFICATION_ID);
+        NotificationManagerCompat.from(this).cancel(BROADCAST_NOTIFICATION_ID);
         ParseUser.logOut();
         startActivity(new Intent(this, LoginActivity.class));
         finish();
@@ -318,7 +339,8 @@ public class HomeActivity extends AppCompatActivity implements
      */
     private void initializeDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        NavigationView mNavigationView = (NavigationView) findViewById(R.id.navigationView);
+        mCircleSelect = (FrameLayout) findViewById(R.id.circleSelect);
+        mNavigationView = (NavigationView) findViewById(R.id.navigationView);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -332,7 +354,7 @@ public class HomeActivity extends AppCompatActivity implements
      * Setup the FloatingActionButton to transition to a "Create Circle" screen
      */
     private void initializeFloatingActionButton() {
-        FloatingActionButton mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

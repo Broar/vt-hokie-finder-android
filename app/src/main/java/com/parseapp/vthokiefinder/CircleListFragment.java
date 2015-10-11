@@ -22,17 +22,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An abstract fragment that displays Circles in a list
+ * An abstract fragment that displays Circles in a refreshable list
  *
  * @author Steven Briggs
- * @version 2015.
+ * @version 2015.10.08
  */
 public abstract class CircleListFragment extends Fragment implements OnRefreshListener {
 
-    protected RecyclerView mRecyclerView;
-    protected SwipeRefreshLayout mSwipeContainer;
-    protected ArrayList<Circle> mCircles;
+    public static final String TAG = CircleListFragment.class.getSimpleName();
 
+    protected RecyclerView mRecyclerView;
+    protected ArrayList<Circle> mCircles;
+    private SwipeRefreshLayout mSwipeContainer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -40,9 +41,8 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
         mCircles = new ArrayList<Circle>();
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_circles_list, container, false);
+    protected View inflateFragment(int resId, LayoutInflater inflater, ViewGroup container) {
+        View view = inflater.inflate(resId, container, false);
 
         // Initialize the SwipeRefreshLayout
         mSwipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
@@ -54,9 +54,8 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
-        setCircleAdapter();
-        refreshCircles();
 
+        setHasOptionsMenu(true);
         return view;
     }
 
@@ -66,6 +65,11 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
     }
 
     /**
+     * Refresh the list of circles
+     */
+    protected abstract void refreshCircles();
+
+    /**
      * Stop the refresh animation if necessary
      */
     protected void stopRefresh() {
@@ -73,16 +77,6 @@ public abstract class CircleListFragment extends Fragment implements OnRefreshLi
             mSwipeContainer.setRefreshing(false);
         }
     }
-
-    /**
-     * Set the CircleAdapter for the RecyclerView
-     */
-    protected abstract void setCircleAdapter();
-
-    /**
-     * Refresh the list of circles
-     */
-    protected abstract void refreshCircles();
 
     /**
      * Open a detailed view of the circle specified by circleId

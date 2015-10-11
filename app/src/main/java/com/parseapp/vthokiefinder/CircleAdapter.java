@@ -27,6 +27,7 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
      * Create a new CircleAdapter object.
      *
      * @param circles a list of Circles
+     * @param listener the item listener
      */
     public CircleAdapter(List<Circle> circles, OnItemClickListener listener) {
         mCircles = circles;

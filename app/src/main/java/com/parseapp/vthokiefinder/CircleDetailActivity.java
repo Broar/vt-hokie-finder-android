@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
+import com.parse.FunctionCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -21,6 +23,7 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -46,6 +49,7 @@ public class CircleDetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_circle_detail);
+        mMembers = new ArrayList<ParseUser>();
 
         // Retrieve the requested circle from the Parse backend
         try {
@@ -173,25 +177,39 @@ public class CircleDetailActivity extends AppCompatActivity {
 
                 // Success! Let's try to remove the current user from the circle
                 if (e == null) {
-
-                    try {
-                        userCircles.get(0).delete();
-                    }
-
-                    catch (ParseException e1) {
-                        // Display an error message and exit out of the function early
-                        Toast.makeText(CircleDetailActivity.this, e1.getMessage(), Toast.LENGTH_LONG).show();
-                        return;
-                    }
-
-                    // Update the list of current users for the circle
-                    mMembers.remove(ParseUser.getCurrentUser());
-                    mRecyclerView.getAdapter().notifyDataSetChanged();
-                    initializeCircleAction(false);
-                    Toast.makeText(CircleDetailActivity.this, "Successfully left!", Toast.LENGTH_LONG).show();
+                    callDeleteUserFromCircle();
+                    finish();
                 }
 
                 // Failure! Let's let the user know about what went wrong
+                else {
+                    Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Call the "deleteUserFromCircle()" function on the Parse backend
+     */
+    private void callDeleteUserFromCircle() {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("circleId", mCircle.getObjectId());
+        params.put("userId", ParseUser.getCurrentUser().getObjectId());
+
+        ParseCloud.callFunctionInBackground("removeUserFromCircle", params, new FunctionCallback<Boolean>() {
+            @Override
+            public void done(Boolean isCircleDeleted, ParseException e) {
+                if (e == null && isCircleDeleted) {
+                    Toast.makeText(CircleDetailActivity.this,
+                            "No members remaining. Circle deleted!", Toast.LENGTH_LONG).show();
+                }
+
+                else if (e == null && !isCircleDeleted) {
+                    Toast.makeText(CircleDetailActivity.this,
+                            "Successfully left circle!", Toast.LENGTH_LONG).show();
+                }
+
                 else {
                     Toast.makeText(CircleDetailActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
                 }

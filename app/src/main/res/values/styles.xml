@@ -17,4 +17,16 @@
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
+
+    <!-- Simple divider between Views -->
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@android:color/darker_gray</item>
+    </style>
+
+    <!-- SwitchCompat style -->
+    <style name="SwitchCompatStyle">
+        <item name="colorControlActivated">@color/primary</item>
+    </style>
 </resources>

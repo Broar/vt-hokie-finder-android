@@ -18,6 +18,33 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
+    <!-- ParseLoginUI style overrides -->
+    <style name="ParseLoginUI.Button" parent="@style/Theme.AppCompat.Light">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="ParseLoginUI.Button.ThirdPartyLogin" parent="@style/Theme.AppCompat.Light">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">24dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="ParseLoginUI.TextView" parent="@style/Base.Theme.HokieFinderApp">
+        <item name="android:textColor">@color/primary_text</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="ParseLoginUI.EditText" parent="@style/Base.Theme.HokieFinderApp">
+        <item name="android:singleLine">true</item>
+        <item name="colorControlActivated">@color/accent</item>
+        <item name="colorControlHighlight">@color/accent</item>
+    </style>
+
     <!-- Simple divider between Views -->
     <style name="Divider">
         <item name="android:layout_width">match_parent</item>

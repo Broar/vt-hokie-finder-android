@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.app.Application;
 
 import com.parse.Parse;
+import com.parse.ParseFacebookUtils;
 import com.parse.ParseObject;
 
 /**
@@ -20,5 +21,6 @@ public class ParseApplication extends Application {
         ParseObject.registerSubclass(Circle.class);
         ParseObject.registerSubclass(UserCircle.class);
         Parse.initialize(this, "Bugsei9yjtBNjH51JSerSEniB895r1zLA3NwFDUO", "ilswrJMAc26LQCRptGaMn5XiH5uVTIHrkfLP82W3");
+        ParseFacebookUtils.initialize(this);
     }
 }

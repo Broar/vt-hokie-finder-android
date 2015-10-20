@@ -330,7 +330,7 @@ public class HomeActivity extends AppCompatActivity implements
     private void initializeSupportActionBar() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         assert getSupportActionBar() != null;
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_48dp);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 

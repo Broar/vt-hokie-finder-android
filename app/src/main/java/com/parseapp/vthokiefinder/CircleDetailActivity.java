@@ -1,6 +1,9 @@
 package com.parseapp.vthokiefinder;
 
+
+import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
@@ -42,7 +44,7 @@ public class CircleDetailActivity extends AppCompatActivity {
     private ArrayList<ParseUser> mMembers;
 
     private RecyclerView mRecyclerView;
-    private Button mCircleAction;
+    private FloatingActionButton mFab;
 
 
     @Override
@@ -68,7 +70,7 @@ public class CircleDetailActivity extends AppCompatActivity {
             getSupportActionBar().setTitle(mCircle.getName());
         }
 
-        mCircleAction = (Button) findViewById(R.id.circleAction);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
         initializeCircleAction(getIntent().getBooleanExtra(IS_MEMBER_KEY, false));
         initializeRecyclerView();
     }
@@ -97,24 +99,52 @@ public class CircleDetailActivity extends AppCompatActivity {
      * @param isMember true if the user is member of the circle, false if not
      */
     private void initializeCircleAction(boolean isMember) {
-        if (isMember) {
-            mCircleAction.setText("LEAVE");
-            mCircleAction.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    leaveCircle();
-                }
-            });
+
+        // Determine if the FAB's icon should change from join to leave
+        // getDrawable() is only available on API 21+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (isMember) {
+                mFab.setImageDrawable(getDrawable(R.drawable.ic_remove_white_48dp));
+                mFab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        leaveCircle();
+                    }
+                });
+            }
+
+            else {
+                mFab.setImageDrawable(getDrawable(R.drawable.ic_add_white_48dp));
+                mFab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        joinCircle();
+                    }
+                });
+            }
         }
 
+        // Provide a deprecated call to getDrawable() for APIs less than 21
         else {
-            mCircleAction.setText("JOIN");
-            mCircleAction.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    joinCircle();
-                }
-            });
+            if (isMember) {
+                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_remove_white_48dp));
+                mFab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        leaveCircle();
+                    }
+                });
+            }
+
+            else {
+                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_add_white_48dp));
+                mFab.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        joinCircle();
+                    }
+                });
+            }
         }
     }
 

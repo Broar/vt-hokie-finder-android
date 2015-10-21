@@ -16,20 +16,26 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.parse.Parse;
 import com.parse.ParseUser;
 
 /**
@@ -57,10 +63,8 @@ public class HomeActivity extends AppCompatActivity implements
     private boolean mIsBroadcasting;
 
     private CoordinatorLayout mCoordinatorLayout;
-    private FloatingActionButton mFab;
+    private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
-    private NavigationView mNavigationView;
-    private FrameLayout mCircleSelect;
 
     private HomeFragment mHomeFragment;
     private CircleBroadcastFragment mCircleBroadcastFragment;
@@ -136,29 +140,35 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            case android.R.id.home:
-                if (mDrawerLayout.isDrawerOpen(mCircleSelect)) {
-                    mDrawerLayout.closeDrawer(mCircleSelect);
-                }
-
-                mDrawerLayout.openDrawer(mNavigationView);
-                return true;
             case R.id.action_show_circles:
-                if (mDrawerLayout.isDrawerOpen(mNavigationView)) {
-                    mDrawerLayout.closeDrawer(mNavigationView);
+                if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    mDrawerLayout.closeDrawer(GravityCompat.START);
                 }
 
-                mDrawerLayout.openDrawer(mCircleSelect);
+                mDrawerLayout.openDrawer(GravityCompat.END);
                 return true;
+
             case R.id.action_broadcast:
                 broadcastLocation();
-                return true;
-            case R.id.action_logout:
-                logout();
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        }
+
+        else if (mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
+            mDrawerLayout.closeDrawer(GravityCompat.END);
+        }
+
+        else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -328,10 +338,8 @@ public class HomeActivity extends AppCompatActivity implements
      * Setup the SupportActionBar for this screen
      */
     private void initializeSupportActionBar() {
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        assert getSupportActionBar() != null;
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_48dp);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
     }
 
     /**
@@ -339,22 +347,56 @@ public class HomeActivity extends AppCompatActivity implements
      */
     private void initializeDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        mCircleSelect = (FrameLayout) findViewById(R.id.circleSelect);
-        mNavigationView = (NavigationView) findViewById(R.id.navigationView);
-        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                // Prevent hamburger icon from turning into a back arrow
+                super.onDrawerOpened(drawerView);
+                super.onDrawerSlide(drawerView, 0);
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                // Completely disable drawer animation
+                super.onDrawerSlide(drawerView, 0);
+            }
+        };
+
+        mDrawerLayout.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.navigationView);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
                 mDrawerLayout.closeDrawers();
+
+                switch (menuItem.getItemId()) {
+                    case R.id.drawer_settings:
+                        return true;
+
+                    case R.id.drawer_logout:
+                        logout();
+                        return true;
+                }
+
                 return true;
             }
         });
+
+        // Inflate the header and attach it to the drawer. The header displays user information
+        // similar to several other Google applications
+        RelativeLayout header = (RelativeLayout) getLayoutInflater().inflate(R.layout.header, navigationView, false);
+        ((TextView) header.findViewById(R.id.username)).setText(ParseUser.getCurrentUser().getUsername());
+        ((TextView) header.findViewById(R.id.email)).setText(ParseUser.getCurrentUser().getEmail());
+        navigationView.addHeaderView(header);
     }
 
     /**
      * Setup the FloatingActionButton to transition to a "Create Circle" screen
      */
     private void initializeFloatingActionButton() {
-        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

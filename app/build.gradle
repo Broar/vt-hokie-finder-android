@@ -55,4 +55,6 @@ dependencies {
 
     compile 'com.facebook.android:facebook-android-sdk:4.0.1'
     // compile files('libs/ParseFacebookUtilsV4-1.10.0.jar')
+
+    compile 'de.hdodenhof:circleimageview:2.0.0'
 }

@@ -5,6 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckedTextView;
+import android.widget.TextView;
+
+import com.franlopez.flipcheckbox.FlipCheckBox;
 
 import java.util.List;
 
@@ -43,7 +46,7 @@ public class CircleBroadcastAdapter extends RecyclerView.Adapter<CircleBroadcast
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.mBroadcastStatus.setText(mUserCircles.get(position).getCircle().getName());
+        holder.mCircleName.setText(mUserCircles.get(position).getCircle().getName());
         holder.mBroadcastStatus.setChecked(mUserCircles.get(position).isBroadcasting());
     }
 
@@ -55,7 +58,8 @@ public class CircleBroadcastAdapter extends RecyclerView.Adapter<CircleBroadcast
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private OnItemClickListener mListener;
-        private CheckedTextView mBroadcastStatus;
+        private FlipCheckBox mBroadcastStatus;
+        private TextView mCircleName;
 
         /**
          * Create a new ViewHolder object.
@@ -66,14 +70,15 @@ public class CircleBroadcastAdapter extends RecyclerView.Adapter<CircleBroadcast
         public ViewHolder(View itemView, OnItemClickListener listener) {
             super(itemView);
             mListener = listener;
-            mBroadcastStatus = (CheckedTextView) itemView.findViewById(R.id.broadcastStatus);
+            mBroadcastStatus = (FlipCheckBox) itemView.findViewById(R.id.broadcastStatus);
             mBroadcastStatus.setOnClickListener(this);
+            mCircleName = (TextView) itemView.findViewById(R.id.circleName);
         }
 
         @Override
         public void onClick(View v) {
-            if (mListener.isUserBroadcasting() && v.getId() == R.id.broadcastStatus) {
-                mBroadcastStatus.toggle();
+            if (v.getId() == R.id.broadcastStatus) {
+                mBroadcastStatus.switchChecked();
                 mListener.onItemClick(v, getLayoutPosition());
             }
         }

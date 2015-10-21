@@ -9,6 +9,8 @@
     <!-- Descriptions for navigation drawer actions and items -->
     <string name="drawer_open">Open</string>
     <string name="drawer_close">Close</string>
+    <string name="drawer_profile">Profile</string>
+    <string name="drawer_friends">Friends</string>
     <string name="drawer_settings">Settings</string>
     <string name="drawer_logout">Logout</string>
 

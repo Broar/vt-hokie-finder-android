@@ -365,6 +365,7 @@ public class HomeActivity extends AppCompatActivity implements
         mDrawerLayout.setDrawerListener(toggle);
         toggle.syncState();
 
+        // Create a listener to handle clicks on the drawer's menu
         NavigationView navigationView = (NavigationView) findViewById(R.id.navigationView);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -372,6 +373,12 @@ public class HomeActivity extends AppCompatActivity implements
                 mDrawerLayout.closeDrawers();
 
                 switch (menuItem.getItemId()) {
+                    case R.id.drawer_profile:
+                        return true;
+
+                    case R.id.drawer_friends:
+                        return true;
+
                     case R.id.drawer_settings:
                         return true;
 

@@ -52,6 +52,7 @@ dependencies {
     
     compile project(':ParseUI-Login')
     compile project(':ParseUI-Widget')
+    compile project(':flipCheckBox')
 
     compile 'com.facebook.android:facebook-android-sdk:4.0.1'
     // compile files('libs/ParseFacebookUtilsV4-1.10.0.jar')

@@ -1,6 +1,7 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +19,7 @@ public class CreateCircleActivity extends AppCompatActivity implements
         CreateCircleFragment.Callbacks {
 
     private CreateCircleFragment mCreateCircleFragment;
+    private BitmapHolderFragment mBitmapHolderFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,11 +41,17 @@ public class CreateCircleActivity extends AppCompatActivity implements
             fm.beginTransaction()
                     .add(R.id.fragmentContainer, mCreateCircleFragment, CreateCircleFragment.TAG)
                     .commit();
+
+            mBitmapHolderFragment = new BitmapHolderFragment();
+            fm.beginTransaction()
+                    .add(mBitmapHolderFragment, BitmapHolderFragment.TAG)
+                    .commit();
         }
 
         // Retrieve the existing fragment instances
         else {
             mCreateCircleFragment = (CreateCircleFragment) fm.findFragmentByTag(CreateCircleFragment.TAG);
+            mBitmapHolderFragment = (BitmapHolderFragment) fm.findFragmentByTag(BitmapHolderFragment.TAG);
         }
     }
 
@@ -62,6 +70,16 @@ public class CreateCircleActivity extends AppCompatActivity implements
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onIconBitmapSet(Bitmap bm) {
+        mBitmapHolderFragment.setIconBitmap(bm);
+    }
+
+    @Override
+    public Bitmap onIconBitmapRequested() {
+        return mBitmapHolderFragment.getIconBitmap();
     }
 
     @Override

@@ -2,6 +2,9 @@ package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,19 +13,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 
 /**
  * A fragment allowing the user to set the primary details of a new circle
  *
  * @author Steven Briggs
- * @version 2015.10.06
+ * @version 2015.10.22
  */
 public class CreateCircleFragment extends Fragment {
 
@@ -30,12 +38,15 @@ public class CreateCircleFragment extends Fragment {
 
     private Callbacks mListener;
 
+    private ImageView mCircleIcon;
     private EditText mCircleName;
     private EditText mCircleDescription;
     private Button mInviteFriends;
     private Button mSaveCircle;
 
     public interface Callbacks {
+        void onIconBitmapSet(Bitmap bm);
+        Bitmap onIconBitmapRequested();
         void onSaveSuccessful(Circle circle);
     }
 
@@ -68,9 +79,55 @@ public class CreateCircleFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_create_circle, container, false);
         mCircleName = (EditText) view.findViewById(R.id.circleName);
         mCircleDescription = (EditText) view.findViewById(R.id.circleDescription);
+        initializeIconPicker(view);
         initializeInviteFriends(view);
         initializeSave(view);
         return view;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK && requestCode == ImagePicker.PICK_IMAGE) {
+            Uri imageUri = data.getData();
+
+            // Change the icon to display the user's selected image
+            try {
+                Bitmap bm = ImagePicker.getBitmapFromUri(getContext(), imageUri);
+                mCircleIcon.setImageBitmap(bm);
+
+                // Remember to save the Bitmap, so that the user's image can be redisplayed
+                // upon returning from configuration changes
+                mListener.onIconBitmapSet(bm);
+            }
+
+            catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(getContext(), "Could not load image!", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    /**
+     * Setup the circle icon picker
+     *
+     * @param view the parent view of the image
+     */
+    private void initializeIconPicker(View view) {
+        mCircleIcon = (ImageView) view.findViewById(R.id.circleIcon);
+
+        // If the user already selected an image, then redisplay it
+        Bitmap bm = mListener.onIconBitmapRequested();
+        if (bm != null) {
+            mCircleIcon.setImageBitmap(bm);
+        }
+
+        mCircleIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(ImagePicker.getIntent(), ImagePicker.PICK_IMAGE);
+            }
+        });
     }
 
     /**
@@ -83,7 +140,7 @@ public class CreateCircleFragment extends Fragment {
         mInviteFriends.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                // Does nothing for now
             }
         });
     }
@@ -123,6 +180,15 @@ public class CreateCircleFragment extends Fragment {
 
         // First, we must save the Circle
         final Circle circle = ParseObject.create(Circle.class);
+
+        // Retrieve the byte array from the ImageView
+        mCircleIcon.setDrawingCacheEnabled(true);
+        mCircleIcon.buildDrawingCache();
+        Bitmap bm = mCircleIcon.getDrawingCache();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+        circle.setIcon(new ParseFile(stream.toByteArray()));
         circle.setName(mCircleName.getText().toString());
         circle.setDescription(mCircleDescription.getText().toString());
         circle.saveInBackground(new SaveCallback() {

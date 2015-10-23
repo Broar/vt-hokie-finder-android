@@ -29,6 +29,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -36,46 +37,33 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.parse.Parse;
+import com.parse.ParseException;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 /**
  * An activity that acts as the applications "homepage". Provides the user with
  * an interface to access the main features of HokieFinder.
  *
  * @author Steven Briggs
- * @version 2015.10.03
+ * @version 2015.10.23
  */
 public class HomeActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        CircleMapFragment.Callbacks {
+        CircleMapFragment.Callbacks,
+        CircleBroadcastFragment.Callbacks,
+        GoogleApiManagerFragment.Callbacks {
 
-    private static final int BROADCAST_NOTIFICATION_ID = 0;
-    private static final int REQUEST_RESOLVE_ERROR = 1001;
-    private static final String DIALOG_ERROR = "dialog_error";
-    private static final String STATE_RESOLVING_ERROR = "resolving_error";
-
-    private GoogleApiClient mGoogleApiClient;
-    private boolean mIsResolvingError;
-
-    private PendingIntent mBroadcastIntent;
-    private LocationRequest mLocationRequest;
-    private boolean mIsBroadcasting;
-
-    private CoordinatorLayout mCoordinatorLayout;
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
 
     private HomeFragment mHomeFragment;
     private CircleBroadcastFragment mCircleBroadcastFragment;
+    private GoogleApiManagerFragment mGoogleApiManagerFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-
-        mIsResolvingError = savedInstanceState != null
-                && savedInstanceState.getBoolean(STATE_RESOLVING_ERROR, false);
 
         FragmentManager fm = getSupportFragmentManager();
 
@@ -90,6 +78,11 @@ public class HomeActivity extends AppCompatActivity implements
             fm.beginTransaction()
                     .add(R.id.circleSelect, mCircleBroadcastFragment, CircleBroadcastFragment.TAG)
                     .commit();
+
+            mGoogleApiManagerFragment = new GoogleApiManagerFragment();
+            fm.beginTransaction()
+                    .add(mGoogleApiManagerFragment, GoogleApiManagerFragment.TAG)
+                    .commit();
         }
 
         // Retrieve existing Fragments
@@ -97,12 +90,11 @@ public class HomeActivity extends AppCompatActivity implements
             mHomeFragment = (HomeFragment) fm.findFragmentByTag(HomeFragment.TAG);
             mCircleBroadcastFragment =
                     (CircleBroadcastFragment) fm.findFragmentByTag(CircleBroadcastFragment.TAG);
+            mGoogleApiManagerFragment =
+                    (GoogleApiManagerFragment) fm.findFragmentByTag(GoogleApiManagerFragment.TAG);
         }
 
         // Initialize all elements of the Activity
-        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
-        buildGoogleApiClient();
-        initializeBroadcast();
         initializeSupportActionBar();
         initializeDrawerLayout();
         initializeFloatingActionButton();
@@ -147,10 +139,6 @@ public class HomeActivity extends AppCompatActivity implements
 
                 mDrawerLayout.openDrawer(GravityCompat.END);
                 return true;
-
-            case R.id.action_broadcast:
-                broadcastLocation();
-                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -174,164 +162,46 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        if (!mIsResolvingError) {
-            mGoogleApiClient.connect();
-        }
+        //mGoogleApiManagerFragment.connectClient();
     }
 
     @Override
     protected void onStop() {
-        mGoogleApiClient.disconnect();
+        //mGoogleApiManagerFragment.disconnectClient();
         super.onStop();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_RESOLVE_ERROR) {
-            mIsResolvingError = false;
-
-            // Make sure the app is not already connected or attempting to connect
-            if (resultCode == RESULT_OK) {
-                if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
-                    mGoogleApiClient.connect();
-                }
-            }
-        }
+    public GoogleApiClient requestGoogleApiClient() {
+        return mGoogleApiManagerFragment.getClient();
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(STATE_RESOLVING_ERROR, mIsResolvingError);
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
+    public void onClientConnected() {
         // Space purposefully left empty
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        // Space purposefully left empty
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // Already handling the error
-        if (mIsResolvingError) {
-            return;
-        }
-
-        else if (result.hasResolution()) {
-            try {
-                mIsResolvingError = true;
-                result.startResolutionForResult(this, REQUEST_RESOLVE_ERROR);
-            }
-
-            // There was an error. Try again
-            catch (IntentSender.SendIntentException e) {
-                mGoogleApiClient.connect();
-            }
-        }
-
-        // Show dialog using GoogleApiAvailability.getErrorDialog()
-        else {
-            showErrorDialog(result.getErrorCode());
-            mIsResolvingError = true;
-        }
-    }
-
-    @Override
-    public GoogleApiClient requestGoogleApi() {
-        return mGoogleApiClient;
-    }
-
-    /**
-     * Switch the user's public location broadcast on/off
-     */
-    private void broadcastLocation() {
-        // Switch broadcasting on
-        if (mGoogleApiClient.isConnected() && !mIsBroadcasting) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, mBroadcastIntent);
-            issueNotification();
-            mIsBroadcasting = true;
-
-            Snackbar.make(mCoordinatorLayout, "Public broadcast on!", Snackbar.LENGTH_LONG).show();
-        }
-
-        // Switch broadcasting off and cancel the ongoing notification
-        else if (mGoogleApiClient.isConnected() && mIsBroadcasting) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mBroadcastIntent);
-            NotificationManagerCompat manager = NotificationManagerCompat.from(this);
-            manager.cancel(BROADCAST_NOTIFICATION_ID);
-            mIsBroadcasting = false;
-
-            Snackbar.make(mCoordinatorLayout, "Public broadcast off!", Snackbar.LENGTH_LONG).show();
-        }
-    }
-
-    /**
-     * Issue a status notification that the user is broadcasting their location
-     */
-    private void issueNotification() {
-        // The activity should be brought back to the front if it already exists
-        Intent intent = new Intent(this, HomeActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-        PendingIntent openHomeIntent = PendingIntent.getActivity(this, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
-        // Build a sticky notification to inform the user they are broadcasting
-        Notification notification = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_stat_fighting_gobbler)
-                .setContentTitle("Location broadcast")
-                .setContentText("Your location is being broadcast to circles")
-                .setContentIntent(openHomeIntent)
-                .setOngoing(true)
-                .setAutoCancel(false)
-                .build();
-
-        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
-        manager.notify(BROADCAST_NOTIFICATION_ID, notification);
     }
 
     /**
      * Log the current user out of the application
      */
     private void logout() {
-        // Ensure the user is not broadcasting their location after logout
-        if (mGoogleApiClient.isConnected() && mIsBroadcasting) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, mBroadcastIntent);
-        }
+        mCircleBroadcastFragment.stopBroadcast();
+        ParseUser.getCurrentUser().put("masterBroadcast", false);
+        ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    ParseUser.logOut();
+                    startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+                    finish();
+                }
 
-        NotificationManagerCompat.from(this).cancel(BROADCAST_NOTIFICATION_ID);
-        ParseUser.logOut();
-        startActivity(new Intent(this, LoginActivity.class));
-        finish();
-    }
+                else {
+                    Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
-    /**
-     * Setup the location broadcasting.
-     */
-    private void initializeBroadcast() {
-        Intent intent = new Intent(this, LocationPushService.class);
-        mBroadcastIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        mLocationRequest = LocationRequest.create()
-                .setInterval(10000L)
-                .setFastestInterval(5000L)
-                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        mIsBroadcasting = false;
-    }
-
-    /**
-     * Build a new instance of the GoogleApiClient.
-     */
-    private synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
     }
 
     /**
@@ -410,53 +280,5 @@ public class HomeActivity extends AppCompatActivity implements
                 startActivity(new Intent(HomeActivity.this, CreateCircleActivity.class));
             }
         });
-    }
-
-    /**
-     * Display an ErrorDialogFragment
-     *
-     * https://developers.google.com/android/guides/api-client#handle_connection_failures
-     *
-     * @param errorCode the error code that prompted the dialog
-     */
-    private void showErrorDialog(int errorCode) {
-        // Create a fragment for the error dialog
-        ErrorDialogFragment dialogFragment = new ErrorDialogFragment();
-        // Pass the error that should be displayed
-        Bundle args = new Bundle();
-        args.putInt(DIALOG_ERROR, errorCode);
-        dialogFragment.setArguments(args);
-        dialogFragment.show(getSupportFragmentManager(), "errordialog");
-    }
-
-    /**
-     * Callback method when an ErrorDialogFragment is dismissed
-     *
-     * https://developers.google.com/android/guides/api-client#handle_connection_failures
-     */
-    public void onDialogDismissed() {
-        mIsResolvingError = false;
-    }
-
-    /**
-     * A DialogFragment to prompt the user to update Google Play Services
-     *
-     * https://developers.google.com/android/guides/api-client#handle_connection_failures
-     */
-    public static class ErrorDialogFragment extends DialogFragment {
-        public ErrorDialogFragment() { }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Get the error code and retrieve the appropriate dialog
-            int errorCode = this.getArguments().getInt(DIALOG_ERROR);
-            return GoogleApiAvailability.getInstance().getErrorDialog(
-                    this.getActivity(), errorCode, REQUEST_RESOLVE_ERROR);
-        }
-
-        @Override
-        public void onDismiss(DialogInterface dialog) {
-            ((HomeActivity) getActivity()).onDialogDismissed();
-        }
     }
 }

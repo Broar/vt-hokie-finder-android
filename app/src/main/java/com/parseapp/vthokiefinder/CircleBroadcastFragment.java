@@ -1,19 +1,30 @@
 package com.parseapp.vthokiefinder;
 
 
+import android.app.Activity;
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
@@ -34,10 +45,21 @@ public class CircleBroadcastFragment extends Fragment
 
     public static final String TAG = CircleBroadcastFragment.class.getSimpleName();
 
+    private static final int BROADCAST_NOTIFICATION_ID = 0;
+
+    private PendingIntent mBroadcastIntent;
+    private LocationRequest mLocationRequest;
+
+    private Callbacks mListener;
+
     private ArrayList<UserCircle> mUserCircles;
     private SwitchCompat mMasterBroadcast;
     private SwipeRefreshLayout mSwipeContainer;
     private RecyclerView mRecyclerView;
+
+    public interface Callbacks {
+        GoogleApiClient requestGoogleApiClient();
+    }
 
     /**
      * A factory method to return a new CircleBroadcastFragment that has been configured
@@ -48,10 +70,33 @@ public class CircleBroadcastFragment extends Fragment
         return new CircleBroadcastFragment();
     }
 
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+
+        try {
+            mListener = (Callbacks) activity;
+        }
+
+        catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement Callbacks");
+        }
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mUserCircles = new ArrayList<UserCircle>();
+
+        // Initialize the location broadcasting service
+        Intent intent = new Intent(getContext(), LocationPushService.class);
+        mBroadcastIntent = PendingIntent.getService(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        mLocationRequest = LocationRequest.create()
+                .setInterval(10000L)
+                .setFastestInterval(5000L)
+                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
     }
 
     @Nullable
@@ -64,7 +109,7 @@ public class CircleBroadcastFragment extends Fragment
         mSwipeContainer.setOnRefreshListener(this);
         mSwipeContainer.setColorSchemeColors(R.color.accent);
 
-        // Setup the RecyclerView of UserCircles
+        // Initialize the RecyclerView of UserCircles
         mRecyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
         manager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -84,25 +129,18 @@ public class CircleBroadcastFragment extends Fragment
         // Initialize the master broadcast switch
         mMasterBroadcast = (SwitchCompat) view.findViewById(R.id.masterBroadcast);
         mMasterBroadcast.setChecked(ParseUser.getCurrentUser().getBoolean("masterBroadcast"));
-
-        // Do not allow the user to to click on the list if the master switch is not flipped
-        if (!mMasterBroadcast.isChecked()) {
-            mRecyclerView.setClickable(false);
-        }
-
         mMasterBroadcast.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // Any clicks on the list of Circles should be enabled / disabled whenever
-                // the master broadcast switch is flipped
-                mRecyclerView.setClickable(isChecked);
 
                 // Save the user's current broadcast preference to the backend
                 ParseUser.getCurrentUser().put("masterBroadcast", isChecked);
                 ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
                     @Override
                     public void done(ParseException e) {
-                        if (e != null) {
+                        if (e == null) {
+                            toggleBroadcast();
+                        } else {
                             Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
@@ -148,7 +186,9 @@ public class CircleBroadcastFragment extends Fragment
                     if (mRecyclerView.getAdapter() != null) {
                         mRecyclerView.getAdapter().notifyDataSetChanged();
                     }
-                } else {
+                }
+
+                else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
@@ -158,8 +198,9 @@ public class CircleBroadcastFragment extends Fragment
     }
 
     /**
-     * Switch whether or not the current ParseUser is broadcastingto a Circlespecified Circle
-     userCircle * @pUserCram circle the cthe broadcasting forbroadcasting for
+     * Switch whether or not the current ParseUser is broadcasting to the specified Circle
+     *
+     * @param userCircle the circle the user wants to broadcast for
      */
     private void switchBroadcastForUser(UserCircle userCircle) {
         userCircle.setIsBroadcasting(!userCircle.isBroadcasting());
@@ -171,5 +212,60 @@ public class CircleBroadcastFragment extends Fragment
                 }
             }
         });
+    }
+
+    /**
+     * Switch the user's public location broadcast on/off
+     */
+    private void toggleBroadcast() {
+        GoogleApiClient googleApiClient = mListener.requestGoogleApiClient();
+
+        // Switch broadcasting on
+        Log.d(TAG, "" + googleApiClient.isConnected());
+        if (googleApiClient.isConnected() && mMasterBroadcast.isChecked()) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest, mBroadcastIntent);
+            startBroadcastNotification();
+        }
+
+        // Switch broadcasting off and cancel the ongoing notification
+        else if (googleApiClient.isConnected() && !mMasterBroadcast.isChecked()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, mBroadcastIntent);
+            NotificationManagerCompat.from(getContext()).cancel(BROADCAST_NOTIFICATION_ID);
+        }
+    }
+
+    /**
+     * Stop all location broadcasting for the user
+     */
+    public void stopBroadcast() {
+        if (mMasterBroadcast.isChecked()) {
+            GoogleApiClient googleApiClient = mListener.requestGoogleApiClient();
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, mBroadcastIntent);
+            NotificationManagerCompat.from(getContext()).cancel(BROADCAST_NOTIFICATION_ID);
+        }
+    }
+
+    /**
+     * Issue a status notification that the user is broadcasting their location
+     */
+    private void startBroadcastNotification() {
+        // The activity should be brought back to the front if it already exists
+        Intent intent = new Intent(getContext(), HomeActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent openHomeIntent = PendingIntent.getActivity(getContext(), 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Build a sticky notification to inform the user they are broadcasting
+        Notification notification = new NotificationCompat.Builder(getContext())
+                .setSmallIcon(R.drawable.ic_stat_fighting_gobbler)
+                .setContentTitle("Location broadcast")
+                .setContentText("Your location is being broadcast to circles")
+                .setContentIntent(openHomeIntent)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .build();
+
+        NotificationManagerCompat.from(getContext()).notify(BROADCAST_NOTIFICATION_ID, notification);
     }
 }

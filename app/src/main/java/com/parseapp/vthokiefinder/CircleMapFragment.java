@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +19,7 @@ import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import java.util.List;
@@ -47,7 +47,7 @@ public class CircleMapFragment extends Fragment {
     private GoogleMap mMap;
 
     public interface Callbacks {
-        GoogleApiClient requestGoogleApi();
+        GoogleApiClient requestGoogleApiClient();
     }
 
     /**
@@ -85,8 +85,8 @@ public class CircleMapFragment extends Fragment {
         mMapView = (MapView) view.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
 
-        // Temporary method of determining if GoogleApiClient is connected
-        mListener.requestGoogleApi().registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+        // Temporary method of determining when GoogleApiClient is connected
+        mListener.requestGoogleApiClient().registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
             @Override
             public void onConnected(Bundle bundle) {
                 getGoogleMap();
@@ -152,7 +152,8 @@ public class CircleMapFragment extends Fragment {
      * Pull the lat/long locations of each user. Add these to the GoogleMaps as Markers
      */
     private void pullLocations() {
-        ParseUser.getQuery().findInBackground(new FindCallback<ParseUser>() {
+        ParseQuery<ParseUser> query = ParseUser.getQuery().whereEqualTo("masterBroadcast", true);
+        query.findInBackground(new FindCallback<ParseUser>() {
             @Override
             public void done(List<ParseUser> users, ParseException e) {
                 // Success! Create Markers for each user and pin them to the map
@@ -165,8 +166,6 @@ public class CircleMapFragment extends Fragment {
                                     new LatLng(location.getLatitude(), location.getLongitude())));
                         }
                     }
-
-                    Log.d(TAG, "Pulled locations!");
                 }
 
                 // Failure! Let the user know what went wrong

@@ -1,42 +1,25 @@
 package com.parseapp.vthokiefinder;
 
-import android.app.Dialog;
-import android.app.Notification;
-import android.app.PendingIntent;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
@@ -187,21 +170,10 @@ public class HomeActivity extends AppCompatActivity implements
     private void logout() {
         mCircleBroadcastFragment.stopBroadcast();
         ParseUser.getCurrentUser().put("masterBroadcast", false);
-        ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e == null) {
-                    ParseUser.logOut();
-                    startActivity(new Intent(HomeActivity.this, LoginActivity.class));
-                    finish();
-                }
-
-                else {
-                    Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
+        ParseUser.getCurrentUser().saveEventually();
+        ParseUser.logOut();
+        startActivity(new Intent(HomeActivity.this, LoginActivity.class));
+        finish();
     }
 
     /**

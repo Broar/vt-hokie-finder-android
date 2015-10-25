@@ -40,6 +40,9 @@
             <meta-data
                 android:name="com.parse.ui.ParseLoginActivity.TWITTER_LOGIN_ENABLED"
                 android:value="true"/>
+            <meta-data
+                android:name="com.parse.ui.ParseLoginActivity.FACEBOOK_LOGIN_PERMISSIONS"
+                android:resource="@array/facebook_permissions"/>
         </activity>
         <activity android:name="com.facebook.FacebookActivity"
             android:configChanges=

@@ -16,4 +16,11 @@
 
     <!-- Application IDs / API keys -->
     <string name="facebook_application_id">1636789559907792</string>
+
+    <!-- Facebook permissions -->
+    <string-array name="facebook_permissions">
+        <item>public_profile</item>
+        <item>email</item>
+        <item>user_friends</item>
+    </string-array>
 </resources>

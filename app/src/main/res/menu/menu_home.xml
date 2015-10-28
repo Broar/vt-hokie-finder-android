@@ -3,7 +3,7 @@
     tools:context=".HomeActivity">
 
     <item android:id="@+id/action_show_circles"
-        android:icon="@drawable/ic_menu_white_48dp"
+        android:icon="@drawable/ic_menu_white_24dp"
         android:title="@string/action_show_circles"
         android:orderInCategory="101"
         app:showAsAction="always" />

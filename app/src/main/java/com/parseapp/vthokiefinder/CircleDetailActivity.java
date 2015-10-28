@@ -30,7 +30,6 @@ import java.util.List;
 
 /**
  * An activity that presents information about a circle to the user
- * because I can't make up my mind on how to build this shit
  *
  * @author Steven Briggs
  * @version 2015.10.05
@@ -67,7 +66,6 @@ public class CircleDetailActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle(mCircle.getName());
         }
 
         mFab = (FloatingActionButton) findViewById(R.id.fab);
@@ -104,7 +102,7 @@ public class CircleDetailActivity extends AppCompatActivity {
         // getDrawable() is only available on API 21+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (isMember) {
-                mFab.setImageDrawable(getDrawable(R.drawable.ic_remove_white_48dp));
+                mFab.setImageDrawable(getDrawable(R.drawable.ic_remove_white_24dp));
                 mFab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -114,7 +112,7 @@ public class CircleDetailActivity extends AppCompatActivity {
             }
 
             else {
-                mFab.setImageDrawable(getDrawable(R.drawable.ic_add_white_48dp));
+                mFab.setImageDrawable(getDrawable(R.drawable.ic_add_white_24dp));
                 mFab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -127,7 +125,7 @@ public class CircleDetailActivity extends AppCompatActivity {
         // Provide a deprecated call to getDrawable() for APIs less than 21
         else {
             if (isMember) {
-                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_remove_white_48dp));
+                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_remove_white_24dp));
                 mFab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -137,7 +135,7 @@ public class CircleDetailActivity extends AppCompatActivity {
             }
 
             else {
-                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_add_white_48dp));
+                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_add_white_24dp));
                 mFab.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

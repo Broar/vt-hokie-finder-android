@@ -1,10 +1,13 @@
 <resources>
     <string name="app_name">VTHokieFinder</string>
+    <string name="create_circle">New Circle</string>
+    <string name="settings">Settings</string>
 
     <!-- Descriptions for toolbar items -->
     <string name="action_broadcast">Broadcast</string>
     <string name="action_show_circles">Show Circles</string>
     <string name="action_logout">Logout</string>
+    <string name="action_save_circle">Save</string>
 
     <!-- Descriptions for navigation drawer actions and items -->
     <string name="drawer_open">Open</string>

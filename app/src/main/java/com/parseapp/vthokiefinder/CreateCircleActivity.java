@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -13,10 +14,11 @@ import android.view.MenuItem;
  * An activity allowing the user to create a new circle
  *
  * @author Steven Briggs
- * @version 2015.10.06
+ * @version 2015.10.26
  */
 public class CreateCircleActivity extends AppCompatActivity implements
-        CreateCircleFragment.Callbacks {
+        CreateCircleFragment.Callbacks,
+        ConfirmDialog.Callbacks {
 
     private CreateCircleFragment mCreateCircleFragment;
     private BitmapHolderFragment mBitmapHolderFragment;
@@ -30,7 +32,7 @@ public class CreateCircleActivity extends AppCompatActivity implements
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Create Circle");
+            getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close_white_24dp);
         }
 
         FragmentManager fm = getSupportFragmentManager();
@@ -65,11 +67,25 @@ public class CreateCircleActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                finish();
+                showDiscardDialog();
+                return true;
+            case R.id.action_save_circle:
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Users should only be prompted to discarded changes if they actually made any
+        if (mCreateCircleFragment.isDirty()) {
+            showDiscardDialog();
+        }
+
+        else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -90,5 +106,23 @@ public class CreateCircleActivity extends AppCompatActivity implements
         intent.putExtra(CircleDetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
         intent.putExtra(CircleDetailActivity.IS_MEMBER_KEY, true);
         startActivity(intent);
+    }
+
+    @Override
+    public void onPositiveButtonClicked() {
+        NavUtils.navigateUpFromSameTask(this);
+    }
+
+    @Override
+    public void onNegativeButtonClicked() {
+        // Do nothing
+    }
+
+    /**
+     * Display a dialog prompting users to confirm they want exit and discard all changes
+     */
+    private void showDiscardDialog() {
+        ConfirmDialog dialog = ConfirmDialog.newInstance("Discard new circle?", "Confirm", "Cancel");
+        dialog.show(getSupportFragmentManager(), ConfirmDialog.TAG);
     }
 }

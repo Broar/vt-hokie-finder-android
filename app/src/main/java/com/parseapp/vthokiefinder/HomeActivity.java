@@ -1,5 +1,6 @@
 package com.parseapp.vthokiefinder;
 
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -17,12 +18,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.parse.ParseException;
 import com.parse.ParseUser;
-import com.parse.SaveCallback;
 
 /**
  * An activity that acts as the applications "homepage". Provides the user with
@@ -38,6 +36,8 @@ public class HomeActivity extends AppCompatActivity implements
 
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mToogle;
+    private FloatingActionButton mFab;
 
     private HomeFragment mHomeFragment;
     private CircleBroadcastFragment mCircleBroadcastFragment;
@@ -90,19 +90,10 @@ public class HomeActivity extends AppCompatActivity implements
      * @param tag the fragment's associated tag
      */
     private void replaceFragment(Fragment fragment, String tag) {
-        // LoginFragment is the lowest level fragment in the Activity, so only need to pop a
-        // fragment off to return to it
-        if (tag.equals(HomeFragment.TAG)) {
-            getSupportFragmentManager().popBackStack();
-        }
-
-        // Just replace the existing fragment
-        else {
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainer, fragment, tag)
-                    .addToBackStack(null)
-                    .commit();
-        }
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainer, fragment, tag)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
@@ -115,6 +106,15 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+            case android.R.id.home:
+                // Pop the backstack if there happens to be a fragment on it. This allows us
+                // to display the default home button as up in hosted fragments
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStack();
+                }
+
+                return true;
+
             case R.id.action_show_circles:
                 if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
                     mDrawerLayout.closeDrawer(GravityCompat.START);
@@ -140,18 +140,6 @@ public class HomeActivity extends AppCompatActivity implements
         else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //mGoogleApiManagerFragment.connectClient();
-    }
-
-    @Override
-    protected void onStop() {
-        //mGoogleApiManagerFragment.disconnectClient();
-        super.onStop();
     }
 
     @Override
@@ -189,7 +177,7 @@ public class HomeActivity extends AppCompatActivity implements
      */
     private void initializeDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
+        mToogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
             @Override
             public void onDrawerOpened(View drawerView) {
                 // Prevent hamburger icon from turning into a back arrow
@@ -204,8 +192,8 @@ public class HomeActivity extends AppCompatActivity implements
             }
         };
 
-        mDrawerLayout.setDrawerListener(toggle);
-        toggle.syncState();
+        mDrawerLayout.setDrawerListener(mToogle);
+        mToogle.syncState();
 
         // Create a listener to handle clicks on the drawer's menu
         NavigationView navigationView = (NavigationView) findViewById(R.id.navigationView);
@@ -222,6 +210,7 @@ public class HomeActivity extends AppCompatActivity implements
                         return true;
 
                     case R.id.drawer_settings:
+                        startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
                         return true;
 
                     case R.id.drawer_logout:
@@ -245,7 +234,7 @@ public class HomeActivity extends AppCompatActivity implements
      * Setup the FloatingActionButton to transition to a "Create Circle" screen
      */
     private void initializeFloatingActionButton() {
-        FloatingActionButton mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

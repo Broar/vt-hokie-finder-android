@@ -8,12 +8,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.ParseException;
@@ -106,6 +108,15 @@ public class CreateCircleFragment extends Fragment {
                 Toast.makeText(getContext(), "Could not load image!", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    /**
+     * Determine if the user has altered the input fields of the new circle
+     *
+     * @return true if the user altered any of the input fields
+     */
+    public boolean isDirty() {
+        return mCircleName.isDirty() || mCircleDescription.isDirty() || mCircleIcon.isDirty();
     }
 
     /**

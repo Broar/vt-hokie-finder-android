@@ -31,6 +31,10 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
             return FindCirclesFragment.newInstance();
         }
 
+        else if (position == 2) {
+            return MyFriendsFragment.newInstance();
+        }
+
         else {
             return CircleMapFragment.newInstance();
         }

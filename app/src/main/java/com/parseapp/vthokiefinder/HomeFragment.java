@@ -19,8 +19,8 @@ import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 public class HomeFragment extends Fragment {
     public static final String TAG = HomeFragment.class.getSimpleName();
 
-    private static final int NUM_TABS = 3;
-    private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "MAP" };
+    private static final int NUM_TABS = 4;
+    private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "FRIENDS", "MAP" };
 
     private ViewPager mViewPager;
     private SlidingTabLayout mTabs;

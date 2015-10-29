@@ -21,6 +21,7 @@ public class ParseApplication extends Application {
         Parse.enableLocalDatastore(this);
         ParseObject.registerSubclass(Circle.class);
         ParseObject.registerSubclass(UserCircle.class);
+        ParseObject.registerSubclass(Friend.class);
         FacebookSdk.sdkInitialize(getApplicationContext());
         Parse.initialize(this, "Bugsei9yjtBNjH51JSerSEniB895r1zLA3NwFDUO", "ilswrJMAc26LQCRptGaMn5XiH5uVTIHrkfLP82W3");
         ParseFacebookUtils.initialize(this);

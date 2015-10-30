@@ -3,7 +3,6 @@ package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -37,7 +36,6 @@ public class HomeActivity extends AppCompatActivity implements
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mToogle;
-    private FloatingActionButton mFab;
 
     private HomeFragment mHomeFragment;
     private CircleBroadcastFragment mCircleBroadcastFragment;
@@ -78,9 +76,8 @@ public class HomeActivity extends AppCompatActivity implements
         }
 
         // Initialize all elements of the Activity
-        initializeSupportActionBar();
+        initializeToolbar();
         initializeDrawerLayout();
-        initializeFloatingActionButton();
     }
 
     /**
@@ -167,7 +164,7 @@ public class HomeActivity extends AppCompatActivity implements
     /**
      * Setup the SupportActionBar for this screen
      */
-    private void initializeSupportActionBar() {
+    private void initializeToolbar() {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
     }
@@ -228,18 +225,5 @@ public class HomeActivity extends AppCompatActivity implements
         ((TextView) header.findViewById(R.id.username)).setText(ParseUser.getCurrentUser().getUsername());
         ((TextView) header.findViewById(R.id.email)).setText(ParseUser.getCurrentUser().getEmail());
         navigationView.addHeaderView(header);
-    }
-
-    /**
-     * Setup the FloatingActionButton to transition to a "Create Circle" screen
-     */
-    private void initializeFloatingActionButton() {
-        mFab = (FloatingActionButton) findViewById(R.id.fab);
-        mFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(HomeActivity.this, CreateCircleActivity.class));
-            }
-        });
     }
 }

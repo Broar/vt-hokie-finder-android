@@ -7,10 +7,13 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
+import com.parse.FunctionCallback;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -46,6 +49,11 @@ public class MyFriendsFragment extends FriendListFragment {
             public void onItemClick(View itemView, int position) {
                 // TODO: Transition to a Profile screen
             }
+
+            @Override
+            public void onRemoveFriendClicked(int position) {
+                removeFriend(position);
+            }
         }));
 
         refreshFriends();
@@ -66,6 +74,29 @@ public class MyFriendsFragment extends FriendListFragment {
                     }
 
                     getRecyclerView().getAdapter().notifyDataSetChanged();
+                } else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Remove a friend from the user's friends list
+     *
+     * @param position the array position of the friend who is to removed
+     */
+    private void removeFriend(final int position) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", getFriends().get(position).getUser().getObjectId());
+        params.put("friendId", getFriends().get(position).getFriend().getObjectId());
+
+        ParseCloud.callFunctionInBackground("deleteFriendship", params, new FunctionCallback<String>() {
+            @Override
+            public void done(String result, ParseException e) {
+                if (e == null) {
+                    getFriends().remove(position);
+                    getRecyclerView().getAdapter().notifyItemRemoved(position);
                 }
 
                 else {

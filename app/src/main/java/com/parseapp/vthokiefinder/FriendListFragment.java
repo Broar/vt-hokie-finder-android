@@ -23,8 +23,8 @@ public abstract class FriendListFragment extends Fragment {
 
     public static final String TAG = FriendListFragment.class.getSimpleName();
 
-    protected RecyclerView mRecyclerView;
-    protected ArrayList<Friend> mFriends;
+    private RecyclerView mRecyclerView;
+    private ArrayList<Friend> mFriends;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

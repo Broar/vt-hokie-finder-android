@@ -14,29 +14,29 @@ import java.util.List;
  * An adapter that determines how to display information about users onscreen
  *
  * @author Steven Briggs
- * @version 2015.09.17
+ * @version 2015.10.31
  */
-public class MemberAdapter extends RecyclerView.Adapter<MemberAdapter.ViewHolder> {
+public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     private List<ParseUser> mMembers;
 
     /**
-     * Create a new MemberAdapter object.
+     * Create a new UserAdapter object.
      *
      * @param members the users to be displayed
      */
-    public MemberAdapter(List<ParseUser> members) {
+    public UserAdapter(List<ParseUser> members) {
         mMembers = members;
     }
 
     @Override
-    public MemberAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public UserAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_user, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(MemberAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(UserAdapter.ViewHolder holder, int position) {
         holder.mUsername.setText(mMembers.get(position).getString("username"));
     }
 

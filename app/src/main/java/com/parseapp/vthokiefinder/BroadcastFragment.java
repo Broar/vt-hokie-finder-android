@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -40,10 +39,10 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.10.10
  */
-public class CircleBroadcastFragment extends Fragment
+public class BroadcastFragment extends ListFragment<UserCircle>
         implements SwipeRefreshLayout.OnRefreshListener {
 
-    public static final String TAG = CircleBroadcastFragment.class.getSimpleName();
+    public static final String TAG = BroadcastFragment.class.getSimpleName();
 
     private static final int BROADCAST_NOTIFICATION_ID = 0;
 
@@ -52,7 +51,6 @@ public class CircleBroadcastFragment extends Fragment
 
     private Callbacks mListener;
 
-    private ArrayList<UserCircle> mUserCircles;
     private SwitchCompat mMasterBroadcast;
     private SwipeRefreshLayout mSwipeContainer;
     private RecyclerView mRecyclerView;
@@ -62,12 +60,12 @@ public class CircleBroadcastFragment extends Fragment
     }
 
     /**
-     * A factory method to return a new CircleBroadcastFragment that has been configured
+     * A factory method to return a new BroadcastFragment that has been configured
      *
-     * @return a new CircleBroadcastFragment that has been configured
+     * @return a new BroadcastFragment that has been configured
      */
-    public static CircleBroadcastFragment newInstance() {
-        return new CircleBroadcastFragment();
+    public static BroadcastFragment newInstance() {
+        return new BroadcastFragment();
     }
 
 
@@ -88,7 +86,6 @@ public class CircleBroadcastFragment extends Fragment
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mUserCircles = new ArrayList<UserCircle>();
 
         // Initialize the location broadcasting service
         Intent intent = new Intent(getContext(), LocationPushService.class);
@@ -114,10 +111,10 @@ public class CircleBroadcastFragment extends Fragment
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new CircleBroadcastAdapter(mUserCircles, new CircleBroadcastAdapter.OnItemClickListener() {
+        mRecyclerView.setAdapter(new CircleBroadcastAdapter(getItems(), new CircleBroadcastAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                switchBroadcastForUser(mUserCircles.get(position));
+                switchBroadcastForUser(getItems().get(position));
             }
 
             @Override
@@ -140,7 +137,9 @@ public class CircleBroadcastFragment extends Fragment
                     public void done(ParseException e) {
                         if (e == null) {
                             toggleBroadcast();
-                        } else {
+                        }
+
+                        else {
                             Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
@@ -148,39 +147,23 @@ public class CircleBroadcastFragment extends Fragment
             }
         });
 
-        refreshCircles();
+        populate();
 
         return view;
     }
 
     @Override
-    public void onRefresh() {
-        refreshCircles();
-    }
-
-    /**
-     * Stop the refresh animation if necessary
-     */
-    private void stopRefresh() {
-        if (mSwipeContainer.isRefreshing()) {
-            mSwipeContainer.setRefreshing(false);
-        }
-    }
-
-    /**
-     * Refresh the list of UserCircles belonging to the current ParseUser
-     */
-    private void refreshCircles() {
+    protected void populate() {
         ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("user", ParseUser.getCurrentUser()).include("circle");
         query.findInBackground(new FindCallback<UserCircle>() {
             @Override
             public void done(List<UserCircle> userCircles, ParseException e) {
                 if (e == null) {
-                    mUserCircles.clear();
+                    getItems().clear();
 
                     for (UserCircle uc : userCircles) {
-                        mUserCircles.add(uc);
+                        getItems().add(uc);
                     }
 
                     if (mRecyclerView.getAdapter() != null) {
@@ -192,9 +175,16 @@ public class CircleBroadcastFragment extends Fragment
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
-                stopRefresh();
+                if (mSwipeContainer.isRefreshing()) {
+                    mSwipeContainer.setRefreshing(false);
+                }
             }
         });
+    }
+
+    @Override
+    public void onRefresh() {
+        populate();
     }
 
     /**
@@ -221,7 +211,6 @@ public class CircleBroadcastFragment extends Fragment
         GoogleApiClient googleApiClient = mListener.requestGoogleApiClient();
 
         // Switch broadcasting on
-        Log.d(TAG, "" + googleApiClient.isConnected());
         if (googleApiClient.isConnected() && mMasterBroadcast.isChecked()) {
             LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, mLocationRequest, mBroadcastIntent);
             startBroadcastNotification();

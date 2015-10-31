@@ -30,7 +30,7 @@ import com.parse.ParseUser;
  */
 public class HomeActivity extends AppCompatActivity implements
         CircleMapFragment.Callbacks,
-        CircleBroadcastFragment.Callbacks,
+        BroadcastFragment.Callbacks,
         GoogleApiManagerFragment.Callbacks {
 
     private Toolbar mToolbar;
@@ -38,7 +38,7 @@ public class HomeActivity extends AppCompatActivity implements
     private ActionBarDrawerToggle mToogle;
 
     private HomeFragment mHomeFragment;
-    private CircleBroadcastFragment mCircleBroadcastFragment;
+    private BroadcastFragment mBroadcastFragment;
     private GoogleApiManagerFragment mGoogleApiManagerFragment;
 
     @Override
@@ -55,9 +55,9 @@ public class HomeActivity extends AppCompatActivity implements
                     .add(R.id.fragmentContainer, mHomeFragment, HomeFragment.TAG)
                     .commit();
 
-            mCircleBroadcastFragment = CircleBroadcastFragment.newInstance();
+            mBroadcastFragment = BroadcastFragment.newInstance();
             fm.beginTransaction()
-                    .add(R.id.circleSelect, mCircleBroadcastFragment, CircleBroadcastFragment.TAG)
+                    .add(R.id.circleSelect, mBroadcastFragment, BroadcastFragment.TAG)
                     .commit();
 
             mGoogleApiManagerFragment = new GoogleApiManagerFragment();
@@ -69,8 +69,8 @@ public class HomeActivity extends AppCompatActivity implements
         // Retrieve existing Fragments
         else {
             mHomeFragment = (HomeFragment) fm.findFragmentByTag(HomeFragment.TAG);
-            mCircleBroadcastFragment =
-                    (CircleBroadcastFragment) fm.findFragmentByTag(CircleBroadcastFragment.TAG);
+            mBroadcastFragment =
+                    (BroadcastFragment) fm.findFragmentByTag(BroadcastFragment.TAG);
             mGoogleApiManagerFragment =
                     (GoogleApiManagerFragment) fm.findFragmentByTag(GoogleApiManagerFragment.TAG);
         }
@@ -153,7 +153,7 @@ public class HomeActivity extends AppCompatActivity implements
      * Log the current user out of the application
      */
     private void logout() {
-        mCircleBroadcastFragment.stopBroadcast();
+        mBroadcastFragment.stopBroadcast();
         ParseUser.getCurrentUser().put("masterBroadcast", false);
         ParseUser.getCurrentUser().saveEventually();
         ParseUser.logOut();

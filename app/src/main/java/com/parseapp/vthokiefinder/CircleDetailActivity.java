@@ -155,7 +155,7 @@ public class CircleDetailActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new MemberAdapter(mMembers));
+        mRecyclerView.setAdapter(new UserAdapter(mMembers));
     }
 
     /**

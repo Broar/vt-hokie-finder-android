@@ -116,6 +116,11 @@ public class HomeFragment extends Fragment {
      * Change the floating action bar's icon based on the Fragment that is displayed
      */
     private void changeFabIcon() {
+
+        if (!mFab.isShown()) {
+            mFab.show();
+        }
+
         mFab.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_disappear));
 
         // Determine what the FAB's icon should change to based on the page position
@@ -132,6 +137,7 @@ public class HomeFragment extends Fragment {
                     mFab.setImageDrawable(getContext().getDrawable(R.drawable.ic_person_add_white_24dp));
                     break;
                 case MAP:
+                    mFab.hide();
                     break;
             }
         }
@@ -149,11 +155,14 @@ public class HomeFragment extends Fragment {
                     mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_add_white_24dp));
                     break;
                 case MAP:
+                    mFab.hide();
                     break;
             }
         }
 
-        mFab.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_appear));
+        if (mPagePosition != MAP) {
+            mFab.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_appear));
+        }
     }
 
     /**

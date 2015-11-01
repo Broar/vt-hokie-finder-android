@@ -270,6 +270,7 @@ public class CircleDetailActivity extends AppCompatActivity {
             @Override
             public void done(List<UserCircle> userCircles, ParseException e) {
                 if (e == null) {
+
                     for (UserCircle uc : userCircles) {
                         members.add(uc.getParseUser("user"));
                     }

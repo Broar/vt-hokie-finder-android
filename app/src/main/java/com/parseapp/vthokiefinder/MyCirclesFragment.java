@@ -16,6 +16,7 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
 import java.util.List;
 
@@ -29,6 +30,9 @@ public class MyCirclesFragment extends ListFragment<Circle> implements SwipeRefr
 
     public static final String TAG = MyCirclesFragment.class.getSimpleName();
 
+    private int mCurrentPage;
+    private EndlessRecyclerViewAdapter mEndlessAdapter;
+    private CircleAdapter mCircleAdapter;
     private SwipeRefreshLayout mSwipeContainer;
 
     /**
@@ -53,44 +57,18 @@ public class MyCirclesFragment extends ListFragment<Circle> implements SwipeRefr
         mSwipeContainer.setColorSchemeColors(R.color.accent);
         mSwipeContainer.setOnRefreshListener(this);
 
-        getRecyclerView().setAdapter(new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
+        mCircleAdapter = new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
                 Circle circle = getItems().get(position);
                 openCircle(circle.getObjectId(), true);
             }
-        }));
-
-        populate();
-        return view;
-    }
-
-    @Override
-    protected void populate() {
-        ParseQuery<UserCircle> query = UserCircle.getQuery();
-        query.whereEqualTo("user", ParseUser.getCurrentUser()).include("circle");
-        query.findInBackground(new FindCallback<UserCircle>() {
-            @Override
-            public void done(List<UserCircle> userCircles, ParseException e) {
-                if (e == null) {
-                    getItems().clear();
-
-                    for (UserCircle uc : userCircles) {
-                        getItems().add(uc.getCircle());
-                    }
-
-                    if (getRecyclerView().getAdapter() != null) {
-                        getRecyclerView().getAdapter().notifyDataSetChanged();
-                    }
-                } else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-
-                if (mSwipeContainer.isRefreshing()) {
-                    mSwipeContainer.setRefreshing(false);
-                }
-            }
         });
+
+        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mCircleAdapter, this);
+        getRecyclerView().setAdapter(mEndlessAdapter);
+
+        return view;
     }
 
     /**
@@ -110,6 +88,47 @@ public class MyCirclesFragment extends ListFragment<Circle> implements SwipeRefr
 
     @Override
     public void onRefresh() {
-        populate();
+        getItems().clear();
+        mCircleAdapter.notifyDataSetChanged();
+        mEndlessAdapter.restartAppending();
+    }
+
+    @Override
+    public void onLoadMoreRequested() {
+        ParseQuery<UserCircle> query = UserCircle.getQuery();
+        query.whereEqualTo("user", ParseUser.getCurrentUser())
+                .include("circle")
+                .setSkip(getNextPage())
+                .setLimit(getLimit());
+
+        query.findInBackground(new FindCallback<UserCircle>() {
+            @Override
+            public void done(List<UserCircle> userCircles, ParseException e) {
+                if (e == null) {
+                    if (!userCircles.isEmpty()) {
+                        for (UserCircle uc : userCircles) {
+                            getItems().add(uc.getCircle());
+                        }
+
+                        mCircleAdapter.notifyDataSetChanged();
+                        mEndlessAdapter.onDataReady(true);
+                    }
+
+                    else {
+                        mEndlessAdapter.onDataReady(false);
+                    }
+
+                    setPage(getPage() + 1);
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+
+                if (mSwipeContainer.isRefreshing()) {
+                    mSwipeContainer.setRefreshing(false);
+                }
+            }
+        });
     }
 }

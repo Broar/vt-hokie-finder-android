@@ -12,6 +12,7 @@ import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,9 +23,12 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.10.31
  */
-public class MyFriendsFragment extends ListFragment<Friend> {
+public class MyFriendsFragment extends ListFragment<Friend> implements EndlessRecyclerViewAdapter.RequestToLoadMoreListener {
 
     private static final String TAG = MyFriendsFragment.class.getSimpleName();
+
+    private EndlessRecyclerViewAdapter mEndlessAdapter;
+    private FriendAdapter mFriendAdapter;
 
     /**
      * A factory method to return a new MyFriendsFragment that has been configured
@@ -44,38 +48,22 @@ public class MyFriendsFragment extends ListFragment<Friend> {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflateFragment(R.layout.fragment_friends_list, inflater, container);
 
-        getRecyclerView().setAdapter(new FriendAdapter(getItems(), new FriendAdapter.OnItemClickListener() {
+        mFriendAdapter = new FriendAdapter(getItems(), new FriendAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                // TODO: Transition to a Profile screen
+                // Transition to a profile screen
             }
 
             @Override
             public void onRemoveFriendClicked(int position) {
                 removeFriend(position);
             }
-        }));
-
-        populate();
-        return view;
-    }
-
-    @Override
-    protected void populate() {
-        ParseQuery<Friend> query = Friend.getQuery().whereEqualTo("user", ParseUser.getCurrentUser()).include("friend");
-        query.findInBackground(new FindCallback<Friend>() {
-            @Override
-            public void done(List<Friend> friends, ParseException e) {
-                if (e == null) {
-                    getItems().addAll(friends);
-                    getRecyclerView().getAdapter().notifyDataSetChanged();
-                }
-
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
         });
+
+        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mFriendAdapter, this);
+        getRecyclerView().setAdapter(mEndlessAdapter);
+
+        return view;
     }
 
     /**
@@ -93,7 +81,39 @@ public class MyFriendsFragment extends ListFragment<Friend> {
             public void done(String result, ParseException e) {
                 if (e == null) {
                     getItems().remove(position);
-                    getRecyclerView().getAdapter().notifyItemRemoved(position);
+                    mEndlessAdapter.notifyItemRemoved(position);
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onLoadMoreRequested() {
+        ParseQuery<Friend> query = Friend.getQuery();
+        query.whereEqualTo("user", ParseUser.getCurrentUser())
+                .include("friend")
+                .setSkip(getNextPage())
+                .setLimit(getLimit());
+
+        query.findInBackground(new FindCallback<Friend>() {
+            @Override
+            public void done(List<Friend> friends, ParseException e) {
+                if (e == null) {
+                    if (!friends.isEmpty()) {
+                        getItems().addAll(friends);
+                        mFriendAdapter.notifyDataSetChanged();
+                        mEndlessAdapter.onDataReady(true);
+                    }
+
+                    else {
+                        mEndlessAdapter.onDataReady(false);
+                    }
+
+                    setPage(getPage() + 1);
                 }
 
                 else {

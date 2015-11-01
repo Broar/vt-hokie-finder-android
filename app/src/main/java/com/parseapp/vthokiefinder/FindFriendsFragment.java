@@ -16,6 +16,7 @@ import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseUser;
+import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,9 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
 
     public static final String TAG = FindFriendsFragment.class.getSimpleName();
 
+    private EndlessRecyclerViewAdapter mEndlessAdapter;
+    private UserAdapter mUserAdapter;
+
     /**
      * A factory method to return a new FindFriendsFragment that has been configured
      *
@@ -43,7 +47,7 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflateFragment(R.layout.fragment_friends_list, inflater, container);
 
-        getRecyclerView().setAdapter(new UserAdapter(getItems(), new UserAdapter.OnItemClickListener() {
+        mUserAdapter = new UserAdapter(getItems(), new UserAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
                 openProfile(getItems().get(position).getObjectId());
@@ -53,7 +57,10 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
             public void onAddFriendClicked(int position) {
                 addFriend(position);
             }
-        }));
+        });
+
+        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mUserAdapter, this);
+        getRecyclerView().setAdapter(mEndlessAdapter);
 
         return view;
     }
@@ -86,26 +93,6 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
         });
     }
 
-    @Override
-    protected void populate() {
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("userId", ParseUser.getCurrentUser().getObjectId());
-
-        ParseCloud.callFunctionInBackground("getPotentialFriends", params, new FunctionCallback<List<ParseUser>>() {
-            @Override
-            public void done(List<ParseUser> users, ParseException e) {
-                if (e == null) {
-                    getItems().addAll(users);
-                    getRecyclerView().getAdapter().notifyDataSetChanged();
-                }
-
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-    }
-
     /**
      * Add a new friend to the user's friends list
      *
@@ -131,5 +118,36 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
 
     private void openProfile(String id) {
 
+    }
+
+    @Override
+    public void onLoadMoreRequested() {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", ParseUser.getCurrentUser().getObjectId());
+        params.put("skip", getNextPage());
+        params.put("limit", getLimit());
+
+        ParseCloud.callFunctionInBackground("getPotentialFriends", params, new FunctionCallback<List<ParseUser>>() {
+            @Override
+            public void done(List<ParseUser> users, ParseException e) {
+                if (e == null) {
+                    if (!users.isEmpty()) {
+                        getItems().addAll(users);
+                        mUserAdapter.notifyDataSetChanged();
+                        mEndlessAdapter.onDataReady(true);
+                    }
+
+                    else {
+                        mEndlessAdapter.onDataReady(false);
+                    }
+
+                    setPage(getPage() + 1);
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
     }
 }

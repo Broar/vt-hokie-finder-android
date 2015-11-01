@@ -17,7 +17,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.10.10
  */
-public class CircleBroadcastAdapter extends RecyclerView.Adapter<CircleBroadcastAdapter.ViewHolder> {
+public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.ViewHolder> {
 
     private List<UserCircle> mUserCircles;
     private OnItemClickListener mListener;
@@ -28,12 +28,12 @@ public class CircleBroadcastAdapter extends RecyclerView.Adapter<CircleBroadcast
     }
 
     /**
-     * Create a new CircleBroadcastAdapter object.
+     * Create a new BroadcastAdapter object.
      *
      * @param userCircles a list of UserCircles
      * @param listener the item listener
      */
-    public CircleBroadcastAdapter(List<UserCircle> userCircles, OnItemClickListener listener) {
+    public BroadcastAdapter(List<UserCircle> userCircles, OnItemClickListener listener) {
         mUserCircles = userCircles;
         mListener = listener;
     }

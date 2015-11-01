@@ -29,6 +29,7 @@ import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
+import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,9 +52,10 @@ public class BroadcastFragment extends ListFragment<UserCircle>
 
     private Callbacks mListener;
 
+    private EndlessRecyclerViewAdapter mEndlessAdapter;
+    private BroadcastAdapter mBroadcastAdapter;
     private SwitchCompat mMasterBroadcast;
     private SwipeRefreshLayout mSwipeContainer;
-    private RecyclerView mRecyclerView;
 
     public interface Callbacks {
         GoogleApiClient requestGoogleApiClient();
@@ -99,19 +101,14 @@ public class BroadcastFragment extends ListFragment<UserCircle>
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_circle_broadcast, container, false);
+        View view = inflateFragment(R.layout.fragment_circle_broadcast, inflater, container);
 
         // Initialize the SwipeRefreshLayout
         mSwipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
         mSwipeContainer.setOnRefreshListener(this);
         mSwipeContainer.setColorSchemeColors(R.color.accent);
 
-        // Initialize the RecyclerView of UserCircles
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
-        LinearLayoutManager manager = new LinearLayoutManager(getActivity());
-        manager.setOrientation(LinearLayoutManager.VERTICAL);
-        mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new CircleBroadcastAdapter(getItems(), new CircleBroadcastAdapter.OnItemClickListener() {
+        mBroadcastAdapter = new BroadcastAdapter(getItems(), new BroadcastAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
                 switchBroadcastForUser(getItems().get(position));
@@ -121,7 +118,10 @@ public class BroadcastFragment extends ListFragment<UserCircle>
             public boolean isUserBroadcasting() {
                 return mMasterBroadcast.isChecked();
             }
-        }));
+        });
+
+        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mBroadcastAdapter, this);
+        getRecyclerView().setAdapter(mEndlessAdapter);
 
         // Initialize the master broadcast switch
         mMasterBroadcast = (SwitchCompat) view.findViewById(R.id.masterBroadcast);
@@ -137,9 +137,7 @@ public class BroadcastFragment extends ListFragment<UserCircle>
                     public void done(ParseException e) {
                         if (e == null) {
                             toggleBroadcast();
-                        }
-
-                        else {
+                        } else {
                             Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }
@@ -147,28 +145,39 @@ public class BroadcastFragment extends ListFragment<UserCircle>
             }
         });
 
-        populate();
-
         return view;
     }
 
     @Override
-    protected void populate() {
+    public void onRefresh() {
+        getItems().clear();
+        mBroadcastAdapter.notifyDataSetChanged();
+        mEndlessAdapter.restartAppending();
+    }
+
+    @Override
+    public void onLoadMoreRequested() {
         ParseQuery<UserCircle> query = UserCircle.getQuery();
-        query.whereEqualTo("user", ParseUser.getCurrentUser()).include("circle");
+        query.whereEqualTo("user", ParseUser.getCurrentUser())
+                .include("circle")
+                .setSkip(getNextPage())
+                .setLimit(getLimit());
+
         query.findInBackground(new FindCallback<UserCircle>() {
             @Override
             public void done(List<UserCircle> userCircles, ParseException e) {
                 if (e == null) {
-                    getItems().clear();
-
-                    for (UserCircle uc : userCircles) {
-                        getItems().add(uc);
+                    if (!userCircles.isEmpty()) {
+                        getItems().addAll(userCircles);
+                        mBroadcastAdapter.notifyDataSetChanged();
+                        mEndlessAdapter.onDataReady(true);
                     }
 
-                    if (mRecyclerView.getAdapter() != null) {
-                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                    else {
+                        mEndlessAdapter.onDataReady(false);
                     }
+
+                    setPage(getPage() + 1);
                 }
 
                 else {
@@ -182,10 +191,6 @@ public class BroadcastFragment extends ListFragment<UserCircle>
         });
     }
 
-    @Override
-    public void onRefresh() {
-        populate();
-    }
 
     /**
      * Switch whether or not the current ParseUser is broadcasting to the specified Circle

@@ -8,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,15 +19,22 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.10.31
  */
-public abstract class ListFragment<T> extends Fragment {
+public abstract class ListFragment<T> extends Fragment implements EndlessRecyclerViewAdapter.RequestToLoadMoreListener {
+
+    public static final int DEFAULT_LIMIT = 10;
 
     private List<T> mItems;
+    private int mPage;
+    private int mLimit;
+
     private RecyclerView mRecyclerView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mItems = new ArrayList<T>();
+        mPage = 0;
+        mLimit = DEFAULT_LIMIT;
     }
 
     /**
@@ -49,16 +58,31 @@ public abstract class ListFragment<T> extends Fragment {
         return view;
     }
 
-    /**
-     * Populate the fragment's list with items
-     */
-    protected abstract void populate();
-
     protected List<T> getItems() {
         return mItems;
     }
 
     protected RecyclerView getRecyclerView() {
         return mRecyclerView;
+    }
+
+    protected int getNextPage() {
+        return mPage * mLimit;
+    }
+
+    protected int getPage() {
+        return mPage;
+    }
+
+    protected void setPage(int page) {
+        mPage = page;
+    }
+
+    protected int getLimit() {
+        return mLimit;
+    }
+
+    protected void setLimit(int limit) {
+        mLimit = limit;
     }
 }

@@ -41,13 +41,13 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_my_friend, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_user, parent, false);
         return new ViewHolder(view, mListener);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-        holder.mName.setText(mFriends.get(position).getFriend().getUsername());
+        holder.mUsername.setText(mFriends.get(position).getFriend().getUsername());
     }
 
     @Override
@@ -62,7 +62,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         private static final int REMOVE = 0;
 
         private OnItemClickListener mListener;
-        private TextView mName;
+        private TextView mUsername;
         private CircleImageView mAvatar;
 
         /**
@@ -76,7 +76,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
             view.setOnClickListener(this);
             view.setOnLongClickListener(this);
             mListener = listener;
-            mName = (TextView) view.findViewById(R.id.name);
+            mUsername = (TextView) view.findViewById(R.id.username);
             mAvatar = (CircleImageView) view.findViewById(R.id.avatar);
         }
 
@@ -91,7 +91,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         @Override
         public boolean onLongClick(View v) {
             AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-            builder.setTitle(mName.getText().toString())
+            builder.setTitle(mUsername.getText().toString())
                     .setItems(R.array.actions_friends, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

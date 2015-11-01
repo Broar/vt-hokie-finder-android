@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">VTHokieFinder</string>
     <string name="create_circle">New Circle</string>
+    <string name="find_friends">Find Friends</string>
     <string name="settings">Settings</string>
 
     <!-- Descriptions for toolbar items -->
@@ -17,10 +18,18 @@
     <string name="drawer_settings">Settings</string>
     <string name="drawer_logout">Logout</string>
 
+    <!-- Actions to handle users -->
+    <string-array name="actions_users">
+        <item>Add as friend</item>
+    </string-array>
+
     <!-- Actions to handle friends -->
     <string-array name="actions_friends">
         <item>Remove friend</item>
     </string-array>
+
+    <string name="action_search">Search</string>
+    <string name="user_search_hint">Search username or email</string>
 
     <!-- Application IDs / API keys -->
     <string name="facebook_application_id">1636789559907792</string>

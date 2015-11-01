@@ -67,10 +67,7 @@ public class MyFriendsFragment extends ListFragment<Friend> {
             @Override
             public void done(List<Friend> friends, ParseException e) {
                 if (e == null) {
-                    for (Friend f : friends) {
-                        getItems().add(f);
-                    }
-
+                    getItems().addAll(friends);
                     getRecyclerView().getAdapter().notifyDataSetChanged();
                 }
 

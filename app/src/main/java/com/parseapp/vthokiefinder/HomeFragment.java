@@ -79,6 +79,7 @@ public class HomeFragment extends Fragment {
                         startActivity(new Intent(getContext(), CreateCircleActivity.class));
                         break;
                     case FRIENDS:
+                        startActivity(new Intent(getContext(), FindFriendsActivity.class));
                         break;
                     case MAP:
                         break;

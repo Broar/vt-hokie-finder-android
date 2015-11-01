@@ -68,6 +68,13 @@
                 android:value=".HomeActivity" />
         </activity>
         <activity
+            android:name=".FindFriendsActivity"
+            android:label="@string/find_friends" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HomeActivity" />
+        </activity>
+        <activity
             android:name=".SettingsActivity"
             android:label="@string/settings">
             <meta-data

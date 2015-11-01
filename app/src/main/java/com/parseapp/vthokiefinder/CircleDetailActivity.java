@@ -40,7 +40,7 @@ public class CircleDetailActivity extends AppCompatActivity {
     public static final String IS_MEMBER_KEY = "isMember";
 
     private Circle mCircle;
-    private ArrayList<ParseUser> mMembers;
+    private List<ParseUser> mMembers;
 
     private RecyclerView mRecyclerView;
     private FloatingActionButton mFab;
@@ -155,7 +155,17 @@ public class CircleDetailActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this);
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new UserAdapter(mMembers));
+        mRecyclerView.setAdapter(new UserAdapter(mMembers, new UserAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                // Transition to a profile screen
+            }
+
+            @Override
+            public void onAddFriendClicked(int position) {
+                // Add user as friend
+            }
+        }));
     }
 
     /**
@@ -265,7 +275,9 @@ public class CircleDetailActivity extends AppCompatActivity {
                     }
 
                     mRecyclerView.getAdapter().notifyDataSetChanged();
-                } else {
+                }
+
+                else {
                     Toast.makeText(CircleDetailActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
                 }
             }

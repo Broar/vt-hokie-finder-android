@@ -16,7 +16,6 @@ import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseUser;
-import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,14 +24,11 @@ import java.util.List;
  * A fragment that displays potential friends to the user
  *
  * @author Steven Briggs
- * @version 2015.10.31
+ * @version 2015.11.02
  */
-public class FindFriendsFragment extends ListFragment<ParseUser> {
+public class FindFriendsFragment extends ListFragment<ParseUser, UserAdapter> {
 
     public static final String TAG = FindFriendsFragment.class.getSimpleName();
-
-    private EndlessRecyclerViewAdapter mEndlessAdapter;
-    private UserAdapter mUserAdapter;
 
     /**
      * A factory method to return a new FindFriendsFragment that has been configured
@@ -44,25 +40,14 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflateFragment(R.layout.fragment_friends_list, inflater, container);
-
-        mUserAdapter = new UserAdapter(getItems(), new UserAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View itemView, int position) {
-                openProfile(getItems().get(position).getObjectId());
-            }
-
-            @Override
-            public void onAddFriendClicked(int position) {
-                addFriend(position);
-            }
-        });
-
-        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mUserAdapter, this);
-        getRecyclerView().setAdapter(mEndlessAdapter);
-
-        return view;
+        return inflateFragment(R.layout.fragment_friends_list, inflater, container);
     }
 
     @Override
@@ -96,16 +81,19 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
     /**
      * Add a new friend to the user's friends list
      *
-     * @param position the array position of the user who is to added
+     * @param position the array position of the user who is to be added
      */
     private void addFriend(final int position) {
         HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", ParseUser.getCurrentUser().getObjectId());
+        params.put("friendId", getItems().get(position).getObjectId());
+
         ParseCloud.callFunctionInBackground("createFriendship", params, new FunctionCallback<String>() {
             @Override
             public void done(String message, ParseException e) {
                 if (e == null) {
                     getItems().remove(position);
-                    getRecyclerView().getAdapter().notifyItemRemoved(position);
+                    getBaseAdapter().notifyItemRemoved(position);
                     Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                 }
 
@@ -133,20 +121,36 @@ public class FindFriendsFragment extends ListFragment<ParseUser> {
                 if (e == null) {
                     if (!users.isEmpty()) {
                         getItems().addAll(users);
-                        mUserAdapter.notifyDataSetChanged();
-                        mEndlessAdapter.onDataReady(true);
+                        getAdapter().onDataReady(true);
                     }
 
                     else {
-                        mEndlessAdapter.onDataReady(false);
+                        getAdapter().onDataReady(false);
                     }
 
-                    setPage(getPage() + 1);
+                    nextPage();
                 }
 
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
+
+                setRefresh(false);
+            }
+        });
+    }
+
+    @Override
+    protected UserAdapter buildAdapter() {
+        return new UserAdapter(getItems(), new UserAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                openProfile(getItems().get(position).getObjectId());
+            }
+
+            @Override
+            public void onAddFriendClicked(int position) {
+                addFriend(position);
             }
         });
     }

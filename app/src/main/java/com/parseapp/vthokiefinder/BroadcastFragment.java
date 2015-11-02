@@ -10,11 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SwitchCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,19 +25,16 @@ import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * A fragment that displays the user's circles and handles broadcasting features
  *
  * @author Steven Briggs
- * @version 2015.10.10
+ * @version 2015.11.02
  */
-public class BroadcastFragment extends ListFragment<UserCircle>
-        implements SwipeRefreshLayout.OnRefreshListener {
+public class BroadcastFragment extends ListFragment<UserCircle, BroadcastAdapter> {
 
     public static final String TAG = BroadcastFragment.class.getSimpleName();
 
@@ -52,10 +45,7 @@ public class BroadcastFragment extends ListFragment<UserCircle>
 
     private Callbacks mListener;
 
-    private EndlessRecyclerViewAdapter mEndlessAdapter;
-    private BroadcastAdapter mBroadcastAdapter;
     private SwitchCompat mMasterBroadcast;
-    private SwipeRefreshLayout mSwipeContainer;
 
     public interface Callbacks {
         GoogleApiClient requestGoogleApiClient();
@@ -101,27 +91,7 @@ public class BroadcastFragment extends ListFragment<UserCircle>
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflateFragment(R.layout.fragment_circle_broadcast, inflater, container);
-
-        // Initialize the SwipeRefreshLayout
-        mSwipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipeContainer);
-        mSwipeContainer.setOnRefreshListener(this);
-        mSwipeContainer.setColorSchemeColors(R.color.accent);
-
-        mBroadcastAdapter = new BroadcastAdapter(getItems(), new BroadcastAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View itemView, int position) {
-                switchBroadcastForUser(getItems().get(position));
-            }
-
-            @Override
-            public boolean isUserBroadcasting() {
-                return mMasterBroadcast.isChecked();
-            }
-        });
-
-        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mBroadcastAdapter, this);
-        getRecyclerView().setAdapter(mEndlessAdapter);
+        View view = inflateFragment(R.layout.fragment_broadcast, inflater, container);
 
         // Initialize the master broadcast switch
         mMasterBroadcast = (SwitchCompat) view.findViewById(R.id.masterBroadcast);
@@ -149,10 +119,18 @@ public class BroadcastFragment extends ListFragment<UserCircle>
     }
 
     @Override
-    public void onRefresh() {
-        getItems().clear();
-        mBroadcastAdapter.notifyDataSetChanged();
-        mEndlessAdapter.restartAppending();
+    protected BroadcastAdapter buildAdapter() {
+        return new BroadcastAdapter(getItems(), new BroadcastAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                switchBroadcastForUser(getItems().get(position));
+            }
+
+            @Override
+            public boolean isUserBroadcasting() {
+                return mMasterBroadcast.isChecked();
+            }
+        });
     }
 
     @Override
@@ -169,24 +147,21 @@ public class BroadcastFragment extends ListFragment<UserCircle>
                 if (e == null) {
                     if (!userCircles.isEmpty()) {
                         getItems().addAll(userCircles);
-                        mBroadcastAdapter.notifyDataSetChanged();
-                        mEndlessAdapter.onDataReady(true);
+                        getAdapter().onDataReady(true);
                     }
 
                     else {
-                        mEndlessAdapter.onDataReady(false);
+                        getAdapter().onDataReady(false);
                     }
 
-                    setPage(getPage() + 1);
+                    nextPage();
                 }
 
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
 
-                if (mSwipeContainer.isRefreshing()) {
-                    mSwipeContainer.setRefreshing(false);
-                }
+                setRefresh(false);
             }
         });
     }

@@ -12,7 +12,6 @@ import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
-import com.rockerhieu.rvadapter.endless.EndlessRecyclerViewAdapter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +20,11 @@ import java.util.List;
  * A fragment that displays a list of the user's friends
  *
  * @author Steven Briggs
- * @version 2015.10.31
+ * @version 2015.11.02
  */
-public class MyFriendsFragment extends ListFragment<Friend> implements EndlessRecyclerViewAdapter.RequestToLoadMoreListener {
+public class MyFriendsFragment extends ListFragment<Friend, FriendAdapter> {
 
     private static final String TAG = MyFriendsFragment.class.getSimpleName();
-
-    private EndlessRecyclerViewAdapter mEndlessAdapter;
-    private FriendAdapter mFriendAdapter;
 
     /**
      * A factory method to return a new MyFriendsFragment that has been configured
@@ -46,24 +42,7 @@ public class MyFriendsFragment extends ListFragment<Friend> implements EndlessRe
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflateFragment(R.layout.fragment_friends_list, inflater, container);
-
-        mFriendAdapter = new FriendAdapter(getItems(), new FriendAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View itemView, int position) {
-                // Transition to a profile screen
-            }
-
-            @Override
-            public void onRemoveFriendClicked(int position) {
-                removeFriend(position);
-            }
-        });
-
-        mEndlessAdapter = new EndlessRecyclerViewAdapter(getContext(), mFriendAdapter, this);
-        getRecyclerView().setAdapter(mEndlessAdapter);
-
-        return view;
+        return inflateFragment(R.layout.fragment_friends_list, inflater, container);
     }
 
     /**
@@ -81,7 +60,7 @@ public class MyFriendsFragment extends ListFragment<Friend> implements EndlessRe
             public void done(String result, ParseException e) {
                 if (e == null) {
                     getItems().remove(position);
-                    mEndlessAdapter.notifyItemRemoved(position);
+                    getBaseAdapter().notifyItemRemoved(position);
                 }
 
                 else {
@@ -105,20 +84,36 @@ public class MyFriendsFragment extends ListFragment<Friend> implements EndlessRe
                 if (e == null) {
                     if (!friends.isEmpty()) {
                         getItems().addAll(friends);
-                        mFriendAdapter.notifyDataSetChanged();
-                        mEndlessAdapter.onDataReady(true);
+                        getAdapter().onDataReady(true);
                     }
 
                     else {
-                        mEndlessAdapter.onDataReady(false);
+                        getAdapter().onDataReady(false);
                     }
 
-                    setPage(getPage() + 1);
+                    nextPage();
                 }
 
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
+
+                setRefresh(false);
+            }
+        });
+    }
+
+    @Override
+    protected FriendAdapter buildAdapter() {
+        return new FriendAdapter(getItems(), new FriendAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View itemView, int position) {
+                // Transition to a profile screen
+            }
+
+            @Override
+            public void onRemoveFriendClicked(int position) {
+                removeFriend(position);
             }
         });
     }

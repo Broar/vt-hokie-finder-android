@@ -4,7 +4,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckedTextView;
 import android.widget.TextView;
 
 import com.franlopez.flipcheckbox.FlipCheckBox;
@@ -12,10 +11,10 @@ import com.franlopez.flipcheckbox.FlipCheckBox;
 import java.util.List;
 
 /**
- * An adapter for a RecylcerView that displays the broadcast status of user's circles
+ * An adapter for a RecyclerView that displays the broadcast status of user's circles
  *
  * @author Steven Briggs
- * @version 2015.10.10
+ * @version 2015.11.04
  */
 public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.ViewHolder> {
 
@@ -24,13 +23,12 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
 
     public interface OnItemClickListener {
         void onItemClick(View itemView, int position);
-        boolean isUserBroadcasting();
     }
 
     /**
      * Create a new BroadcastAdapter object.
      *
-     * @param userCircles a list of UserCircles
+     * @param userCircles the dataset of UserCircles
      * @param listener the item listener
      */
     public BroadcastAdapter(List<UserCircle> userCircles, OnItemClickListener listener) {
@@ -40,7 +38,7 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_circle_broadcast, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_broadcast, parent, false);
         return new ViewHolder(view, mListener);
     }
 

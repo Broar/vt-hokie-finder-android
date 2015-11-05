@@ -80,8 +80,6 @@ public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
-
-                setRefresh(false);
             }
         });
     }
@@ -90,7 +88,7 @@ public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
     protected CircleAdapter buildAdapter() {
         return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(View itemView, int position) {
+            public void onItemClick(int position) {
                 openCircle(getItems().get(position).getObjectId(), false);
             }
         });

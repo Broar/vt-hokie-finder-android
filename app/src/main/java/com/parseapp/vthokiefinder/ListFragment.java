@@ -1,6 +1,7 @@
 package com.parseapp.vthokiefinder;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,11 +22,10 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.02
  */
-public abstract class ListFragment<T, A extends RecyclerView.Adapter<? extends RecyclerView.ViewHolder>> extends Fragment implements
-        EndlessRecyclerViewAdapter.RequestToLoadMoreListener,
-        SwipeRefreshLayout.OnRefreshListener {
+public abstract class ListFragment<T, A extends RecyclerView.Adapter<? extends RecyclerView.ViewHolder>>
+        extends Fragment implements EndlessRecyclerViewAdapter.RequestToLoadMoreListener {
 
-    public static final int DEFAULT_LIMIT = 10;
+    public static final int DEFAULT_LIMIT = 25;
 
     private List<T> mItems;
     private int mPage;
@@ -33,8 +33,6 @@ public abstract class ListFragment<T, A extends RecyclerView.Adapter<? extends R
 
     private A mBaseAdapter;
     private EndlessRecyclerViewAdapter mAdapter;
-    private RecyclerView mRecyclerView;
-    private SwipeRefreshLayout mSwipeContainer;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -58,47 +56,24 @@ public abstract class ListFragment<T, A extends RecyclerView.Adapter<? extends R
         View view = inflater.inflate(resId, container, false);
 
         // Initialize the RecyclerView
-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        RecyclerView mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
         LinearLayoutManager manager = new LinearLayoutManager(getActivity());
         manager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(manager);
         mRecyclerView.setAdapter(mAdapter);
 
-        // Initialize the SwipeRefreshLayout
-        mSwipeContainer = (SwipeRefreshLayout) view.findViewById(R.id.swipe_container);
-
-        // The swipe container is an optional layout item
-        if (mSwipeContainer != null) {
-            mSwipeContainer.setOnRefreshListener(this);
-        }
-
         return view;
     }
 
-    @Override
-    public void onRefresh() {
-        mItems.clear();
-        mPage = 0;
-        mAdapter.restartAppending();
-    }
-
     /**
-     * Construct a new adapter for the RecyclerView
+     * Construct a new base adapter for the RecyclerView
      *
-     * @return the newly constructed adapter
+     * @return the newly constructed base adapter
      */
     protected abstract A buildAdapter();
 
-    protected RecyclerView getRecyclerView() {
-        return mRecyclerView;
-    }
-
     protected EndlessRecyclerViewAdapter getAdapter() {
         return mAdapter;
-    }
-
-    protected void setRefresh(boolean refresh) {
-        mSwipeContainer.setRefreshing(refresh);
     }
 
     protected A getBaseAdapter() {

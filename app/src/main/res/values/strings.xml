@@ -2,6 +2,7 @@
     <string name="app_name">VTHokieFinder</string>
     <string name="create_circle">New Circle</string>
     <string name="find_friends">Find Friends</string>
+    <string name="profile">Profile</string>
     <string name="settings">Settings</string>
 
     <!-- Descriptions for toolbar items -->
@@ -20,6 +21,11 @@
 
     <!-- Actions to handle users -->
     <string-array name="actions_users">
+        <item>Add as friend</item>
+    </string-array>
+
+    <!-- Actions to handle non-friends -->
+    <string-array name="actions_nonfriends">
         <item>Add as friend</item>
     </string-array>
 

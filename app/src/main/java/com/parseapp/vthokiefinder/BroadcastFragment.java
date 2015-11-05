@@ -26,6 +26,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -125,11 +126,6 @@ public class BroadcastFragment extends ListFragment<UserCircle, BroadcastAdapter
             public void onItemClick(View itemView, int position) {
                 switchBroadcastForUser(getItems().get(position));
             }
-
-            @Override
-            public boolean isUserBroadcasting() {
-                return mMasterBroadcast.isChecked();
-            }
         });
     }
 
@@ -160,8 +156,6 @@ public class BroadcastFragment extends ListFragment<UserCircle, BroadcastAdapter
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
-
-                setRefresh(false);
             }
         });
     }

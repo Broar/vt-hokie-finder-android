@@ -134,8 +134,6 @@ public class FindFriendsFragment extends ListFragment<ParseUser, UserAdapter> {
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
-
-                setRefresh(false);
             }
         });
     }

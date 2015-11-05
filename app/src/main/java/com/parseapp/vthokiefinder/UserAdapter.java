@@ -33,7 +33,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     /**
      * Create a new UserAdapter object.
      *
-     * @param users the users to be displayed
+     * @param users the dataset of users
      * @param listener the object listening to item click events
      */
     public UserAdapter(List<ParseUser> users, OnItemClickListener listener) {

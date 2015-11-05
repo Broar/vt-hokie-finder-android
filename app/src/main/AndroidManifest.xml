@@ -75,6 +75,10 @@
                 android:value=".HomeActivity" />
         </activity>
         <activity
+            android:name=".ProfileActivity"
+            android:label="@string/profile">
+        </activity>
+        <activity
             android:name=".SettingsActivity"
             android:label="@string/settings">
             <meta-data

@@ -1,7 +1,6 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
-import android.content.pm.ConfigurationInfo;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,9 +11,9 @@ import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import com.parse.ParseUser;
 import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 
 /**
@@ -23,11 +22,10 @@ import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
  * @author Steven Briggs
  * @version 2015.10.
  */
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements ViewPagerAdapter.Callbacks {
     public static final String TAG = HomeFragment.class.getSimpleName();
 
-    private static final int NUM_TABS = 4;
-    private static final CharSequence[] TAB_TITLES = { "MY CIRCLES", "CIRCLES", "FRIENDS", "MAP" };
+    private static final CharSequence[] TITLES = { "MY CIRCLES", "CIRCLES", "FRIENDS", "MAP" };
 
     private static final int MY_CIRCLES = 0;
     private static final int CIRCLES = 1;
@@ -110,7 +108,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        mViewPager.setAdapter(new ViewPagerAdapter(getChildFragmentManager(), TAB_TITLES, NUM_TABS));
+        mViewPager.setAdapter(new ViewPagerAdapter(getChildFragmentManager(), TITLES, this));
     }
 
     /**
@@ -188,5 +186,24 @@ public class HomeFragment extends Fragment {
         });
 
         mTabs.setViewPager(mViewPager);
+    }
+
+    @Override
+    public Fragment onItemRequested(int position) {
+        if (position == 0) {
+            return CirclesFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+        }
+
+        else if (position == 1) {
+            return FindCirclesFragment.newInstance();
+        }
+
+        else if (position == 2) {
+            return FriendsFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+        }
+
+        else {
+            return CircleMapFragment.newInstance();
+        }
     }
 }

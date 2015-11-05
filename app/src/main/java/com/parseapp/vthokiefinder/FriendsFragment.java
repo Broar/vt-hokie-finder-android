@@ -1,5 +1,6 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,29 +11,35 @@ import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ParseUser;
 
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * A fragment that displays a list of the user's friends
+ * A fragment that displays a list of a specified user's friends
  *
  * @author Steven Briggs
- * @version 2015.11.02
+ * @version 2015.11.03
  */
-public class MyFriendsFragment extends ListFragment<Friend, FriendAdapter> {
+public class FriendsFragment extends ListFragment<Friend, FriendAdapter> {
 
-    private static final String TAG = MyFriendsFragment.class.getSimpleName();
+    public static final String TAG = FriendsFragment.class.getSimpleName();
+    public static final String USER_ID_KEY = "userId";
 
     /**
-     * A factory method to return a new MyFriendsFragment that has been configured
+     * A factory method to return a new FriendsFragment that has been configured
      *
-     * @return a new MyFriendsFragment that has been configured
+     * @param userId the id of the user
+     * @return a new FriendsFragment that has been configured
      */
-    public static MyFriendsFragment newInstance() {
-        return new MyFriendsFragment();
+    public static FriendsFragment newInstance(String userId) {
+        Bundle args = new Bundle();
+        args.putString(USER_ID_KEY, userId);
+        FriendsFragment fragment = new FriendsFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -46,14 +53,44 @@ public class MyFriendsFragment extends ListFragment<Friend, FriendAdapter> {
     }
 
     /**
+     * Add a new friend to a user's friends list
+     *
+     * @param userId the id of the user
+     * @param position the array position of the user who is to be added
+     */
+    private void addFriend(String userId, final int position) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", userId);
+        params.put("friendId", getItems().get(position).getObjectId());
+
+        ParseCloud.callFunctionInBackground("createFriendship", params, new FunctionCallback<String>() {
+            @Override
+            public void done(String message, ParseException e) {
+                if (e == null) {
+                    getItems().remove(position);
+                    getBaseAdapter().notifyItemRemoved(position);
+                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
      * Remove a friend from the user's friends list
      *
      * @param position the array position of the friend who is to removed
      */
     private void removeFriend(final int position) {
+        String userId = getItems().get(position).getUser().getObjectId();
+        String friendId = getItems().get(position).getFriend().getObjectId();
+
         HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("userId", getItems().get(position).getUser().getObjectId());
-        params.put("friendId", getItems().get(position).getFriend().getObjectId());
+        params.put("userId", userId);
+        params.put("friendId", friendId);
 
         ParseCloud.callFunctionInBackground("deleteFriendship", params, new FunctionCallback<String>() {
             @Override
@@ -72,8 +109,10 @@ public class MyFriendsFragment extends ListFragment<Friend, FriendAdapter> {
 
     @Override
     public void onLoadMoreRequested() {
+        String userId = getArguments().getString(USER_ID_KEY);
+
         ParseQuery<Friend> query = Friend.getQuery();
-        query.whereEqualTo("user", ParseUser.getCurrentUser())
+        query.whereEqualTo("user", ParseObject.createWithoutData("_User", userId))
                 .include("friend")
                 .setSkip(getNextPage())
                 .setLimit(getLimit());
@@ -97,8 +136,6 @@ public class MyFriendsFragment extends ListFragment<Friend, FriendAdapter> {
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
-
-                setRefresh(false);
             }
         });
     }
@@ -107,8 +144,16 @@ public class MyFriendsFragment extends ListFragment<Friend, FriendAdapter> {
     protected FriendAdapter buildAdapter() {
         return new FriendAdapter(getItems(), new FriendAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(View itemView, int position) {
-                // Transition to a profile screen
+            public void onItemClick(int position) {
+                String id = getItems().get(position).getFriend().getObjectId();
+                Intent intent = new Intent(getContext(), ProfileActivity.class);
+                intent.putExtra(ProfileActivity.USER_ID_KEY, id);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onAddFriendClicked(int position) {
+                addFriend(getArguments().getString(USER_ID_KEY), position);
             }
 
             @Override

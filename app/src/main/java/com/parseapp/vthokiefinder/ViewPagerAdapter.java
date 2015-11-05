@@ -1,48 +1,40 @@
 package com.parseapp.vthokiefinder;
 
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 
 /**
- * A simple ViewPager required to utilize the SlidingTabLayout
+ * A simple adapter to be used by ViewPagers
  *
  * @author Steven Briggs
- * @version 2015.09.22
+ * @version 2015.11.03
  */
 public class ViewPagerAdapter extends FragmentStatePagerAdapter {
 
     private CharSequence[] mTitles;
-    private int mNumOfTabs;
+    private Callbacks mListener;
 
-    public ViewPagerAdapter(FragmentManager fm, CharSequence[] titles, int numOfTabs) {
+    public interface Callbacks {
+        Fragment onItemRequested(int position);
+    }
+
+    public ViewPagerAdapter(FragmentManager fm, CharSequence[] titles, @NonNull Callbacks listener) {
         super(fm);
         mTitles = titles;
-        mNumOfTabs = numOfTabs;
+        mListener = listener;
     }
 
     @Override
+    @NonNull
     public Fragment getItem(int position) {
-        if (position == 0) {
-            return MyCirclesFragment.newInstance();
-        }
-
-        else if (position == 1) {
-            return FindCirclesFragment.newInstance();
-        }
-
-        else if (position == 2) {
-            return MyFriendsFragment.newInstance();
-        }
-
-        else {
-            return CircleMapFragment.newInstance();
-        }
+        return mListener.onItemRequested(position);
     }
 
     @Override
     public int getCount() {
-        return mNumOfTabs;
+        return mTitles.length;
     }
 
     @Override

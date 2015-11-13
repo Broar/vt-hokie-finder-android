@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -25,6 +27,8 @@ public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
 
     public static final String TAG = FindCirclesFragment.class.getSimpleName();
 
+    private CirclesFragment.Callbacks mListener;
+
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
      *
@@ -35,23 +39,22 @@ public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflateFragment(R.layout.fragment_circles_list, inflater, container);
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+
+        try {
+            mListener = (CirclesFragment.Callbacks) activity;
+        }
+
+        catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement Callbacks");
+        }
     }
 
-    /**
-     * Open a detailed view of the circle specified by id
-     *
-     * @param id the id of the circle to be opened
-     * @param isMember determines whether the current user is member of the circle
-     */
-    private void openCircle(String id, boolean isMember) {
-        Intent intent = new Intent(getContext(), CircleDetailActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString(CircleDetailActivity.CIRCLE_ID_KEY, id);
-        bundle.putBoolean(CircleDetailActivity.IS_MEMBER_KEY, isMember);
-        intent.putExtras(bundle);
-        getActivity().startActivity(intent);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflateFragment(R.layout.fragment_circles_list, inflater, container);
     }
 
     @Override
@@ -89,7 +92,7 @@ public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
         return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                openCircle(getItems().get(position).getObjectId(), false);
+                mListener.onCircleClick(getItems().get(position).getObjectId());
             }
         });
     }

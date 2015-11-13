@@ -104,7 +104,6 @@ public class CreateCircleActivity extends AppCompatActivity implements
         finish();
         Intent intent = new Intent(this, CircleDetailActivity.class);
         intent.putExtra(CircleDetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
-        intent.putExtra(CircleDetailActivity.IS_MEMBER_KEY, true);
         startActivity(intent);
     }
 

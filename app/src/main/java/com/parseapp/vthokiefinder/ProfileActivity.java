@@ -1,5 +1,6 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -11,7 +12,7 @@ import android.view.MenuItem;
  * @author Steven Briggs
  * @version 2015.11.03
  */
-public class ProfileActivity extends AppCompatActivity {
+public class ProfileActivity extends AppCompatActivity implements CirclesFragment.Callbacks {
 
     public static final String USER_ID_KEY = "userId";
 
@@ -45,5 +46,12 @@ public class ProfileActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCircleClick(String circleId) {
+        Intent intent = new Intent(this, CircleDetailActivity.class);
+        intent.putExtra(CircleDetailActivity.CIRCLE_ID_KEY, circleId);
+        startActivity(intent);
     }
 }

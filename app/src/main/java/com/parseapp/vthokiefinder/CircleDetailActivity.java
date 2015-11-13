@@ -1,13 +1,13 @@
 package com.parseapp.vthokiefinder;
 
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,7 +24,6 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,25 +33,19 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.10.05
  */
-public class CircleDetailActivity extends AppCompatActivity {
+public class CircleDetailActivity extends AppCompatActivity implements UserFragment.Callbacks {
 
     public static final String CIRCLE_ID_KEY = "circleId";
-    public static final String IS_MEMBER_KEY = "isMember";
 
     private Circle mCircle;
-    private List<ParseUser> mMembers;
-
-    private RecyclerView mRecyclerView;
+    private UserFragment mUserFragment;
     private FloatingActionButton mFab;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_circle_detail);
-        mMembers = new ArrayList<ParseUser>();
 
-        // Retrieve the requested circle from the Parse backend
         try {
             mCircle = Circle.getQuery().get(getIntent().getStringExtra(CIRCLE_ID_KEY));
         }
@@ -61,16 +54,28 @@ public class CircleDetailActivity extends AppCompatActivity {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
+        FragmentManager fm = getSupportFragmentManager();
+        if (savedInstanceState == null) {
+            mUserFragment = UserFragment.newInstance();
+            fm.beginTransaction()
+                    .add(R.id.fragmentContainer, mUserFragment, UserFragment.TAG)
+                    .commit();
+        }
+
+        else {
+            mUserFragment = (UserFragment) fm.findFragmentByTag(UserFragment.TAG);
+        }
+
         // Initialize the Toolbar to be the ActionBar
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(mCircle.getName());
             getSupportActionBar().setHomeButtonEnabled(true);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         mFab = (FloatingActionButton) findViewById(R.id.fab);
-        initializeCircleAction(getIntent().getBooleanExtra(IS_MEMBER_KEY, false));
-        initializeRecyclerView();
+        setupAction(false);
     }
 
     @Override
@@ -96,7 +101,7 @@ public class CircleDetailActivity extends AppCompatActivity {
      *
      * @param isMember true if the user is member of the circle, false if not
      */
-    private void initializeCircleAction(boolean isMember) {
+    private void setupAction(boolean isMember) {
 
         // Determine if the FAB's icon should change from join to leave
         // getDrawable() is only available on API 21+
@@ -147,28 +152,6 @@ public class CircleDetailActivity extends AppCompatActivity {
     }
 
     /**
-     * Setup the RecyclerView containing a list of members within the circle
-     */
-    private void initializeRecyclerView() {
-        mMembers = getMembers();
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        LinearLayoutManager manager = new LinearLayoutManager(this);
-        manager.setOrientation(LinearLayoutManager.VERTICAL);
-        mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.setAdapter(new UserAdapter(mMembers, new UserAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(View itemView, int position) {
-                // Transition to a profile screen
-            }
-
-            @Override
-            public void onAddFriendClicked(int position) {
-                // Add user as friend
-            }
-        }));
-    }
-
-    /**
      * Add the current user as a member to the circle
      */
     private void joinCircle() {
@@ -187,9 +170,8 @@ public class CircleDetailActivity extends AppCompatActivity {
 
                 // Success! Let's inform the user they have joined
                 if (e == null) {
-                    mMembers.add(ParseUser.getCurrentUser());
-                    mRecyclerView.getAdapter().notifyDataSetChanged();
-                    initializeCircleAction(true);
+                    mUserFragment.notifyUsersChanged(ParseUser.getCurrentUser());
+                    setupAction(true);
                     Toast.makeText(CircleDetailActivity.this, "Successfully joined!", Toast.LENGTH_LONG).show();
                 }
 
@@ -212,7 +194,6 @@ public class CircleDetailActivity extends AppCompatActivity {
         query.findInBackground(new FindCallback<UserCircle>() {
             @Override
             public void done(List<UserCircle> userCircles, ParseException e) {
-
                 // Success! Let's try to remove the current user from the circle
                 if (e == null) {
                     callDeleteUserFromCircle();
@@ -243,7 +224,7 @@ public class CircleDetailActivity extends AppCompatActivity {
                             "No members remaining. Circle deleted!", Toast.LENGTH_LONG).show();
                 }
 
-                else if (e == null && !isCircleDeleted) {
+                else if (e == null) {
                     Toast.makeText(CircleDetailActivity.this,
                             "Successfully left circle!", Toast.LENGTH_LONG).show();
                 }
@@ -255,35 +236,15 @@ public class CircleDetailActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Query a list of all members within the circle
-     *
-     * @return a list of all members within the circle
-     */
-    private ArrayList<ParseUser> getMembers() {
-        final ArrayList<ParseUser> members = new ArrayList<ParseUser>();
+    @Override
+    public void onUserClicked(String userId) {
+        Intent intent = new Intent(this, ProfileActivity.class);
+        intent.putExtra(ProfileActivity.USER_ID_KEY, userId);
+        startActivity(intent);
+    }
 
-        // Get all of the members of the Circle
-        ParseQuery<UserCircle> query = UserCircle.getQuery();
-        query.whereEqualTo("circle", mCircle).include("user");
-        query.findInBackground(new FindCallback<UserCircle>() {
-            @Override
-            public void done(List<UserCircle> userCircles, ParseException e) {
-                if (e == null) {
-
-                    for (UserCircle uc : userCircles) {
-                        members.add(uc.getParseUser("user"));
-                    }
-
-                    mRecyclerView.getAdapter().notifyDataSetChanged();
-                }
-
-                else {
-                    Toast.makeText(CircleDetailActivity.this, "Couldn't load members!", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
-        return members;
+    @Override
+    public Circle onCircleRequested() {
+        return mCircle;
     }
 }

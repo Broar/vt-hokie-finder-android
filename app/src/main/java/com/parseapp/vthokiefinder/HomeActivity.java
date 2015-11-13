@@ -29,13 +29,13 @@ import com.parse.ParseUser;
  * @version 2015.10.23
  */
 public class HomeActivity extends AppCompatActivity implements
+        CirclesFragment.Callbacks,
         CircleMapFragment.Callbacks,
         BroadcastFragment.Callbacks,
         GoogleApiManagerFragment.Callbacks {
 
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
-    private ActionBarDrawerToggle mToogle;
 
     private HomeFragment mHomeFragment;
     private BroadcastFragment mBroadcastFragment;
@@ -76,21 +76,9 @@ public class HomeActivity extends AppCompatActivity implements
         }
 
         // Initialize all elements of the Activity
-        initializeToolbar();
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
         initializeDrawerLayout();
-    }
-
-    /**
-     * Replace the existing fragment with the specified one
-     *
-     * @param fragment the fragment to be shown
-     * @param tag the fragment's associated tag
-     */
-    private void replaceFragment(Fragment fragment, String tag) {
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainer, fragment, tag)
-                .addToBackStack(null)
-                .commit();
     }
 
     @Override
@@ -162,19 +150,12 @@ public class HomeActivity extends AppCompatActivity implements
     }
 
     /**
-     * Setup the SupportActionBar for this screen
-     */
-    private void initializeToolbar() {
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(mToolbar);
-    }
-
-    /**
      * Setup the DrawerLayout for this screen
      */
     private void initializeDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        mToogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close) {
+        ActionBarDrawerToggle mToogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar,
+                R.string.drawer_open, R.string.drawer_close) {
             @Override
             public void onDrawerOpened(View drawerView) {
                 // Prevent hamburger icon from turning into a back arrow
@@ -225,5 +206,12 @@ public class HomeActivity extends AppCompatActivity implements
         ((TextView) header.findViewById(R.id.username)).setText(ParseUser.getCurrentUser().getUsername());
         ((TextView) header.findViewById(R.id.email)).setText(ParseUser.getCurrentUser().getEmail());
         navigationView.addHeaderView(header);
+    }
+
+    @Override
+    public void onCircleClick(String circleId) {
+        Intent intent = new Intent(this, CircleDetailActivity.class);
+        intent.putExtra(CircleDetailActivity.CIRCLE_ID_KEY, circleId);
+        startActivity(intent);
     }
 }

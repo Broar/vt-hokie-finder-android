@@ -22,7 +22,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.02
  */
-public abstract class ListFragment<T, A extends RecyclerView.Adapter<? extends RecyclerView.ViewHolder>>
+public abstract class RecyclerFragment<T, A extends RecyclerView.Adapter<? extends RecyclerView.ViewHolder>>
         extends Fragment implements EndlessRecyclerViewAdapter.RequestToLoadMoreListener {
 
     public static final int DEFAULT_LIMIT = 25;

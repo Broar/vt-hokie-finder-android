@@ -26,7 +26,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.02
  */
-public class FindFriendsFragment extends ListFragment<ParseUser, UserAdapter> {
+public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter> {
 
     public static final String TAG = FindFriendsFragment.class.getSimpleName();
 
@@ -140,7 +140,7 @@ public class FindFriendsFragment extends ListFragment<ParseUser, UserAdapter> {
 
     @Override
     protected UserAdapter buildAdapter() {
-        return new UserAdapter(getItems(), new UserAdapter.OnItemClickListener() {
+        return new UserAdapter(getContext(), getItems(), new UserAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
                 openProfile(getItems().get(position).getObjectId());

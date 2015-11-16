@@ -1,6 +1,8 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -8,6 +10,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.parse.ParseFile;
 import com.parse.ParseUser;
 
 import java.util.List;
@@ -22,6 +27,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
+    private Context mContext;
     private List<ParseUser> mUsers;
     private OnItemClickListener mListener;
 
@@ -33,10 +39,12 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     /**
      * Create a new UserAdapter object.
      *
+     * @param context the context of the adapter
      * @param users the dataset of users
      * @param listener the object listening to item click events
      */
-    public UserAdapter(List<ParseUser> users, OnItemClickListener listener) {
+    public UserAdapter(Context context, List<ParseUser> users, OnItemClickListener listener) {
+        mContext = context;
         mUsers = users;
         mListener = listener;
     }
@@ -49,6 +57,17 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(UserAdapter.ViewHolder holder, int position) {
+        ParseUser user = mUsers.get(position);
+
+        ParseFile imageFile = user.getParseFile("avatar");
+        if (imageFile != null) {
+            Glide.with(mContext)
+                    .load(Uri.parse(imageFile.getUrl()))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.mAvatar);
+        }
+
+
         holder.mUsername.setText(mUsers.get(position).getString("username"));
     }
 

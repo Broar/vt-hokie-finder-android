@@ -8,14 +8,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.ParseException;
@@ -111,21 +109,12 @@ public class CreateCircleFragment extends Fragment {
     }
 
     /**
-     * Determine if the user has altered the input fields of the new circle
-     *
-     * @return true if the user altered any of the input fields
-     */
-    public boolean isDirty() {
-        return mCircleName.isDirty() || mCircleDescription.isDirty() || mCircleIcon.isDirty();
-    }
-
-    /**
      * Setup the circle icon picker
      *
      * @param view the parent view of the image
      */
     private void initializeIconPicker(View view) {
-        mCircleIcon = (ImageView) view.findViewById(R.id.circleIcon);
+        mCircleIcon = (ImageView) view.findViewById(R.id.circle_icon);
 
         // If the user already selected an image, then redisplay it
         Bitmap bm = mListener.onIconBitmapRequested();

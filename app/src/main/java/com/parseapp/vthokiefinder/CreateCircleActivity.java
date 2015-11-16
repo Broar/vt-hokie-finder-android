@@ -14,7 +14,7 @@ import android.view.MenuItem;
  * An activity allowing the user to create a new circle
  *
  * @author Steven Briggs
- * @version 2015.10.26
+ * @version 2015.11.13
  */
 public class CreateCircleActivity extends AppCompatActivity implements
         CreateCircleFragment.Callbacks,
@@ -41,7 +41,7 @@ public class CreateCircleActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             mCreateCircleFragment = CreateCircleFragment.newInstance();
             fm.beginTransaction()
-                    .add(R.id.fragmentContainer, mCreateCircleFragment, CreateCircleFragment.TAG)
+                    .add(R.id.fragment_container, mCreateCircleFragment, CreateCircleFragment.TAG)
                     .commit();
 
             mBitmapHolderFragment = new BitmapHolderFragment();
@@ -77,18 +77,6 @@ public class CreateCircleActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onBackPressed() {
-        // Users should only be prompted to discarded changes if they actually made any
-        if (mCreateCircleFragment.isDirty()) {
-            showDiscardDialog();
-        }
-
-        else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
     public void onIconBitmapSet(Bitmap bm) {
         mBitmapHolderFragment.setIconBitmap(bm);
     }
@@ -102,8 +90,8 @@ public class CreateCircleActivity extends AppCompatActivity implements
     public void onSaveSuccessful(Circle circle) {
         // Finish this Activity. Open the detail view of the newly created circle
         finish();
-        Intent intent = new Intent(this, CircleDetailActivity.class);
-        intent.putExtra(CircleDetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra(DetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
         startActivity(intent);
     }
 

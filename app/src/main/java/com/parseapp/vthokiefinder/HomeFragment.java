@@ -1,11 +1,11 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 
 import com.parse.ParseUser;
-import com.parseapp.vthokiefinder.widgets.SlidingTabLayout;
 
 /**
  * A fragment providing tabular navigation between the main features of the application
@@ -35,7 +34,7 @@ public class HomeFragment extends Fragment implements ViewPagerAdapter.Callbacks
     private int mPagePosition;
     private FloatingActionButton mFab;
     private ViewPager mViewPager;
-    private SlidingTabLayout mTabs;
+    private TabLayout mTabs;
 
     /**
      * A factory method to return a new HomeFragment that has been configured
@@ -52,8 +51,8 @@ public class HomeFragment extends Fragment implements ViewPagerAdapter.Callbacks
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         mFab = (FloatingActionButton) view.findViewById(R.id.fab);
-        mViewPager = (ViewPager) view.findViewById(R.id.viewPager);
-        mTabs = (SlidingTabLayout) view.findViewById(R.id.tabs);
+        mViewPager = (ViewPager) view.findViewById(R.id.view_pager);
+        mTabs = (TabLayout) view.findViewById(R.id.tabs);
 
         initializeFab();
         initializePager();
@@ -168,24 +167,7 @@ public class HomeFragment extends Fragment implements ViewPagerAdapter.Callbacks
      * Setup the tabular navigation
      */
     private void initializeTabs() {
-
-        // Alter the space distribution of the tabs depending on the orientation
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            mTabs.setDistributeEvenly(true);
-        }
-
-        else {
-            mTabs.setDistributeEvenly(false);
-        }
-
-        mTabs.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
-            @Override
-            public int getIndicatorColor(int position) {
-                return R.color.tabs_scroll_color;
-            }
-        });
-
-        mTabs.setViewPager(mViewPager);
+        mTabs.setupWithViewPager(mViewPager);
     }
 
     @Override

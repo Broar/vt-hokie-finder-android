@@ -2,9 +2,9 @@ package com.parseapp.vthokiefinder;
 
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,8 +18,13 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.parse.ParseFile;
 import com.parse.ParseUser;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * An activity that acts as the applications "homepage". Provides the user with
@@ -30,6 +35,7 @@ import com.parse.ParseUser;
  */
 public class HomeActivity extends AppCompatActivity implements
         CirclesFragment.Callbacks,
+        FriendsFragment.Callbacks,
         CircleMapFragment.Callbacks,
         BroadcastFragment.Callbacks,
         GoogleApiManagerFragment.Callbacks {
@@ -52,12 +58,12 @@ public class HomeActivity extends AppCompatActivity implements
         if (savedInstanceState == null) {
             mHomeFragment = HomeFragment.newInstance();
             fm.beginTransaction()
-                    .add(R.id.fragmentContainer, mHomeFragment, HomeFragment.TAG)
+                    .add(R.id.fragment_container, mHomeFragment, HomeFragment.TAG)
                     .commit();
 
             mBroadcastFragment = BroadcastFragment.newInstance();
             fm.beginTransaction()
-                    .add(R.id.circleSelect, mBroadcastFragment, BroadcastFragment.TAG)
+                    .add(R.id.broadcast_select, mBroadcastFragment, BroadcastFragment.TAG)
                     .commit();
 
             mGoogleApiManagerFragment = new GoogleApiManagerFragment();
@@ -174,7 +180,7 @@ public class HomeActivity extends AppCompatActivity implements
         mToogle.syncState();
 
         // Create a listener to handle clicks on the drawer's menu
-        NavigationView navigationView = (NavigationView) findViewById(R.id.navigationView);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -203,15 +209,33 @@ public class HomeActivity extends AppCompatActivity implements
         // Inflate the header and attach it to the drawer. The header displays user information
         // similar to several other Google applications
         RelativeLayout header = (RelativeLayout) getLayoutInflater().inflate(R.layout.header, navigationView, false);
+        CircleImageView avatar = (CircleImageView) header.findViewById(R.id.avatar);
+
+        // Attempt to load the user's avatar. If there isn't one, then use the default image
+        ParseFile imageFile = ParseUser.getCurrentUser().getParseFile("avatar");
+        if (imageFile != null) {
+            Glide.with(this)
+                    .load(Uri.parse(imageFile.getUrl()))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(avatar);
+        }
+
         ((TextView) header.findViewById(R.id.username)).setText(ParseUser.getCurrentUser().getUsername());
         ((TextView) header.findViewById(R.id.email)).setText(ParseUser.getCurrentUser().getEmail());
         navigationView.addHeaderView(header);
     }
 
     @Override
-    public void onCircleClick(String circleId) {
-        Intent intent = new Intent(this, CircleDetailActivity.class);
-        intent.putExtra(CircleDetailActivity.CIRCLE_ID_KEY, circleId);
+    public void onCircleClicked(Circle circle) {
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra(DetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
+        startActivity(intent);
+    }
+
+    @Override
+    public void onFriendClicked(ParseUser friend) {
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra(DetailActivity.USER_ID_KEY, friend.getObjectId());
         startActivity(intent);
     }
 }

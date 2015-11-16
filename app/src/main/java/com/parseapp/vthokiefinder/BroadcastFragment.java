@@ -26,7 +26,6 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,7 +34,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.02
  */
-public class BroadcastFragment extends ListFragment<UserCircle, BroadcastAdapter> {
+public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAdapter> {
 
     public static final String TAG = BroadcastFragment.class.getSimpleName();
 

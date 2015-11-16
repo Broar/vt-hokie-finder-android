@@ -54,13 +54,6 @@
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name=".CircleDetailActivity"
-            android:label="@string/app_name" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HomeActivity" />
-        </activity>
-        <activity
             android:name=".CreateCircleActivity"
             android:label="@string/create_circle" >
             <meta-data
@@ -75,8 +68,11 @@
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".ProfileActivity"
-            android:label="@string/profile">
+            android:name=".DetailActivity"
+            android:label="@string/details">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HomeActivity" />
         </activity>
         <activity
             android:name=".SettingsActivity"

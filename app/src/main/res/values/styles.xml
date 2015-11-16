@@ -18,6 +18,24 @@
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->
     </style>
 
+    <!-- Custome style for sliding tabs -->
+    <style name="HokieFinderTabLayout" parent="Widget.Design.TabLayout">
+        <item name="tabIndicatorColor">@color/tabs_scroll_color</item>
+        <item name="tabIndicatorHeight">4dp</item>
+        <item name="tabPaddingStart">12dp</item>
+        <item name="tabPaddingEnd">12dp</item>
+        <item name="tabBackground">?attr/selectableItemBackground</item>
+        <item name="tabTextAppearance">@style/HokieFinderTabTextAppearance</item>
+        <item name="tabSelectedTextColor">?android:textColorPrimary</item>
+    </style>
+
+    <style name="HokieFinderTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="textAllCaps">true</item>
+    </style>
+
     <!-- ParseLoginUI style overrides -->
     <style name="ParseLoginUI.Button" parent="@style/Theme.AppCompat.Light">
         <item name="android:layout_width">match_parent</item>

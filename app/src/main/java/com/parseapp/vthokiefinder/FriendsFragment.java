@@ -1,5 +1,7 @@
 package com.parseapp.vthokiefinder;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +15,7 @@ import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseUser;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +26,16 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.03
  */
-public class FriendsFragment extends ListFragment<Friend, FriendAdapter> {
+public class FriendsFragment extends RecyclerFragment<Friend, FriendAdapter> {
 
     public static final String TAG = FriendsFragment.class.getSimpleName();
     public static final String USER_ID_KEY = "userId";
+
+    private Callbacks mListener;
+
+    public interface Callbacks {
+        void onFriendClicked(ParseUser friend);
+    }
 
     /**
      * A factory method to return a new FriendsFragment that has been configured
@@ -40,6 +49,20 @@ public class FriendsFragment extends ListFragment<Friend, FriendAdapter> {
         FriendsFragment fragment = new FriendsFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Activity activity = (Activity) context;
+
+        try {
+            mListener = (Callbacks) activity;
+        }
+
+        catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement Callbacks");
+        }
     }
 
     @Override
@@ -142,13 +165,10 @@ public class FriendsFragment extends ListFragment<Friend, FriendAdapter> {
 
     @Override
     protected FriendAdapter buildAdapter() {
-        return new FriendAdapter(getItems(), new FriendAdapter.OnItemClickListener() {
+        return new FriendAdapter(getContext(), getItems(), new FriendAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                String id = getItems().get(position).getFriend().getObjectId();
-                Intent intent = new Intent(getContext(), ProfileActivity.class);
-                intent.putExtra(ProfileActivity.USER_ID_KEY, id);
-                startActivity(intent);
+                mListener.onFriendClicked(getItems().get(position).getFriend());
             }
 
             @Override

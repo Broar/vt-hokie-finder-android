@@ -21,7 +21,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.12
  */
-public class CirclesFragment extends ListFragment<Circle, CircleAdapter> {
+public class CirclesFragment extends RecyclerFragment<Circle, CircleAdapter> {
 
     public static final String TAG = CirclesFragment.class.getSimpleName();
     public static final String USER_ID_KEY = "userId";
@@ -29,7 +29,7 @@ public class CirclesFragment extends ListFragment<Circle, CircleAdapter> {
     private Callbacks mListener;
 
     public interface Callbacks {
-        void onCircleClick(String circleId);
+        void onCircleClicked(Circle circle);
     }
 
     /**
@@ -103,10 +103,10 @@ public class CirclesFragment extends ListFragment<Circle, CircleAdapter> {
 
     @Override
     protected CircleAdapter buildAdapter() {
-        return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
+        return new CircleAdapter(getContext(), getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                mListener.onCircleClick(getItems().get(position).getObjectId());
+                mListener.onCircleClicked(getItems().get(position));
             }
         });
     }

@@ -1,6 +1,8 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -8,9 +10,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseUser;
 
 import java.util.HashMap;
@@ -27,6 +32,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder> {
 
+    private Context mContext;
     private List<Friend> mFriends;
     private OnItemClickListener mListener;
 
@@ -42,7 +48,8 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
      * @param friends the dataset of friends
      * @param listener the item listener
      */
-    public FriendAdapter(List<Friend> friends, OnItemClickListener listener) {
+    public FriendAdapter(Context context, List<Friend> friends, OnItemClickListener listener) {
+        mContext = context;
         mFriends = friends;
         mListener = listener;
     }
@@ -55,11 +62,21 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        holder.mUsername.setText(mFriends.get(position).getFriend().getUsername());
+        ParseUser friend = mFriends.get(position).getFriend();
+
+        ParseFile imageFile = friend.getParseFile("avatar");
+        if (imageFile != null) {
+            Glide.with(mContext)
+                    .load(Uri.parse(imageFile.getUrl()))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.mAvatar);
+        }
+
+        holder.mUsername.setText(friend.getUsername());
 
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("userId", ParseUser.getCurrentUser().getObjectId());
-        params.put("friendId", mFriends.get(position).getFriend().getObjectId());
+        params.put("friendId", friend.getObjectId());
 
         ParseCloud.callFunctionInBackground("areFriends", params, new FunctionCallback<Boolean>() {
             @Override

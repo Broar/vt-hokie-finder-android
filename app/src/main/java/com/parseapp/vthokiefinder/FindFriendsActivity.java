@@ -25,7 +25,7 @@ public class FindFriendsActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             mFindFriendsFragment = FindFriendsFragment.newInstance();
             fm.beginTransaction()
-                    .add(R.id.fragmentContainer, mFindFriendsFragment, FindFriendsFragment.TAG)
+                    .add(R.id.fragment_container, mFindFriendsFragment, FindFriendsFragment.TAG)
                     .commit();
         }
 

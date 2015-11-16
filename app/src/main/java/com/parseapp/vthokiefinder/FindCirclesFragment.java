@@ -2,7 +2,6 @@ package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +22,7 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.02
  */
-public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
+public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter> {
 
     public static final String TAG = FindCirclesFragment.class.getSimpleName();
 
@@ -89,10 +88,10 @@ public class FindCirclesFragment extends ListFragment<Circle, CircleAdapter> {
 
     @Override
     protected CircleAdapter buildAdapter() {
-        return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
+        return new CircleAdapter(getContext(), getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                mListener.onCircleClick(getItems().get(position).getObjectId());
+                mListener.onCircleClicked(getItems().get(position));
             }
         });
     }

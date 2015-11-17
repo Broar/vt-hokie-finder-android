@@ -188,6 +188,7 @@ public class HomeActivity extends AppCompatActivity implements
 
                 switch (menuItem.getItemId()) {
                     case R.id.drawer_profile:
+                        startActivity(new Intent(HomeActivity.this, EditProfileActivity.class));
                         return true;
 
                     case R.id.drawer_friends:

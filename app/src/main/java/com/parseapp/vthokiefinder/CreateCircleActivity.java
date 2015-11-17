@@ -1,7 +1,7 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
@@ -21,7 +21,7 @@ public class CreateCircleActivity extends AppCompatActivity implements
         ConfirmDialog.Callbacks {
 
     private CreateCircleFragment mCreateCircleFragment;
-    private BitmapHolderFragment mBitmapHolderFragment;
+    private RetainedFragment<Uri> mImageUriHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,16 +44,16 @@ public class CreateCircleActivity extends AppCompatActivity implements
                     .add(R.id.fragment_container, mCreateCircleFragment, CreateCircleFragment.TAG)
                     .commit();
 
-            mBitmapHolderFragment = new BitmapHolderFragment();
+            mImageUriHolder = new RetainedFragment<Uri>();
             fm.beginTransaction()
-                    .add(mBitmapHolderFragment, BitmapHolderFragment.TAG)
+                    .add(mImageUriHolder, RetainedFragment.TAG)
                     .commit();
         }
 
         // Retrieve the existing fragment instances
         else {
             mCreateCircleFragment = (CreateCircleFragment) fm.findFragmentByTag(CreateCircleFragment.TAG);
-            mBitmapHolderFragment = (BitmapHolderFragment) fm.findFragmentByTag(BitmapHolderFragment.TAG);
+            mImageUriHolder = (RetainedFragment<Uri>) fm.findFragmentByTag(RetainedFragment.TAG);
         }
     }
 
@@ -70,6 +70,7 @@ public class CreateCircleActivity extends AppCompatActivity implements
                 showDiscardDialog();
                 return true;
             case R.id.action_save_circle:
+                mCreateCircleFragment.saveCircle();
                 return true;
         }
 
@@ -77,13 +78,13 @@ public class CreateCircleActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onIconBitmapSet(Bitmap bm) {
-        mBitmapHolderFragment.setIconBitmap(bm);
+    public void onImageSet(Uri imageUri) {
+        mImageUriHolder.setData(imageUri);
     }
 
     @Override
-    public Bitmap onIconBitmapRequested() {
-        return mBitmapHolderFragment.getIconBitmap();
+    public Uri onImageUriRequested() {
+        return mImageUriHolder.getData();
     }
 
     @Override

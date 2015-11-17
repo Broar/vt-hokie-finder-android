@@ -16,6 +16,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -23,7 +25,6 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 
 /**
@@ -42,11 +43,10 @@ public class CreateCircleFragment extends Fragment {
     private EditText mCircleName;
     private EditText mCircleDescription;
     private Button mInviteFriends;
-    private Button mSaveCircle;
 
     public interface Callbacks {
-        void onIconBitmapSet(Bitmap bm);
-        Bitmap onIconBitmapRequested();
+        void onImageSet(Uri imageUri);
+        Uri onImageUriRequested();
         void onSaveSuccessful(Circle circle);
     }
 
@@ -81,30 +81,23 @@ public class CreateCircleFragment extends Fragment {
         mCircleDescription = (EditText) view.findViewById(R.id.circleDescription);
         initializeIconPicker(view);
         initializeInviteFriends(view);
-        initializeSave(view);
         return view;
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        // The user selected an image, so display it as the circle icon
         if (resultCode == Activity.RESULT_OK && requestCode == ImagePicker.PICK_IMAGE) {
             Uri imageUri = data.getData();
 
-            // Change the icon to display the user's selected image
-            try {
-                Bitmap bm = ImagePicker.getBitmapFromUri(getContext(), imageUri);
-                mCircleIcon.setImageBitmap(bm);
+            Glide.with(this)
+                    .load(imageUri)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(mCircleIcon);
 
-                // Remember to save the Bitmap, so that the user's image can be redisplayed
-                // upon returning from configuration changes
-                mListener.onIconBitmapSet(bm);
-            }
-
-            catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(getContext(), "Could not load image!", Toast.LENGTH_LONG).show();
-            }
+            mListener.onImageSet(imageUri);
         }
     }
 
@@ -117,9 +110,10 @@ public class CreateCircleFragment extends Fragment {
         mCircleIcon = (ImageView) view.findViewById(R.id.circle_icon);
 
         // If the user already selected an image, then redisplay it
-        Bitmap bm = mListener.onIconBitmapRequested();
-        if (bm != null) {
-            mCircleIcon.setImageBitmap(bm);
+        if (mListener.onImageUriRequested() != null) {
+            Glide.with(this)
+                    .load(mListener.onImageUriRequested())
+                    .into(mCircleIcon);
         }
 
         mCircleIcon.setOnClickListener(new View.OnClickListener() {
@@ -146,39 +140,19 @@ public class CreateCircleFragment extends Fragment {
     }
 
     /**
-     * Setup the button to save a new circle
-     *
-     * @param view the parent view of the button
+     * Save the user's newly created Circle to the backend
      */
-    private void initializeSave(View view) {
-        mSaveCircle = (Button) view.findViewById(R.id.saveCircle);
-        mSaveCircle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String name = mCircleName.getText().toString();
-                String description = mCircleDescription.getText().toString();
+    public void saveCircle() {
 
-                // A circle's name is a required field
-                if (!name.isEmpty()) {
-                    saveCircle(name, description);
-                }
+        String name = mCircleName.getText().toString().trim();
+        String description = mCircleDescription.getText().toString().trim();
 
-                else {
-                    mCircleName.setError("Missing name");
-                }
-            }
-        });
-    }
+        // The circle name is a require field. Display an error and do not save if it is empty
+        if (name.isEmpty()) {
+            Toast.makeText(getContext(), "Name cannot be empty", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-    /**
-     * Save the new circle to the Parse backend
-     *
-     * @param name the name of the circle
-     * @param description the description of the circle
-     */
-    private void saveCircle(String name, String description) {
-
-        // First, we must save the Circle
         final Circle circle = ParseObject.create(Circle.class);
 
         // Retrieve the byte array from the ImageView
@@ -186,15 +160,16 @@ public class CreateCircleFragment extends Fragment {
         mCircleIcon.buildDrawingCache();
         Bitmap bm = mCircleIcon.getDrawingCache();
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        bm.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 
-        circle.setIcon(new ParseFile(stream.toByteArray()));
-        circle.setName(mCircleName.getText().toString());
-        circle.setDescription(mCircleDescription.getText().toString());
+        circle.setIcon(new ParseFile("icon.jpg", stream.toByteArray()));
+        circle.setName(name);
+        circle.setDescription(description);
         circle.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
-                // Success! Create a new UserCircle relationship
+
+                // Add the user as the first member of the new circle
                 if (e == null) {
                     UserCircle uc = ParseObject.create(UserCircle.class);
                     uc.setCircle(circle);
@@ -203,12 +178,11 @@ public class CreateCircleFragment extends Fragment {
                         @Override
                         public void done(ParseException e) {
 
-                            // Success! Let the parent activity know that we are done
+                            // Inform the parent activity we are finished
                             if (e == null) {
                                 mListener.onSaveSuccessful(circle);
                             }
 
-                            // Failure! Inform the user about the error
                             else {
                                 Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                             }
@@ -216,7 +190,6 @@ public class CreateCircleFragment extends Fragment {
                     });
                 }
 
-                // Failure! Inform the user about the error
                 else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }

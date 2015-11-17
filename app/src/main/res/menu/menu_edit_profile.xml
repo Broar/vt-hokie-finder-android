@@ -2,8 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_save_circle"
+        android:id="@+id/action_save_profile"
         android:title="@string/action_save"
         android:icon="@drawable/ic_check_white_24dp"
-        app:showAsAction="always|withText" />
+        app:showAsAction="always" />
 </menu>

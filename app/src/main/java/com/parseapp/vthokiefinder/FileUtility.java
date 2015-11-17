@@ -23,7 +23,8 @@ public class FileUtility {
      * @return the absolute path to the file
      */
     public static String getRealPathFromURI(Context context, Uri contentUri) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
+                && DocumentsContract.isDocumentUri(context, contentUri)) {
             return getPathForV19AndUp(context, contentUri);
         }
 

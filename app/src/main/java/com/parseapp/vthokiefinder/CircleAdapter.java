@@ -68,6 +68,7 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
         }
 
         holder.mName.setText(mCircles.get(position).getName());
+        holder.mDescription.setText(mCircles.get(position).getDescription());
     }
 
     @Override
@@ -80,6 +81,7 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
         private OnItemClickListener mListener;
         private CircleImageView mIcon;
         private TextView mName;
+        private TextView mDescription;
 
         /**
          * Create a new ViewHolder object.
@@ -93,6 +95,7 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
             view.setOnClickListener(this);
             mIcon = (CircleImageView) itemView.findViewById(R.id.icon);
             mName = (TextView) itemView.findViewById(R.id.name);
+            mDescription = (TextView) itemView.findViewById(R.id.description);
         }
 
         @Override

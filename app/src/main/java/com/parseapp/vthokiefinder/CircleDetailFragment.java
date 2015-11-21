@@ -10,14 +10,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.parse.DeleteCallback;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
@@ -31,28 +34,33 @@ import com.parse.SaveCallback;
 import java.util.HashMap;
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 /**
  * A fragment that displays the details of a circle
  *
  * @author Steven Briggs
- * @version 2015.11.13
+ * @version 2015.11.20
  */
 public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapter> {
 
     public static final String TAG = CircleDetailFragment.class.getSimpleName();
     public static final String CIRCLE_ID_KEY = "circleId";
-    public static final String IS_MEMBER_KEY = "isMember";
 
     private Callbacks mListener;
     private Circle mCircle;
-    private boolean mIsMember;
+    private int mMemberStatus;
+
+    private Menu mMenu;
 
     private Toolbar mToolbar;
     private FloatingActionButton mFab;
-    private ImageView mIcon;
+    private CircleImageView mIcon;
+    private TextView mName;
+    private TextView mDescription;
 
     public interface Callbacks {
-        void onMemberClicked(String memberId);
+        void onMemberClicked(ParseUser user);
         void onCircleDestroyed();
         void onHomeClicked();
     }
@@ -61,13 +69,11 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
      * A factory method to return a new CircleDetailFragment that has been configured
      *
      * @param circleId the object id of the circle to display
-     * @param isMember true if the current user is a member of the circle, false if not
      * @return a new CircleDetailFragment that has been configured
      */
-    public static CircleDetailFragment newInstance(String circleId, boolean isMember) {
+    public static CircleDetailFragment newInstance(String circleId) {
         Bundle args = new Bundle();
         args.putString(CIRCLE_ID_KEY, circleId);
-        args.putBoolean(IS_MEMBER_KEY, isMember);
         CircleDetailFragment fragment = new CircleDetailFragment();
         fragment.setArguments(args);
         return fragment;
@@ -90,8 +96,17 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Determine the membership status of the current user for this circle
         mCircle = ParseObject.createWithoutData(Circle.class, getArguments().getString(CIRCLE_ID_KEY));
-        mIsMember = getArguments().getBoolean(IS_MEMBER_KEY);
+        mCircle.isMember(ParseUser.getCurrentUser(), new Circle.OnMembershipFoundListener() {
+            @Override
+            public void onMembershipFound(int memberStatus) {
+                mMemberStatus = memberStatus;
+                getActivity().invalidateOptionsMenu();
+            }
+        });
+
         setHasOptionsMenu(true);
     }
 
@@ -101,7 +116,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         View view = inflateFragment(R.layout.fragment_circle_detail, inflater, container);
 
         // Request the circle icon to display
-        mIcon = (ImageView) view.findViewById(R.id.circle_icon);
+        mIcon = (CircleImageView) view.findViewById(R.id.circle_icon);
         ParseFile imageFile = mCircle.getIcon();
         if (imageFile != null) {
             Glide.with(getContext())
@@ -110,26 +125,68 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
                     .into(mIcon);
         }
 
-        // Setup the FAB to handle the user leaving or joining the circle
-        mFab = (FloatingActionButton) view.findViewById(R.id.fab);
-        mFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mIsMember) {
-                    leaveCircle();
-                }
+        mName = (TextView) view.findViewById(R.id.circle_name);
+        mName.setText(mCircle.getName());
+        mDescription = (TextView) view.findViewById(R.id.circle_description);
+        mDescription.setText(mCircle.getDescription());
 
-                else {
-                    joinCircle();
+        // Setup the FAB to allow the user to edit the circle if they are a member
+        mFab = (FloatingActionButton) view.findViewById(R.id.fab);
+        if (mMemberStatus == Circle.MEMBER) {
+            mFab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Transition to edit page
                 }
-            }
-        });
+            });
+        }
+
+        else {
+            mFab.hide();
+        }
 
         mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
         setupToolbar();
-        changeFabIcon();
 
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_circle_detail, menu);
+        mMenu = menu;
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(Menu menu) {
+        switch (mMemberStatus) {
+            case Circle.MEMBER:
+                mMenu.findItem(R.id.action_add_circle).setVisible(false);
+                mMenu.findItem(R.id.action_leave_circle).setVisible(true);
+                mMenu.findItem(R.id.action_cancel_circle_request).setVisible(false);
+                break;
+
+            case Circle.NOT_MEMBER:
+                mMenu.findItem(R.id.action_add_circle).setVisible(true);
+                mMenu.findItem(R.id.action_leave_circle).setVisible(false);
+                mMenu.findItem(R.id.action_cancel_circle_request).setVisible(false);
+                break;
+
+            case Circle.PENDING:
+                mMenu.findItem(R.id.action_add_circle).setVisible(false);
+                mMenu.findItem(R.id.action_leave_circle).setVisible(false);
+                mMenu.findItem(R.id.action_cancel_circle_request).setVisible(true);
+                break;
+
+            default:
+                mMenu.findItem(R.id.action_add_circle).setVisible(false);
+                mMenu.findItem(R.id.action_leave_circle).setVisible(false);
+                mMenu.findItem(R.id.action_cancel_circle_request).setVisible(false);
+                break;
+        }
+
+        super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -137,6 +194,15 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         switch (item.getItemId()) {
             case android.R.id.home:
                 mListener.onHomeClicked();
+                return true;
+            case R.id.action_add_circle:
+                joinCircle();
+                return true;
+            case R.id.action_leave_circle:
+                leaveCircle();
+                return true;
+            case R.id.action_cancel_circle_request:
+                cancelRequest();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -148,7 +214,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         return new UserAdapter(getContext(), getItems(), new UserAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
-                mListener.onMemberClicked(getItems().get(position).getObjectId());
+                mListener.onMemberClicked(getItems().get(position));
             }
 
             @Override
@@ -196,35 +262,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         AppCompatActivity parent = (AppCompatActivity) getActivity();
         parent.setSupportActionBar(mToolbar);
         parent.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        parent.getSupportActionBar().setTitle(mCircle.getName());
-    }
-
-    /**
-     * Change the floating action button's icon to represent either joining or leaving a circle
-     */
-    private void changeFabIcon() {
-        // Determine if the FAB's icon should change from join to leave
-        // getDrawable() is only available on API 21+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (mIsMember) {
-                mFab.setImageDrawable(getContext().getDrawable(R.drawable.ic_remove_white_24dp));
-            }
-
-            else {
-                mFab.setImageDrawable(getContext().getDrawable(R.drawable.ic_add_white_24dp));
-            }
-        }
-
-        // Provide a deprecated call to getDrawable() for APIs less than 21
-        else {
-            if (mIsMember) {
-                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_remove_white_24dp));
-            }
-
-            else {
-                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_add_white_24dp));
-            }
-        }
+        parent.getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
 
     /**
@@ -236,18 +274,16 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         userCircle.put("user", ParseUser.getCurrentUser());
         userCircle.put("circle", mCircle);
         userCircle.put("isBroadcasting", false);
-        userCircle.put("pending", false);
+        userCircle.put("pending", true);
 
         // Save the UserCircle object to the Parse backend
         userCircle.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
                 if (e == null) {
-                    mIsMember = true;
-                    getItems().add(ParseUser.getCurrentUser());
-                    getBaseAdapter().notifyItemInserted(getItems().size() - 1);
-                    changeFabIcon();
-                    Toast.makeText(getContext(), "Successfully joined!", Toast.LENGTH_LONG).show();
+                    mMemberStatus = Circle.PENDING;
+                    getActivity().invalidateOptionsMenu();
+                    Toast.makeText(getContext(), "Request sent!", Toast.LENGTH_LONG).show();
                 }
 
                 else {
@@ -269,19 +305,64 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
             @Override
             public void done(Boolean isCircleDestroyed, ParseException e) {
                 if (e == null) {
-
-                    mIsMember = false;
                     getItems().remove(ParseUser.getCurrentUser());
                     getBaseAdapter().notifyDataSetChanged();
-                    changeFabIcon();
+                    mMemberStatus = Circle.NOT_MEMBER;
 
+                    // If the user was the last remaining member of the circle, then it will no
+                    // longer exist because we assume circles are deleted if they have no members.
+                    // We allow the parent of the fragment to handle this case; otherwise, the
+                    // fragment just updates its UI
                     if (isCircleDestroyed) {
                         mListener.onCircleDestroyed();
                         Toast.makeText(getContext(), "Circle destroyed!", Toast.LENGTH_LONG).show();
                     }
 
                     else {
+                        getActivity().invalidateOptionsMenu();
                         Toast.makeText(getContext(), "Left circle!", Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Delete the pending request for the user to join this circle
+     */
+    private void cancelRequest() {
+        ParseQuery<UserCircle> query = UserCircle.getQuery();
+        query.whereEqualTo("user", ParseUser.getCurrentUser())
+                .whereEqualTo("circle", mCircle)
+                .whereEqualTo("pending", true);
+
+        query.findInBackground(new FindCallback<UserCircle>() {
+            @Override
+            public void done(List<UserCircle> userCircles, ParseException e) {
+                if (e == null) {
+                    if (!userCircles.isEmpty()) {
+                        userCircles.get(0).deleteInBackground(new DeleteCallback() {
+                            @Override
+                            public void done(ParseException e) {
+                                if (e == null) {
+                                    mMemberStatus = Circle.NOT_MEMBER;
+                                    getActivity().invalidateOptionsMenu();
+                                    Toast.makeText(getContext(), "Request cancelled!", Toast.LENGTH_LONG).show();
+                                }
+
+                                else {
+                                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+                    }
+
+                    else {
+                        Toast.makeText(getContext(), "Couldn't cancel request!", Toast.LENGTH_LONG).show();
                     }
                 }
 

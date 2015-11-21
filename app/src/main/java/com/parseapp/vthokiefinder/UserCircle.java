@@ -42,11 +42,11 @@ public class UserCircle extends ParseObject {
         put("isBroadcasting", isBroadcasting);
     }
 
-    public boolean getPending() {
-        return getBoolean("isPending");
+    public boolean isPending() {
+        return getBoolean("pending");
     }
 
-    public void setPending(boolean pending) {
+    public void setIsPending(boolean pending) {
         put("pending", pending);
     }
 

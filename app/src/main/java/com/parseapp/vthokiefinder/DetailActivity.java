@@ -47,17 +47,11 @@ public class DetailActivity extends AppCompatActivity implements
             }
 
             else {
-                Circle circle = ParseObject.createWithoutData(Circle.class, circleId);
-                circle.isMember(ParseUser.getCurrentUser(), new Circle.OnMembershipFoundListener() {
-                    @Override
-                    public void onMembershipFound(boolean isMember) {
-                        mCircleDetailFragment = CircleDetailFragment.newInstance(circleId, isMember);
-                        fm.beginTransaction()
-                                .add(R.id.fragment_container, mCircleDetailFragment, CircleDetailFragment.TAG)
-                                .addToBackStack(null)
-                                .commit();
-                    }
-                });
+                mCircleDetailFragment = CircleDetailFragment.newInstance(circleId);
+                fm.beginTransaction()
+                        .add(R.id.fragment_container, mCircleDetailFragment, CircleDetailFragment.TAG)
+                        .addToBackStack(null)
+                        .commit();
             }
         }
 
@@ -81,34 +75,27 @@ public class DetailActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onMemberClicked(String memberId) {
-        mProfileFragment = ProfileFragment.newInstance(memberId);
-        FragmentManager fm = getSupportFragmentManager();
-        fm.beginTransaction()
+    public void onMemberClicked(ParseUser member) {
+        mProfileFragment = ProfileFragment.newInstance(member.getObjectId());
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, mProfileFragment, ProfileFragment.TAG)
                 .addToBackStack(null)
                 .commit();
     }
 
     @Override
-    public void onCircleClicked(final Circle circle) {
-        circle.isMember(ParseUser.getCurrentUser(), new Circle.OnMembershipFoundListener() {
-            @Override
-            public void onMembershipFound(boolean isMember) {
-                mCircleDetailFragment = CircleDetailFragment.newInstance(circle.getObjectId(), isMember);
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, mCircleDetailFragment, CircleDetailFragment.TAG)
-                        .addToBackStack(null)
-                        .commit();
-            }
-        });
+    public void onCircleClicked(Circle circle) {
+        mCircleDetailFragment = CircleDetailFragment.newInstance(circle.getObjectId());
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, mCircleDetailFragment, CircleDetailFragment.TAG)
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
     public void onFriendClicked(ParseUser friend) {
         mProfileFragment = ProfileFragment.newInstance(friend.getObjectId());
-        FragmentManager fm = getSupportFragmentManager();
-        fm.beginTransaction()
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, mProfileFragment, ProfileFragment.TAG)
                 .addToBackStack(null)
                 .commit();

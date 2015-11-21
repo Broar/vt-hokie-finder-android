@@ -1,10 +1,7 @@
 package com.parseapp.vthokiefinder;
 
-import android.content.Context;
-import android.widget.Toast;
 
 import com.parse.FindCallback;
-import com.parse.GetCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -23,6 +20,10 @@ import java.util.List;
  */
 @ParseClassName("Circle")
 public class Circle extends ParseObject {
+
+    public static final int MEMBER = 0;
+    public static final int NOT_MEMBER = 1;
+    public static final int PENDING = 2;
 
     public Circle() {
         // Default constructor is required
@@ -64,12 +65,18 @@ public class Circle extends ParseObject {
         query.findInBackground(new FindCallback<UserCircle>() {
             @Override
             public void done(List<UserCircle> userCircles, ParseException e) {
-                if (e == null && !userCircles.isEmpty()) {
-                    listener.onMembershipFound(true);
-                }
+                if (e == null) {
+                    if (!userCircles.isEmpty() && !userCircles.get(0).isPending()) {
+                        listener.onMembershipFound(MEMBER);
+                    }
 
-                else if (e == null) {
-                    listener.onMembershipFound(false);
+                    else if (!userCircles.isEmpty() && userCircles.get(0).isPending()){
+                        listener.onMembershipFound(PENDING);
+                    }
+
+                    else {
+                        listener.onMembershipFound(NOT_MEMBER);
+                    }
                 }
             }
         });
@@ -80,6 +87,6 @@ public class Circle extends ParseObject {
     }
 
     public interface OnMembershipFoundListener {
-        void onMembershipFound(boolean isMember);
+        void onMembershipFound(int memberStatus);
     }
 }

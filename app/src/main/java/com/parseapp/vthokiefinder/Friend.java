@@ -14,6 +14,7 @@ import com.parse.ParseUser;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A POJO representing a friendship relationship from one ParseUser to another
@@ -23,6 +24,11 @@ import java.util.List;
  */
 @ParseClassName("Friend")
 public class Friend extends ParseObject {
+
+    public static final int FRIENDS = 0;
+    public static final int NOT_FRIENDS = 1;
+    public static final int INCOMING = 2;
+    public static final int OUTGOING = 3;
 
     public Friend() {
         // Required default constructor
@@ -60,7 +66,50 @@ public class Friend extends ParseObject {
         put("accepted", accepted);
     }
 
+    /**
+     * Determine the friendship status of a pair of users
+     *
+     * @param user the user
+     * @param friend the friend
+     * @param listener the listener to return the results to
+     */
+    public static void findFriendshipStatus(ParseUser user, ParseUser friend, final OnFriendshipFoundListener listener) {
+
+        Map<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", user.getObjectId());
+        params.put("friendId", friend.getObjectId());
+
+        // Determine the friendship status
+        ParseCloud.callFunctionInBackground("getFriendshipStatus", params, new FunctionCallback<String>() {
+            @Override
+            public void done(String friendStatus, ParseException e) {
+                if (e == null) {
+                    // Report the friendship status to the listener
+                    switch (friendStatus) {
+                        case "friend":
+                            listener.onFriendshipFound(FRIENDS);
+                            break;
+                        case "outgoing":
+                            listener.onFriendshipFound(INCOMING);
+                            break;
+                        case "incoming":
+                            listener.onFriendshipFound(OUTGOING);
+                            break;
+                        case "not_friend":
+                            listener.onFriendshipFound(NOT_FRIENDS);
+                            break;
+                    }
+                }
+
+            }
+        });
+    }
+
     public static ParseQuery<Friend> getQuery() {
         return new ParseQuery<Friend>(Friend.class);
+    }
+
+    public interface OnFriendshipFoundListener {
+        void onFriendshipFound(int friendStatus);
     }
 }

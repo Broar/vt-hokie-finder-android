@@ -136,6 +136,7 @@ public class FriendsFragment extends RecyclerFragment<Friend, FriendAdapter> {
 
         ParseQuery<Friend> query = Friend.getQuery();
         query.whereEqualTo("user", ParseObject.createWithoutData("_User", userId))
+                .whereEqualTo("pending", false)
                 .include("friend")
                 .setSkip(getNextPage())
                 .setLimit(getLimit());

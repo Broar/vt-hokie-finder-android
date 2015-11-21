@@ -71,6 +71,7 @@ public class CirclesFragment extends RecyclerFragment<Circle, CircleAdapter> {
 
         ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("user", ParseObject.createWithoutData("_User", userId))
+                .whereEqualTo("pending", false)
                 .include("circle")
                 .setSkip(getNextPage())
                 .setLimit(getLimit());

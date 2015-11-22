@@ -80,11 +80,11 @@ public class DetailActivity extends AppCompatActivity implements
     @Override
     public void onBackPressed() {
         FragmentManager fm = getSupportFragmentManager();
-        
+
         if (fm.getBackStackEntryCount() > 1) {
 
             // Clear whatever URI the retained fragment is holding
-            if (mEditCircleFragment.isVisible()) {
+            if (mEditCircleFragment != null && mEditCircleFragment.isVisible()) {
                 mImageUriHolder.setData(null);
             }
 

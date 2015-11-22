@@ -18,15 +18,15 @@
                 android:id="@+id/toolbar"
                 layout="@layout/toolbar" />
 
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/avatar"
-                android:layout_width="160dp"
-                android:layout_height="160dp"
-                android:layout_marginBottom="24dp"
-                android:layout_gravity="center_horizontal"
-                android:src="@drawable/fighting_gobblers_medium"
-                app:civ_border_color="#FFFFFFFF"
-                app:civ_border_width="2dp"/>
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/icon"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_gravity="center_horizontal"
+                    android:src="@drawable/fighting_gobblers_medium"
+                    app:civ_border_color="#FFFFFFFF"
+                    app:civ_border_width="2dp" />
 
         </android.support.design.widget.AppBarLayout>
 
@@ -37,24 +37,28 @@
             android:orientation="vertical">
 
             <EditText
-                android:id="@+id/username"
+                android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:gravity="left|start"
+                android:gravity="start"
                 android:textSize="16sp"
-                android:inputType="textNoSuggestions"
-                android:hint="Username" />
+                android:freezesText="true"
+                android:maxLines="1"
+                android:nextFocusDown="@+id/description"
+                android:hint="Name" />
 
             <EditText
-                android:id="@+id/email"
+                android:id="@+id/description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:gravity="left|start"
                 android:textSize="16sp"
-                android:inputType="textEmailAddress"
-                android:hint="Email address" />
+                android:maxLines="2"
+                android:maxLength="128"
+                android:nextFocusDown="@null"
+                android:hint="Description" />
 
         </LinearLayout>
 
@@ -67,7 +71,7 @@
         android:paddingRight="24dp"
         android:paddingEnd="24dp"
         android:src="@drawable/ic_add_circle_outline_white_24dp"
-        app:layout_anchor="@+id/avatar"
+        app:layout_anchor="@+id/icon"
         app:layout_anchorGravity="bottom|right|end"/>
 
 </android.support.design.widget.CoordinatorLayout>

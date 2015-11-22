@@ -70,7 +70,7 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
             mListener = listener;
             mBroadcastStatus = (FlipCheckBox) itemView.findViewById(R.id.broadcastStatus);
             mBroadcastStatus.setOnClickListener(this);
-            mCircleName = (TextView) itemView.findViewById(R.id.circleName);
+            mCircleName = (TextView) itemView.findViewById(R.id.name);
         }
 
         @Override

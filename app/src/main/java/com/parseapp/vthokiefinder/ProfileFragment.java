@@ -100,18 +100,8 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Determine the friendship status between this user and the current user
-        mUser = ParseObject.createWithoutData(ParseUser.class, getArguments().getString(USER_ID_KEY));
-        Friend.findFriendshipStatus(ParseUser.getCurrentUser(), mUser, new Friend.OnFriendshipFoundListener() {
-            @Override
-            public void onFriendshipFound(int friendStatus) {
-                mFriendStatus = friendStatus;
-                getActivity().invalidateOptionsMenu();
-            }
-        });
-
         setHasOptionsMenu(true);
+        mUser = ParseObject.createWithoutData(ParseUser.class, getArguments().getString(USER_ID_KEY));
     }
 
     @Nullable
@@ -132,6 +122,23 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
         getProfile();
 
         return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Determine the friendship status between the current user and this one
+        Friend.findFriendshipStatus(ParseUser.getCurrentUser(), mUser, new Friend.OnFriendshipFoundListener() {
+            @Override
+            public void onFriendshipFound(int friendStatus) {
+                mFriendStatus = friendStatus;
+
+                if (getActivity() != null) {
+                    getActivity().invalidateOptionsMenu();
+                }
+            }
+        });
     }
 
     @Override

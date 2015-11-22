@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/circle_icon"
+        android:id="@+id/icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
@@ -18,26 +18,27 @@
         android:src="@drawable/fighting_gobblers_medium" />
 
     <EditText
-        android:id="@+id/circleName"
+        android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:freezesText="true"
         android:maxLines="1"
-        android:nextFocusDown="@+id/circleDescription"
+        android:nextFocusDown="@+id/description"
         android:hint="Name"/>
 
     <EditText
-        android:id="@+id/circleDescription"
+        android:id="@+id/description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        android:freezesText="true"
         android:maxLines="2"
         android:maxLength="128"
         android:nextFocusDown="@null"
         android:hint="Description"/>
 
     <Button
-        android:id="@+id/inviteFriends"
+        android:id="@+id/invite_friends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"

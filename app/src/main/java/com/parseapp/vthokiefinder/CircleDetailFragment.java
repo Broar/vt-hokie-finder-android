@@ -3,7 +3,6 @@ package com.parseapp.vthokiefinder;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -61,6 +60,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
 
     public interface Callbacks {
         void onMemberClicked(ParseUser user);
+        void onEditClicked(Circle circle);
         void onCircleDestroyed();
         void onHomeClicked();
     }
@@ -93,21 +93,13 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         }
     }
 
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Determine the membership status of the current user for this circle
-        mCircle = ParseObject.createWithoutData(Circle.class, getArguments().getString(CIRCLE_ID_KEY));
-        mCircle.isMember(ParseUser.getCurrentUser(), new Circle.OnMembershipFoundListener() {
-            @Override
-            public void onMembershipFound(int memberStatus) {
-                mMemberStatus = memberStatus;
-                getActivity().invalidateOptionsMenu();
-            }
-        });
-
         setHasOptionsMenu(true);
+        mCircle = ParseObject.createWithoutData(Circle.class, getArguments().getString(CIRCLE_ID_KEY));
     }
 
     @Nullable
@@ -115,40 +107,35 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflateFragment(R.layout.fragment_circle_detail, inflater, container);
 
-        // Request the circle icon to display
-        mIcon = (CircleImageView) view.findViewById(R.id.circle_icon);
-        ParseFile imageFile = mCircle.getIcon();
-        if (imageFile != null) {
-            Glide.with(getContext())
-                    .load(Uri.parse(imageFile.getUrl()))
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(mIcon);
-        }
+        bindFragment(view);
 
-        mName = (TextView) view.findViewById(R.id.circle_name);
+        // Set the initial values of the fields
         mName.setText(mCircle.getName());
-        mDescription = (TextView) view.findViewById(R.id.circle_description);
         mDescription.setText(mCircle.getDescription());
 
-        // Setup the FAB to allow the user to edit the circle if they are a member
-        mFab = (FloatingActionButton) view.findViewById(R.id.fab);
-        if (mMemberStatus == Circle.MEMBER) {
-            mFab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    // Transition to edit page
-                }
-            });
-        }
-
-        else {
-            mFab.hide();
-        }
-
-        mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        loadIcon();
         setupToolbar();
 
         return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Determine the membership status of the user for this circle. Setup the options
+        // menu and floating action button once the status is known
+        mCircle.isMember(ParseUser.getCurrentUser(), new Circle.OnMembershipFoundListener() {
+            @Override
+            public void onMembershipFound(int memberStatus) {
+                mMemberStatus = memberStatus;
+                setupFab();
+
+                if (getActivity() != null) {
+                    getActivity().invalidateOptionsMenu();
+                }
+            }
+        });
     }
 
     @Override
@@ -256,6 +243,32 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     }
 
     /**
+     * Bind the views of the layout to the fragment
+     *
+     * @param view the layout view
+     */
+    private void bindFragment(View view) {
+        mIcon = (CircleImageView) view.findViewById(R.id.icon);
+        mName = (TextView) view.findViewById(R.id.circle_name);
+        mDescription = (TextView) view.findViewById(R.id.circle_description);
+        mFab = (FloatingActionButton) view.findViewById(R.id.fab);
+        mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+    }
+
+    /**
+     * Load the circle's icon
+     */
+    private void loadIcon() {
+        ParseFile imageFile = mCircle.getIcon();
+        if (imageFile != null) {
+            Glide.with(getContext())
+                    .load(Uri.parse(imageFile.getUrl()))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(mIcon);
+        }
+    }
+
+    /**
      * Setup the toolbar to function as the SupportActionBar
      */
     private void setupToolbar() {
@@ -263,6 +276,26 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         parent.setSupportActionBar(mToolbar);
         parent.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         parent.getSupportActionBar().setDisplayShowTitleEnabled(false);
+    }
+
+    /**
+     * Setup the floating action button to handle requests to edit a circle's details
+     */
+    private void setupFab() {
+        // Members of the circle should be able to edit its details
+        if (mMemberStatus == Circle.MEMBER) {
+            mFab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.onEditClicked(mCircle);
+                }
+            });
+        }
+
+        // Non-members of the circle should not have access to the edit screen
+        else {
+            mFab.hide();
+        }
     }
 
     /**

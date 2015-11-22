@@ -77,8 +77,8 @@ public class CreateCircleFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_circle, container, false);
-        mCircleName = (EditText) view.findViewById(R.id.circleName);
-        mCircleDescription = (EditText) view.findViewById(R.id.circleDescription);
+        mCircleName = (EditText) view.findViewById(R.id.name);
+        mCircleDescription = (EditText) view.findViewById(R.id.description);
         initializeIconPicker(view);
         initializeInviteFriends(view);
         return view;
@@ -107,7 +107,7 @@ public class CreateCircleFragment extends Fragment {
      * @param view the parent view of the image
      */
     private void initializeIconPicker(View view) {
-        mCircleIcon = (ImageView) view.findViewById(R.id.circle_icon);
+        mCircleIcon = (ImageView) view.findViewById(R.id.icon);
 
         // If the user already selected an image, then redisplay it
         if (mListener.onImageUriRequested() != null) {
@@ -130,7 +130,7 @@ public class CreateCircleFragment extends Fragment {
      * @param view the parent view of the button
      */
     private void initializeInviteFriends(View view) {
-        mInviteFriends = (Button) view.findViewById(R.id.inviteFriends);
+        mInviteFriends = (Button) view.findViewById(R.id.invite_friends);
         mInviteFriends.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -1,8 +1,10 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -78,36 +80,6 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
         });
     }
 
-    /**
-     * Add a new friend to the user's friends list
-     *
-     * @param position the array position of the user who is to be added
-     */
-    private void addFriend(final int position) {
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("userId", ParseUser.getCurrentUser().getObjectId());
-        params.put("friendId", getItems().get(position).getObjectId());
-
-        ParseCloud.callFunctionInBackground("createFriendship", params, new FunctionCallback<String>() {
-            @Override
-            public void done(String message, ParseException e) {
-                if (e == null) {
-                    getItems().remove(position);
-                    getBaseAdapter().notifyItemRemoved(position);
-                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
-                }
-
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-    }
-
-    private void openProfile(String id) {
-
-    }
-
     @Override
     public void onLoadMoreRequested() {
         HashMap<String, Object> params = new HashMap<String, Object>();
@@ -122,16 +94,12 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
                     if (!users.isEmpty()) {
                         getItems().addAll(users);
                         getAdapter().onDataReady(true);
-                    }
-
-                    else {
+                    } else {
                         getAdapter().onDataReady(false);
                     }
 
                     nextPage();
-                }
-
-                else {
+                } else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
@@ -140,15 +108,71 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
 
     @Override
     protected UserAdapter buildAdapter() {
-        return new UserAdapter(getContext(), getItems(), new UserAdapter.OnItemClickListener() {
+        return new UserAdapter(getItems(), new UserAdapter.OnItemClickedListener() {
             @Override
-            public void onItemClick(View itemView, int position) {
+            public void onItemClicked(int position) {
                 openProfile(getItems().get(position).getObjectId());
             }
 
             @Override
-            public void onAddFriendClicked(int position) {
-                addFriend(position);
+            public boolean onItemLongClicked(final int position) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+                builder.setTitle("Send request to " + getItems().get(position).getUsername() + "?")
+                        .setCancelable(true)
+                        .setPositiveButton("Send", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                sendFriendRequest(position);
+                                dialog.dismiss();
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+
+                builder.create().show();
+
+                return true;
+            }
+        });
+    }
+
+    private void openProfile(String id) {
+
+    }
+
+    /**
+     * Send a friend request to the user at position
+     *
+     * @param position the array position of the user who is being sent the request
+     */
+    private void sendFriendRequest(final int position) {
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put("userId", ParseUser.getCurrentUser().getObjectId());
+        params.put("friendId", getItems().get(position).getObjectId());
+
+        ParseCloud.callFunctionInBackground("createFriendRequest", params, new FunctionCallback<Boolean>() {
+            @Override
+            public void done(Boolean requestSent, ParseException e) {
+                if (e == null) {
+                    if (requestSent) {
+                        getItems().remove(position);
+                        getBaseAdapter().notifyItemRemoved(position);
+                        Toast.makeText(getContext(), "Request sent!", Toast.LENGTH_LONG).show();
+                    }
+
+                    else {
+                        Toast.makeText(getContext(), "Couldn't send request", Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
             }
         });
     }

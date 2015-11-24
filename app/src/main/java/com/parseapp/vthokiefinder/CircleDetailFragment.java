@@ -198,15 +198,15 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
 
     @Override
     protected UserAdapter buildAdapter() {
-        return new UserAdapter(getContext(), getItems(), new UserAdapter.OnItemClickListener() {
+        return new UserAdapter(getItems(), new UserAdapter.OnItemClickedListener() {
             @Override
-            public void onItemClick(View itemView, int position) {
+            public void onItemClicked(int position) {
                 mListener.onMemberClicked(getItems().get(position));
             }
 
             @Override
-            public void onAddFriendClicked(int position) {
-                // Add the user at position as a friend
+            public boolean onItemLongClicked(int position) {
+                return false;
             }
         });
     }

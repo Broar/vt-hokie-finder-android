@@ -1,7 +1,9 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,24 +20,24 @@ import com.parse.ParseUser;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * A fragment that displays the user's friend invites and handles their management. The invites
  * can be either incoming or outgoing but only one type can displayed per fragment instance
  *
  * @author Steven Briggs
- * @version 2015.11.23
+ * @version 2015.11.24
  */
-public class FriendInvitesFragment extends RecyclerFragment<ParseUser, FriendInviteAdapter> {
+public class FriendInvitesFragment extends RecyclerFragment<ParseUser, UserAdapter> {
 
     public static final String TAG = FriendInvitesFragment.class.getSimpleName();
     public static final int INCOMING_INVITES = 0;
     public static final int OUTGOING_INVITES = 1;
 
     private static final String INVITE_TYPE_KEY = "inviteType";
-
-    private int mInviteType;
+    private static final int ACCEPT_INVITE = 0;
+    private static final int DECLINE_INVITE = 1;
+    private static final int CANCEL_INVITE = 0;
 
     /**
      * A factory method to return a new FriendInvitesFragment that has been configured
@@ -58,31 +60,17 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, FriendInv
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    protected FriendInviteAdapter buildAdapter() {
-        return new FriendInviteAdapter(getItems(), getArguments().getInt(INVITE_TYPE_KEY), new FriendInviteAdapter.OnItemClickedListener() {
+    protected UserAdapter buildAdapter() {
+        return new UserAdapter(getItems(), new UserAdapter.OnItemClickedListener() {
             @Override
             public void onItemClicked(int position) {
                 // Do nothing
             }
 
             @Override
-            public void onAcceptFriendInviteClicked(int position) {
-                acceptFriendInvite(position);
-            }
-
-            @Override
-            public void onDenyFriendInviteClicked(int position) {
-                deleteFriendInvite(getItems().get(position), ParseUser.getCurrentUser(), position);
-            }
-
-            @Override
-            public void onCancelFriendInviteClicked(int position) {
-                deleteFriendInvite(ParseUser.getCurrentUser(), getItems().get(position), position);
+            public boolean onItemLongClicked(int position) {
+                buildInviteActionsDialog(position);
+                return true;
             }
         });
     }
@@ -99,7 +87,7 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, FriendInv
     }
 
     /**
-     * Load friend invites into the dataset
+     * Load friend invites into the data set
      *
      * @param cloudFunctionName the name of the cloud code function to run
      */
@@ -133,8 +121,52 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, FriendInv
     }
 
     /**
+     * Build the alert dialog to display actions to manage a user's friend invites/requests
      *
-     * @param position
+     * @param position the position of the user with a pending friendship
+     */
+    private void buildInviteActionsDialog(final int position) {
+        final ParseUser user = getItems().get(position);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        if (getArguments().getInt(INVITE_TYPE_KEY) == INCOMING_INVITES) {
+            builder.setTitle(user.getUsername())
+                    .setItems(R.array.actions_incoming_friend_invites, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case ACCEPT_INVITE:
+                                    acceptFriendInvite(position);
+                                    break;
+                                case DECLINE_INVITE:
+                                    deleteFriendInvite(user, ParseUser.getCurrentUser(), position);
+                                    break;
+                            }
+                        }
+                    });
+        }
+
+        else {
+            builder.setTitle(user.getUsername())
+                    .setItems(R.array.actions_outgoing_friend_invites, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case CANCEL_INVITE:
+                                    deleteFriendInvite(ParseUser.getCurrentUser(), user, position);
+                                    break;
+                            }
+                        }
+                    });
+        }
+
+        builder.create().show();
+    }
+
+    /**
+     * Accept the invitation of the user at position to be a friend
+     *
+     * @param position the position of the user
      */
     private void acceptFriendInvite(final int position) {
         Map<String, Object> params = new HashMap<String, Object>();
@@ -158,10 +190,11 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, FriendInv
     }
 
     /**
+     * Delete the friend invite from user to friend
      *
-     * @param user
-     * @param friend
-     * @param position
+     * @param user the user who requested the friendship
+     * @param friend the user who received the friend request
+     * @param position the position of the declined friend
      */
     private void deleteFriendInvite(ParseUser user, ParseUser friend, final int position) {
         ParseQuery<Friend> query = Friend.getQuery();

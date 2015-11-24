@@ -191,7 +191,8 @@ public class HomeActivity extends AppCompatActivity implements
                         startActivity(new Intent(HomeActivity.this, EditProfileActivity.class));
                         return true;
 
-                    case R.id.drawer_friends:
+                    case R.id.drawer_invites:
+                        startActivity(new Intent(HomeActivity.this, InvitesActivity.class));
                         return true;
 
                     case R.id.drawer_settings:

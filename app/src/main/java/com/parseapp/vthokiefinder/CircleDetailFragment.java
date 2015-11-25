@@ -183,7 +183,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
                 mListener.onHomeClicked();
                 return true;
             case R.id.action_add_circle:
-                joinCircle();
+                sendRequestToJoin();
                 return true;
             case R.id.action_leave_circle:
                 leaveCircle();
@@ -299,15 +299,16 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     }
 
     /**
-     * Add the user to this circle
+     * Send a request for the current user to join this circle
      */
-    private void joinCircle() {
+    private void sendRequestToJoin() {
         // Create a UserCircle object to represent the new relationship
         ParseObject userCircle = ParseObject.create(UserCircle.class);
         userCircle.put("user", ParseUser.getCurrentUser());
         userCircle.put("circle", mCircle);
-        userCircle.put("isBroadcasting", false);
         userCircle.put("pending", true);
+        userCircle.put("isBroadcasting", false);
+        userCircle.put("isInvite", false);
 
         // Save the UserCircle object to the Parse backend
         userCircle.saveInBackground(new SaveCallback() {

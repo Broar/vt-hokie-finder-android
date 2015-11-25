@@ -22,7 +22,7 @@
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:tabMaxWidth="0dp"
             app:tabGravity="fill"
-            app:tabMode="fixed"
+            app:tabMode="scrollable"
             style="@style/HokieFinderTabLayout"/>
 
     </android.support.design.widget.AppBarLayout>

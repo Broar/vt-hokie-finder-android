@@ -170,8 +170,8 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, UserAdapt
      */
     private void acceptFriendInvite(final int position) {
         Map<String, Object> params = new HashMap<String, Object>();
-        params.put("userId", getItems().get(position).getObjectId());
-        params.put("friendId", ParseUser.getCurrentUser().getObjectId());
+        params.put("userId", ParseUser.getCurrentUser().getObjectId());
+        params.put("friendId", getItems().get(position).getObjectId());
         
         ParseCloud.callFunctionInBackground("acceptFriendRequest", params, new FunctionCallback<String>() {
             @Override

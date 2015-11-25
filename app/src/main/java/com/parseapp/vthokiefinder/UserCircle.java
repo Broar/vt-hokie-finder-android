@@ -9,7 +9,7 @@ import com.parse.ParseUser;
  * A POJO representing a relationship between a Circle and ParseUser
  *
  * @author Steven Briggs
- * @version 2015.10.03
+ * @version 2015.11.24
  */
 @ParseClassName("UserCircle")
 public class UserCircle extends ParseObject {
@@ -48,6 +48,22 @@ public class UserCircle extends ParseObject {
 
     public void setIsPending(boolean pending) {
         put("pending", pending);
+    }
+
+    public ParseUser getFriend() {
+        return getParseUser("friend");
+    }
+
+    public void setFriend(ParseUser user) {
+        put("friend", user);
+    }
+
+    public boolean isInvite() {
+        return getBoolean("isInvite");
+    }
+
+    public void setIsInvite(boolean isInvite) {
+        put("isInvite", isInvite);
     }
 
     public static ParseQuery<UserCircle> getQuery() {

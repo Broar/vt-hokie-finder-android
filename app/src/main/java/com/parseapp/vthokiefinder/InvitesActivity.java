@@ -17,13 +17,14 @@ import android.view.MenuItem;
  */
 public class InvitesActivity extends AppCompatActivity implements ViewPagerAdapter.Callbacks {
 
-    private static final String[] TITLES = { "FRIEND INVITES", "FRIEND REQUESTS" };
+    private static final String[] TITLES = { "CIRCLE INVITES", "CIRCLE REQUESTS",
+            "MEMBERSHIP REQUESTS", "FRIEND INVITES", "FRIEND REQUESTS" };
+
     private static final int CIRCLE_INCOMING = 0;
     private static final int CIRCLE_OUTGOING = 1;
     private static final int CIRCLE_MEMBERSHIP = 2;
-
-    private static final int FRIEND_INCOMING = 0;
-    private static final int FRIEND_OUTGOING = 1;
+    private static final int FRIEND_INCOMING = 3;
+    private static final int FRIEND_OUTGOING = 4;
 
     private Toolbar mToolbar;
     private TabLayout mTabs;
@@ -59,6 +60,12 @@ public class InvitesActivity extends AppCompatActivity implements ViewPagerAdapt
     @Override
     public Fragment onItemRequested(int position) {
         switch (position) {
+            case CIRCLE_INCOMING:
+                return CircleInvitesFragment.newInstance(CircleInvitesFragment.TYPE_INVITES);
+            case CIRCLE_OUTGOING:
+                return CircleInvitesFragment.newInstance(CircleInvitesFragment.TYPE_REQUESTS);
+            case CIRCLE_MEMBERSHIP:
+                return CircleInvitesFragment.newInstance(CircleInvitesFragment.TYPE_MEMBERSHIP);
             case FRIEND_INCOMING:
                 return FriendInvitesFragment.newInstance(FriendInvitesFragment.INCOMING_INVITES);
             case FRIEND_OUTGOING:

@@ -27,15 +27,22 @@
     <string name="drawer_settings">Settings</string>
     <string name="drawer_logout">Logout</string>
 
-    <!-- Actions to handle users -->
-    <string-array name="actions_users">
-        <item>Add as friend</item>
+    <!-- Actions to handle invites to circles -->
+    <string-array name="actions_circle_invites">
+        <item>Accept invite</item>
+        <item>Decline invite</item>
+    </string-array>
+
+    <!-- Actions to handle requests to join circles -->
+    <string-array name="actions_circle_membership_requests">
+        <item>Approve request</item>
+        <item>Deny request</item>
     </string-array>
 
     <!-- Actions to handle incoming friend invites -->
     <string-array name="actions_incoming_friend_invites">
         <item>Accept invite</item>
-        <item>Deny invite</item>
+        <item>Decline invite</item>
     </string-array>
 
     <!-- Actions to handle outgoing friend invites -->

@@ -19,18 +19,19 @@
             android:text="Circle Name"
             android:layout_centerVertical="true" />
 
-        <com.franlopez.flipcheckbox.FlipCheckBox
-            android:id="@+id/broadcastStatus"
+        <eu.davidea.flipview.FlipView
+            android:id="@+id/broadcast_status"
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:layout_marginRight="12dp"
             android:layout_marginEnd="12dp"
+            android:clickable="true"
             app:checked="false"
-            app:showAnimations="true"
-            app:flipAnimationDuration="75"
-            app:showAcceptImage="true" />
+            app:enableInitialAnimation="true"
+            app:rearImage="@drawable/ic_check_white_24dp"
+            app:rearImageAnimationDelay="0"/>
 
     </RelativeLayout>
 

@@ -1,12 +1,11 @@
 package com.parseapp.vthokiefinder;
 
 import android.net.Uri;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -17,6 +16,7 @@ import com.parse.ParseUser;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import eu.davidea.flipview.FlipView;
 
 /**
  * An adapter that determines how to display information about users onscreen
@@ -54,18 +54,18 @@ public class InvitesAdapter extends RecyclerView.Adapter<InvitesAdapter.ViewHold
     @Override
     public void onBindViewHolder(InvitesAdapter.ViewHolder holder, int position) {
         ParseUser user = mUsers.get(position);
+        holder.mUsername.setText(user.getString("username"));
 
         ParseFile imageFile = user.getParseFile("avatar");
         if (imageFile != null) {
+            CircleImageView avatar = (CircleImageView) holder.mIsInvited.getFrontLayout().findViewById(R.id.avatar);
             Glide.with(holder.itemView.getContext())
                     .load(Uri.parse(imageFile.getUrl()))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(holder.mAvatar);
+                    .into(avatar);
         }
 
-
-        holder.mUsername.setText(user.getString("username"));
-        holder.mIsInvited.setChecked(mListener.onIsInvitedRequested(position));
+        holder.mIsInvited.flipSilently(mListener.onIsInvitedRequested(position));
     }
 
     @Override
@@ -77,8 +77,7 @@ public class InvitesAdapter extends RecyclerView.Adapter<InvitesAdapter.ViewHold
 
         private OnItemClickedListener mListener;
         private TextView mUsername;
-        private CircleImageView mAvatar;
-        private CheckBox mIsInvited;
+        private FlipView mIsInvited;
 
         /**
          * Create a new ViewHolder object.
@@ -90,23 +89,35 @@ public class InvitesAdapter extends RecyclerView.Adapter<InvitesAdapter.ViewHold
             super(itemView);
             mListener = listener;
             itemView.setOnClickListener(this);
-            mAvatar = (CircleImageView) itemView.findViewById(R.id.avatar);
             mUsername = (TextView) itemView.findViewById(R.id.username);
-            mIsInvited = (CheckBox) itemView.findViewById(R.id.invite);
+            mIsInvited = (FlipView) itemView.findViewById(R.id.invite);
+            mIsInvited.setChildBackgroundColor(FlipView.REAR_VIEW_INDEX,
+                    ContextCompat.getColor(itemView.getContext(), R.color.primary));
 
-            mIsInvited.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            mIsInvited.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    mListener.onInviteClicked(getLayoutPosition(), isChecked);
+                public void onClick(View v) {
+                    mIsInvited.showNext();
+                }
+            });
+
+            // We must provide the FlipView with a listener because a FlipView is not
+            // considered flipped until the animation has completed. This means the
+            // OnItemClickedListener cannot be informed about the invite change until we
+            // get a callback from the FlipView itself
+            mIsInvited.setOnFlippingListener(new FlipView.OnFlippingListener() {
+                @Override
+                public void onFlipped(FlipView flipView, boolean checked) {
+                    mListener.onInviteClicked(getLayoutPosition(), checked);
                 }
             });
         }
 
         @Override
         public void onClick(View v) {
-            // Defer informing the OnItemClickedListener about the checked change
-            // to the CheckBox's own listener
-            mIsInvited.toggle();
+            // Defer informing the OnItemClickedListener about the flip change to the
+            // FlipView's own listener
+            mIsInvited.performClick();
         }
     }
 }

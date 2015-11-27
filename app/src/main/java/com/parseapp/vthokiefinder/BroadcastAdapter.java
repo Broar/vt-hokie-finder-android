@@ -1,14 +1,16 @@
 package com.parseapp.vthokiefinder;
 
+import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.franlopez.flipcheckbox.FlipCheckBox;
-
 import java.util.List;
+
+import eu.davidea.flipview.FlipView;
 
 /**
  * An adapter for a RecyclerView that displays the broadcast status of user's circles
@@ -44,8 +46,8 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.mCircleName.setText(mUserCircles.get(position).getCircle().getName());
-        holder.mBroadcastStatus.setChecked(mUserCircles.get(position).isBroadcasting());
+        holder.mName.setText(mUserCircles.get(position).getCircle().getName());
+        holder.mBroadcastStatus.flipSilently(mUserCircles.get(position).isBroadcasting());
     }
 
     @Override
@@ -53,11 +55,11 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
         return mUserCircles.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
 
         private OnItemClickListener mListener;
-        private FlipCheckBox mBroadcastStatus;
-        private TextView mCircleName;
+        private TextView mName;
+        private FlipView mBroadcastStatus;
 
         /**
          * Create a new ViewHolder object.
@@ -68,17 +70,17 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
         public ViewHolder(View itemView, OnItemClickListener listener) {
             super(itemView);
             mListener = listener;
-            mBroadcastStatus = (FlipCheckBox) itemView.findViewById(R.id.broadcastStatus);
-            mBroadcastStatus.setOnClickListener(this);
-            mCircleName = (TextView) itemView.findViewById(R.id.name);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (v.getId() == R.id.broadcastStatus) {
-                mBroadcastStatus.switchChecked();
-                mListener.onItemClick(v, getLayoutPosition());
-            }
+            mName = (TextView) itemView.findViewById(R.id.name);
+            mBroadcastStatus = (FlipView) itemView.findViewById(R.id.broadcast_status);
+            mBroadcastStatus.setChildBackgroundColor(FlipView.REAR_VIEW_INDEX,
+                    ContextCompat.getColor(itemView.getContext(), R.color.primary));
+            mBroadcastStatus.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mBroadcastStatus.showNext();
+                    mListener.onItemClick(v, getLayoutPosition());
+                }
+            });
         }
     }
 

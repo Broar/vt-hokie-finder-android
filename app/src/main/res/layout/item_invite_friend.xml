@@ -18,13 +18,16 @@
         android:layout_marginEnd="12dp"
         android:orientation="horizontal">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/avatar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/fighting_gobblers_medium"
-            app:civ_border_color="#FF000000"
-            app:civ_border_width="2dp" />
+        <eu.davidea.flipview.FlipView
+            android:id="@+id/invite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            app:checked="false"
+            app:enableInitialAnimation="true"
+            app:frontLayout="@layout/item_avatar"
+            app:rearImage="@drawable/ic_check_white_24dp"
+            app:rearImageAnimationDelay="0" />
 
         <TextView
             android:id="@+id/username"
@@ -34,18 +37,10 @@
             android:layout_marginLeft="32dp"
             android:layout_marginStart="32dp"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/avatar"
-            android:layout_toEndOf="@+id/avatar"
+            android:layout_toRightOf="@+id/invite"
+            android:layout_toEndOf="@+id/invite"
             android:text="Username"
             android:textSize="18sp" />
-
-        <CheckBox
-            android:id="@+id/invite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
 
     </RelativeLayout>
 

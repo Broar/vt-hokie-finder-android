@@ -1,47 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+            <include
+                android:id="@+id/toolbar"
+                layout="@layout/toolbar" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/icon"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_marginBottom="24dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/fighting_gobblers_medium"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="2dp"/>
+
+        </android.support.design.widget.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="left|start"
+                android:textSize="16sp"
+                android:inputType="textNoSuggestions"
+                android:hint="Name" />
+
+            <EditText
+                android:id="@+id/description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="left|start"
+                android:textSize="16sp"
+                android:inputType="textAutoComplete"
+                android:hint="Description" />
+
+            <Button
+                android:id="@+id/invite_friends"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Invite friends" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
     <ImageView
-        android:id="@+id/icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="24dp"
-        android:maxHeight="240dp"
-        android:maxWidth="180dp"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/fighting_gobblers_medium" />
+        android:paddingBottom="24dp"
+        android:paddingRight="24dp"
+        android:paddingEnd="24dp"
+        android:src="@drawable/ic_add_circle_outline_white_24dp"
+        app:layout_anchor="@+id/icon"
+        app:layout_anchorGravity="bottom|right|end"/>
 
-    <EditText
-        android:id="@+id/name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:freezesText="true"
-        android:maxLines="1"
-        android:nextFocusDown="@+id/description"
-        android:hint="Name"/>
-
-    <EditText
-        android:id="@+id/description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:freezesText="true"
-        android:maxLines="2"
-        android:maxLength="128"
-        android:nextFocusDown="@null"
-        android:hint="Description"/>
-
-    <Button
-        android:id="@+id/invite_friends"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="Invite Friends"/>
-
-</LinearLayout>
+</android.support.design.widget.CoordinatorLayout>

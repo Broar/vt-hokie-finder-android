@@ -2,13 +2,21 @@ package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -47,6 +55,7 @@ public class CreateCircleFragment extends Fragment {
     public interface Callbacks {
         void onImageSet(Uri imageUri);
         Uri onImageUriRequested();
+        void onInviteFriendsClicked();
         void onSaveSuccessful(Circle circle);
     }
 
@@ -73,6 +82,12 @@ public class CreateCircleFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -81,7 +96,30 @@ public class CreateCircleFragment extends Fragment {
         mCircleDescription = (EditText) view.findViewById(R.id.description);
         initializeIconPicker(view);
         initializeInviteFriends(view);
+        initializeToolbar(view);
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_create_circle, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                showDiscardDialog();
+                return true;
+
+            case R.id.action_save_circle:
+                saveCircle();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -134,9 +172,21 @@ public class CreateCircleFragment extends Fragment {
         mInviteFriends.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Does nothing for now
+                mListener.onInviteFriendsClicked();
             }
         });
+    }
+
+    /**
+     * Setup the Toolbar to be the SupportActionBar
+     *
+     * @param view the parent view of the Toolbar
+     */
+    private void initializeToolbar(View view) {
+        AppCompatActivity parent = (AppCompatActivity) getActivity();
+        parent.setSupportActionBar((Toolbar) view.findViewById(R.id.toolbar));
+        parent.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        parent.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close_white_24dp);
     }
 
     /**
@@ -174,6 +224,11 @@ public class CreateCircleFragment extends Fragment {
                     UserCircle uc = ParseObject.create(UserCircle.class);
                     uc.setCircle(circle);
                     uc.setUser(ParseUser.getCurrentUser());
+                    uc.setIsBroadcasting(false);
+                    uc.setIsPending(false);
+                    uc.setIsAccepted(true);
+                    uc.setIsInvite(false);
+
                     uc.saveInBackground(new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
@@ -195,5 +250,28 @@ public class CreateCircleFragment extends Fragment {
                 }
             }
         });
+    }
+
+    /**
+     * Display a dialog prompting users to confirm they want exit and discard all changes
+     */
+    private void showDiscardDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Discard new circle?")
+                .setCancelable(true)
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        NavUtils.navigateUpFromSameTask(getActivity());
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                });
+
+        builder.create().show();
     }
 }

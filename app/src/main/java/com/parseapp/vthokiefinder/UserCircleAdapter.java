@@ -75,15 +75,16 @@ public class UserCircleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ParseUser user = mUserCircles.get(position).getUser();
+        ParseUser friend = mUserCircles.get(position).getFriend();
         Circle circle = mUserCircles.get(position).getCircle();
 
         // Bind the UserCircle at position to an InvitesViewHolder
         if (holder instanceof InvitesViewHolder) {
             InvitesViewHolder invitesHolder = (InvitesViewHolder) holder;
-            loadImage(user.getParseFile("avatar"), invitesHolder.mUserAvatar);
+            loadImage(friend.getParseFile("avatar"), invitesHolder.mUserAvatar);
             loadImage(circle.getIcon(), invitesHolder.mCircleAvatar);
             invitesHolder.mCircleName.setText(circle.getName());
-            invitesHolder.mUsername.setText(user.getUsername());
+            invitesHolder.mUsername.setText(friend.getUsername());
         }
 
         // Bind the UserCircle at position to a RequestsViewHolder

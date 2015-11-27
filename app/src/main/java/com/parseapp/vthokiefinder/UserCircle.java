@@ -50,6 +50,14 @@ public class UserCircle extends ParseObject {
         put("pending", pending);
     }
 
+    public boolean isAccepted() {
+        return getBoolean("accepted");
+    }
+
+    public void setIsAccepted(boolean accepted) {
+        put("accepted", accepted);
+    }
+
     public ParseUser getFriend() {
         return getParseUser("friend");
     }

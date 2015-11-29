@@ -132,6 +132,8 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
     public void onLoadMoreRequested() {
         ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("user", ParseUser.getCurrentUser())
+                .whereEqualTo("pending", false)
+                .whereEqualTo("accepted", true)
                 .include("circle")
                 .setSkip(getNextPage())
                 .setLimit(getLimit());

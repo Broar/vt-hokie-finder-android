@@ -65,6 +65,8 @@
 
     <!-- Application IDs / API keys -->
     <string name="facebook_application_id">1636789559907792</string>
+    <string name="google_geo_api_key">AIzaSyBKgiId5G7FVQR8YQFRyMVhXuRkVIEhcOk</string>
+    <string name="google_server_api_key">AIzaSyBIK_kAFACf_1nTUjb-p9mOi1Ph-5yMR2k</string>
 
     <!-- Facebook permissions -->
     <string-array name="facebook_permissions">

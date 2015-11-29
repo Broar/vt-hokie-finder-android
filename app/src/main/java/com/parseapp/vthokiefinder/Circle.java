@@ -5,6 +5,7 @@ import com.parse.FindCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -52,6 +53,39 @@ public class Circle extends ParseObject {
     public void setIcon(ParseFile icon) {
         put("icon", icon);
     }
+
+    public String getCity() {
+        return getString("City");
+    }
+
+    public void setCity(String city) {
+        put("City", city);
+    }
+
+    public String getState() {
+        return getString("State");
+    }
+
+    public void setState(String state) {
+        put("State", state);
+    }
+
+    public ParseGeoPoint getLocation() {
+        return getParseGeoPoint("location");
+    }
+
+    public void setLocation(ParseGeoPoint location) {
+        put("location", location);
+    }
+
+    public boolean isCommunity() {
+        return getBoolean("isCommunity");
+    }
+
+    public void setIsCommunity(boolean isCommunity) {
+        put("isCommunity", isCommunity);
+    }
+
 
     /**
      * Determine if the specified user is a member of this circle

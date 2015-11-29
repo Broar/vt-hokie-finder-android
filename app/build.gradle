@@ -45,6 +45,7 @@ dependencies {
 
     compile 'com.google.android.gms:play-services-location:8.1.0'
 
+    compile 'com.google.maps:google-maps-services:0.1.9'
     compile 'com.google.maps.android:android-maps-utils:0.4+'
 
     compile 'com.parse.bolts:bolts-android:1.2.1'
@@ -52,7 +53,8 @@ dependencies {
     compile 'com.parse:parsefacebookutils-v4-android:1.10.3@aar'
 
     compile project(':ParseUI-Login')
-    compile project(':ParseUI-Widget')
+
+    compile 'com.squareup.okhttp:okhttp-urlconnection:2.5.0'
 
     compile 'com.facebook.android:facebook-android-sdk:4.4.0'
 

@@ -5,6 +5,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Criteria;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,6 +17,7 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,36 +25,59 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CheckedTextView;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.maps.GeoApiContext;
+import com.google.maps.GeocodingApi;
+import com.google.maps.GeocodingApiRequest;
+import com.google.maps.PendingResult;
+import com.google.maps.model.AddressType;
+import com.google.maps.model.GeocodingResult;
+import com.google.maps.model.LatLng;
+import com.parse.LocationCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 
 /**
  * A fragment allowing the user to set the primary details of a new circle
  *
  * @author Steven Briggs
- * @version 2015.10.22
+ * @version 2015.11.29
  */
 public class CreateCircleFragment extends Fragment {
 
     public static final String TAG = CreateCircleFragment.class.getSimpleName();
 
+    private static final int MAXIMUM_GEOCODER_RESULTS = 10;
+    private static final String CURRENT_LOCATION_ERRORR = "Couldn't get your location. Please try again later";
+    private static final String NO_GEOCODER_WARNING = "Your device cannot perform address lookups. Do you still want to create a community?";
+    private static final String ADDRESS_LOOKUP_ERROR = "Couldn't determine your address. Please try again later";
+
     private Callbacks mListener;
 
+    private Toolbar mToolbar;
     private ImageView mCircleIcon;
     private EditText mCircleName;
     private EditText mCircleDescription;
+    private CheckBox mIsCommunity;
     private Button mInviteFriends;
 
     public interface Callbacks {
@@ -92,11 +120,10 @@ public class CreateCircleFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_create_circle, container, false);
-        mCircleName = (EditText) view.findViewById(R.id.name);
-        mCircleDescription = (EditText) view.findViewById(R.id.description);
-        initializeIconPicker(view);
-        initializeInviteFriends(view);
-        initializeToolbar(view);
+        bindFragment(view);
+        setupToolbar();
+        setupIconSelect();
+        setupInviteFriends();
         return view;
     }
 
@@ -114,7 +141,7 @@ public class CreateCircleFragment extends Fragment {
                 return true;
 
             case R.id.action_save_circle:
-                saveCircle();
+                createNewCircle();
                 return true;
 
             default:
@@ -140,13 +167,23 @@ public class CreateCircleFragment extends Fragment {
     }
 
     /**
-     * Setup the circle icon picker
+     * Bind the fragment to the views of its layout
      *
-     * @param view the parent view of the image
+     * @param view the layout view
      */
-    private void initializeIconPicker(View view) {
+    private void bindFragment(View view) {
+        mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        mCircleName = (EditText) view.findViewById(R.id.name);
+        mCircleDescription = (EditText) view.findViewById(R.id.description);
         mCircleIcon = (ImageView) view.findViewById(R.id.icon);
+        mIsCommunity = (CheckBox) view.findViewById(R.id.is_community);
+        mInviteFriends = (Button) view.findViewById(R.id.invite_friends);
+    }
 
+    /**
+     * Setup the circle icon picker
+     */
+    private void setupIconSelect() {
         // If the user already selected an image, then redisplay it
         if (mListener.onImageUriRequested() != null) {
             Glide.with(this)
@@ -164,11 +201,8 @@ public class CreateCircleFragment extends Fragment {
 
     /**
      * Setup the button to invite a user's friends
-     *
-     * @param view the parent view of the button
      */
-    private void initializeInviteFriends(View view) {
-        mInviteFriends = (Button) view.findViewById(R.id.invite_friends);
+    private void setupInviteFriends() {
         mInviteFriends.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -179,21 +213,15 @@ public class CreateCircleFragment extends Fragment {
 
     /**
      * Setup the Toolbar to be the SupportActionBar
-     *
-     * @param view the parent view of the Toolbar
      */
-    private void initializeToolbar(View view) {
+    private void setupToolbar() {
         AppCompatActivity parent = (AppCompatActivity) getActivity();
-        parent.setSupportActionBar((Toolbar) view.findViewById(R.id.toolbar));
+        parent.setSupportActionBar(mToolbar);
         parent.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         parent.getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close_white_24dp);
     }
 
-    /**
-     * Save the user's newly created Circle to the backend
-     */
-    public void saveCircle() {
-
+    public void createNewCircle() {
         String name = mCircleName.getText().toString().trim();
         String description = mCircleDescription.getText().toString().trim();
 
@@ -203,7 +231,7 @@ public class CreateCircleFragment extends Fragment {
             return;
         }
 
-        final Circle circle = ParseObject.create(Circle.class);
+        final Circle newCircle = ParseObject.create(Circle.class);
 
         // Retrieve the byte array from the ImageView
         mCircleIcon.setDrawingCacheEnabled(true);
@@ -212,13 +240,123 @@ public class CreateCircleFragment extends Fragment {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 
-        circle.setIcon(new ParseFile("icon.jpg", stream.toByteArray()));
-        circle.setName(name);
-        circle.setDescription(description);
+        newCircle.setIcon(new ParseFile("icon.jpg", stream.toByteArray()));
+        newCircle.setName(name);
+        newCircle.setDescription(description);
+        newCircle.setIsCommunity(mIsCommunity.isChecked());
+
+        // If this is a community, then retrieve the user's current location and address
+        if (mIsCommunity.isChecked()) {
+            ParseGeoPoint.getCurrentLocationInBackground(10000, new LocationCallback() {
+                @Override
+                public void done(ParseGeoPoint geoPoint, ParseException e) {
+                    if (e == null) {
+                        newCircle.setLocation(geoPoint);
+                        handleReverseGeocode(newCircle, geoPoint);
+                    }
+
+                    else {
+                        Toast.makeText(getContext(), CURRENT_LOCATION_ERRORR, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        }
+
+        // Otherwise, just save the circle as normal
+        else {
+            saveCircle(newCircle);
+        }
+    }
+
+    /**
+     * Determine the user's current address via a reverse geocode lookup
+     *
+     * @param circle the circle
+     * @param location the current location of the user
+     */
+    private void handleReverseGeocode(final Circle circle, ParseGeoPoint location) {
+        // Perform the reverse geocode lookup of the user's address
+        if (Geocoder.isPresent()) {
+            Geocoder geocoder = new Geocoder(getContext(), Locale.getDefault());
+            List<Address> foundAddresses = new ArrayList<Address>();
+
+            try {
+                foundAddresses = geocoder.getFromLocation(location.getLatitude(),
+                        location.getLongitude(), MAXIMUM_GEOCODER_RESULTS);
+            }
+
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // Extract a locality and administrative area from one of the addresses
+            String formattedAddress = "";
+            for (int i = 0; i < foundAddresses.size(); i++) {
+                String locality = foundAddresses.get(i).getLocality();
+                String adminArea = foundAddresses.get(i).getAdminArea();
+
+                if (locality != null && adminArea != null) {
+                    circle.setCity(locality);
+                    circle.setState(adminArea);
+                    formattedAddress = locality + ", " + adminArea;
+                    break;
+                }
+            }
+
+            // Display a dialog for the user to confirm the community location
+            if (!formattedAddress.isEmpty()) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setTitle("Create a community in " + formattedAddress + "?")
+                        .setCancelable(true)
+                        .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                saveCircle(circle);
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Do nothing
+                            }
+                        });
+                builder.create().show();
+            }
+
+            else {
+                Toast.makeText(getContext(), ADDRESS_LOOKUP_ERROR, Toast.LENGTH_LONG).show();
+            }
+        }
+
+        // Display a dialog warning the user that their community will not have an address
+        // associated with it
+        else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setTitle(NO_GEOCODER_WARNING)
+                    .setCancelable(true)
+                    .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            saveCircle(circle);
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Do nothing
+                        }
+                    });
+            builder.create().show();
+        }
+    }
+
+    /**
+     * Save the user's newly created circle
+     */
+    private void saveCircle(final Circle circle) {
         circle.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
-
                 // Add the user as the first member of the new circle
                 if (e == null) {
                     UserCircle uc = ParseObject.create(UserCircle.class);
@@ -232,7 +370,6 @@ public class CreateCircleFragment extends Fragment {
                     uc.saveInBackground(new SaveCallback() {
                         @Override
                         public void done(ParseException e) {
-
                             // Inform the parent activity we are finished
                             if (e == null) {
                                 mListener.onSaveSuccessful(circle);

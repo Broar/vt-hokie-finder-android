@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
@@ -13,7 +14,11 @@ import android.support.v4.app.Fragment;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderApi;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.internal.FusedLocationProviderResult;
+import com.google.maps.model.LatLng;
 
 /**
  * A retained fragment that manages a connection to the GoogleApiClient
@@ -37,6 +42,15 @@ public class GoogleApiManagerFragment extends Fragment implements
 
     public interface Callbacks {
         void onClientConnected();
+    }
+
+    /**
+     * A factory method to return a new GoogleApiManagerFragment that has been configured
+     *
+     * @return a new GoogleApiManagerFragment that has been configured
+     */
+    public static GoogleApiManagerFragment newInstance() {
+        return new GoogleApiManagerFragment();
     }
 
     @Override
@@ -138,22 +152,51 @@ public class GoogleApiManagerFragment extends Fragment implements
         return mGoogleApiClient;
     }
 
+    /**
+     * Determine if the GoogleApiClient is connected
+     * @return
+     */
     public boolean isClientConnected() {
         return mGoogleApiClient.isConnected();
     }
 
+    /**
+     * Connect the GoogleApiClient
+     */
     public void connectClient() {
         if (!mGoogleApiClient.isConnecting() && !mGoogleApiClient.isConnected()) {
             mGoogleApiClient.connect();
         }
     }
 
+    /**
+     * Disconnect the GoogleApiClient
+     */
     public void disconnectClient() {
         if (mGoogleApiClient.isConnecting() || mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
         }
     }
 
+    /**
+     * Retrieve the last known location of the user
+     *
+     * @return the last known location of the user if it exists; otherwise, null
+     */
+    public Location getCurrentLocation() {
+        if (isClientConnected())  {
+            Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            return location;
+        }
+
+        return null;
+    }
+
+    /**
+     * Determine if the GoogleApiClient is resolving an error
+     *
+     * @return true if the GoogleApiClietn is resolving an error, false if not
+     */
     public boolean isResolvingError() {
         return mIsResolvingError;
     }

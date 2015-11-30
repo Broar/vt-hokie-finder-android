@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v4.widget.SwipeRefreshLayout
+    <LinearLayout
         android:id="@+id/swipe_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_weight="0.05" >
 
         <android.support.v7.widget.RecyclerView
@@ -17,26 +17,40 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-    </android.support.v4.widget.SwipeRefreshLayout>
+    </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="12dp"
-        android:orientation="vertical">
+        android:layout_marginBottom="24dp"
+        android:layout_gravity="bottom">
+
         <View
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="6dp"
+            android:layout_above="@+id/master_broadcast"
+            android:layout_marginBottom="12dp"
             style="@style/Divider" />
 
-        <android.support.v7.widget.SwitchCompat
-            android:id="@+id/masterBroadcast"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_width="240dp"
-            android:layout_marginLeft="16dp"
-            android:text="Master Broadcast"
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="6dp"
+            android:layout_marginStart="6dp"
+            android:text="Broadcast location?"/>
+
+        <android.support.v7.widget.SwitchCompat
+            android:id="@+id/master_broadcast"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="6dp"
+            android:layout_marginEnd="6dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             app:theme="@style/SwitchCompatStyle"/>
-    </LinearLayout>
+
+    </RelativeLayout>
 
 </LinearLayout>

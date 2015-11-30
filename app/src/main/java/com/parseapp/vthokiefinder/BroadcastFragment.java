@@ -32,7 +32,7 @@ import java.util.List;
  * A fragment that displays the user's circles and handles broadcasting features
  *
  * @author Steven Briggs
- * @version 2015.11.02
+ * @version 2015.11.29
  */
 public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAdapter> {
 
@@ -94,7 +94,7 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
         View view = inflateFragment(R.layout.fragment_broadcast, inflater, container);
 
         // Initialize the master broadcast switch
-        mMasterBroadcast = (SwitchCompat) view.findViewById(R.id.masterBroadcast);
+        mMasterBroadcast = (SwitchCompat) view.findViewById(R.id.master_broadcast);
         mMasterBroadcast.setChecked(ParseUser.getCurrentUser().getBoolean("masterBroadcast"));
         mMasterBroadcast.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

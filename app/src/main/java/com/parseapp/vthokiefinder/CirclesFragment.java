@@ -104,7 +104,7 @@ public class CirclesFragment extends RecyclerFragment<Circle, CircleAdapter> {
 
     @Override
     protected CircleAdapter buildAdapter() {
-        return new CircleAdapter(getContext(), getItems(), new CircleAdapter.OnItemClickListener() {
+        return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
                 mListener.onCircleClicked(getItems().get(position));

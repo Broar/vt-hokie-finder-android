@@ -56,12 +56,22 @@ public class InvitesAdapter extends RecyclerView.Adapter<InvitesAdapter.ViewHold
         ParseUser user = mUsers.get(position);
         holder.mUsername.setText(user.getString("username"));
 
+        // Load the user's avatar if it exists
         ParseFile imageFile = user.getParseFile("avatar");
         if (imageFile != null) {
             CircleImageView avatar = (CircleImageView) holder.mIsInvited.getFrontLayout().findViewById(R.id.avatar);
             Glide.with(holder.itemView.getContext())
                     .load(Uri.parse(imageFile.getUrl()))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(avatar);
+        }
+
+        // Otherwise, just load the default Fightin' Gobblers icon
+        else {
+            CircleImageView avatar = (CircleImageView) holder.mIsInvited.getFrontLayout().findViewById(R.id.avatar);
+            Glide.with(holder.itemView.getContext())
+                    .fromResource()
+                    .load(R.drawable.fighting_gobblers_medium)
                     .into(avatar);
         }
 

@@ -53,6 +53,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     public void onBindViewHolder(UserAdapter.ViewHolder holder, int position) {
         ParseUser user = mUsers.get(position);
 
+        // Load the user's avatar if it exists
         ParseFile imageFile = user.getParseFile("avatar");
         if (imageFile != null) {
             Glide.with(holder.itemView.getContext())
@@ -61,6 +62,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                     .into(holder.mAvatar);
         }
 
+        // Otherwise, just load the default Fightin' Gobblers icon
+        else {
+            Glide.with(holder.itemView.getContext())
+                    .fromResource()
+                    .load(R.drawable.fighting_gobblers_medium)
+                    .into(holder.mAvatar);
+        }
 
         holder.mUsername.setText(user.getString("username"));
     }

@@ -123,6 +123,13 @@ public class UserCircleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(iv);
         }
+
+        else {
+            Glide.with(iv.getContext())
+                    .fromResource()
+                    .load(R.drawable.fighting_gobblers_medium)
+                    .into(iv);
+        }
     }
 
     public static class InvitesViewHolder extends RecyclerView.ViewHolder implements

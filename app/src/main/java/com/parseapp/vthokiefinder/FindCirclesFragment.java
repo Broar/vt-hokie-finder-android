@@ -67,16 +67,19 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
             @Override
             public void done(List<Circle> circles, ParseException e) {
                 if (e == null) {
-                    if (!circles.isEmpty()) {
-                        getItems().addAll(circles);
-                        getAdapter().onDataReady(true);
-                    }
+//                    if (!circles.isEmpty()) {
+//                        getItems().addAll(circles);
+//                        getAdapter().onDataReady(true);
+//                    }
+//
+//                    else {
+//                        getAdapter().onDataReady(false);
+//                    }
+//
+//                    nextPage();
 
-                    else {
-                        getAdapter().onDataReady(false);
-                    }
-
-                    nextPage();
+                    getItems().addAll(circles);
+                    getAdapter().onDataReady(false);
                 }
 
                 else {
@@ -88,7 +91,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
 
     @Override
     protected CircleAdapter buildAdapter() {
-        return new CircleAdapter(getContext(), getItems(), new CircleAdapter.OnItemClickListener() {
+        return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
                 mListener.onCircleClicked(getItems().get(position));

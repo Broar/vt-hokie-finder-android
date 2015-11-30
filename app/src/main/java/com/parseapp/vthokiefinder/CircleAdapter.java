@@ -28,7 +28,6 @@ import de.hdodenhof.circleimageview.CircleImageView;
  */
 public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder> {
 
-    private Context mContext;
     private List<Circle> mCircles;
     private OnItemClickListener mListener;
 
@@ -39,12 +38,10 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
     /**
      * Create a new CircleAdapter object.
      *
-     * @param context the context for the adapter
      * @param circles the dataset of circles
      * @param listener the item listener
      */
-    public CircleAdapter(Context context, List<Circle> circles, OnItemClickListener listener) {
-        mContext = context;
+    public CircleAdapter(List<Circle> circles, OnItemClickListener listener) {
         mCircles = circles;
         mListener = listener;
     }
@@ -59,11 +56,20 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
     public void onBindViewHolder(ViewHolder holder, int position) {
         ParseFile imageFile = mCircles.get(position).getIcon();
 
+        // Load the circle's icon if it exists
         if (imageFile != null) {
             Uri imageUri = Uri.parse(imageFile.getUrl());
-            Glide.with(mContext)
+            Glide.with(holder.itemView.getContext())
                     .load(imageUri)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.mIcon);
+        }
+
+        // Otherwise, just load the default Fightin' Gobblers icon
+        else {
+            Glide.with(holder.itemView.getContext())
+                    .fromResource()
+                    .load(R.drawable.fighting_gobblers_medium)
                     .into(holder.mIcon);
         }
 

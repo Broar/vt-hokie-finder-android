@@ -64,11 +64,20 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         ParseUser friend = mFriends.get(position).getFriend();
 
+        // Load the user's avatar if it exists
         ParseFile imageFile = friend.getParseFile("avatar");
         if (imageFile != null) {
             Glide.with(mContext)
                     .load(Uri.parse(imageFile.getUrl()))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(holder.mAvatar);
+        }
+
+        // Otherwise, just load the default Fightin' Gobblers icon
+        else {
+            Glide.with(holder.itemView.getContext())
+                    .fromResource()
+                    .load(R.drawable.fighting_gobblers_medium)
                     .into(holder.mAvatar);
         }
 

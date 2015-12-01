@@ -354,6 +354,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
 
                     else {
                         getActivity().invalidateOptionsMenu();
+                        mFab.hide();
                         Toast.makeText(getContext(), "Left circle!", Toast.LENGTH_LONG).show();
                     }
                 }

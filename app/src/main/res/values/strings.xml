@@ -1,7 +1,9 @@
 <resources>
+    <!-- Application and Activity titles -->
     <string name="app_name">VTHokieFinder</string>
     <string name="create_circle">New Circle</string>
     <string name="find_friends">Find Friends</string>
+    <string name="find_circles">Find Circles</string>
     <string name="details">Details</string>
     <string name="profile">Profile</string>
     <string name="invites">Invites</string>

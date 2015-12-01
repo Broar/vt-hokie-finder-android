@@ -1,6 +1,5 @@
 package com.parseapp.vthokiefinder;
 
-import android.content.Context;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -10,12 +9,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.parse.GetDataCallback;
-import com.parse.GetDataStreamCallback;
-import com.parse.ParseException;
 import com.parse.ParseFile;
 
-import java.io.InputStream;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -32,7 +27,8 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
     private OnItemClickListener mListener;
 
     public interface OnItemClickListener {
-        void onItemClick(int position);
+        void onItemClicked(int position);
+        boolean onItemLongClicked(int position);
     }
 
     /**
@@ -82,7 +78,9 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
         return mCircles.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements
+            View.OnClickListener,
+            View.OnLongClickListener {
 
         private OnItemClickListener mListener;
         private CircleImageView mIcon;
@@ -99,6 +97,7 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
             super(view);
             mListener = listener;
             view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
             mIcon = (CircleImageView) itemView.findViewById(R.id.icon);
             mName = (TextView) itemView.findViewById(R.id.name);
             mDescription = (TextView) itemView.findViewById(R.id.description);
@@ -107,8 +106,17 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
         @Override
         public void onClick(View v) {
             if (mListener != null) {
-                mListener.onItemClick(getLayoutPosition());
+                mListener.onItemClicked(getLayoutPosition());
             }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            if (mListener != null) {
+                return mListener.onItemLongClicked(getLayoutPosition());
+            }
+
+            return false;
         }
     }
 }

@@ -68,6 +68,13 @@
                 android:value=".HomeActivity" />
         </activity>
         <activity
+            android:name=".FindCirclesActivity"
+            android:label="@string/find_circles" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HomeActivity" />
+        </activity>
+        <activity
             android:name=".DetailActivity"
             android:label="@string/details">
             <meta-data

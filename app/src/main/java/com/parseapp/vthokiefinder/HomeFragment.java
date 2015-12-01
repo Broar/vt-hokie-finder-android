@@ -105,8 +105,7 @@ public class HomeFragment extends Fragment implements
         mFabAddCircles.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Do nothing for now
-                // startActivity(new Intent(getContext(), FindCirclesActivity.class));
+                startActivity(new Intent(getContext(), FindCirclesActivity.class));
             }
         });
     }

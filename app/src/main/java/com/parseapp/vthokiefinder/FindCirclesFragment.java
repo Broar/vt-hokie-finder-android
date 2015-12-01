@@ -2,39 +2,53 @@ package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.parse.FunctionCallback;
+import com.parse.LocationCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * A fragment that displays the circles the current user can possibly join
+ * A fragment that displays the circles / communities the current user can possibly join
  *
  * @author Steven Briggs
- * @version 2015.11.02
+ * @version 2015.12.01
  */
 public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter> {
 
     public static final String TAG = FindCirclesFragment.class.getSimpleName();
+    public static final int FIND_CIRCLES = 0;
+    public static final int FIND_COMMUNITIES = 1;
+
+    private static final String FIND_KEY = "find";
 
     private CirclesFragment.Callbacks mListener;
 
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
      *
+     * @param find the type of circle to search for
      * @return a new FindCirclesFragment that has been configured
      */
-    public static FindCirclesFragment newInstance() {
-        return new FindCirclesFragment();
+    public static FindCirclesFragment newInstance(int find) {
+        Bundle args = new Bundle();
+        args.putInt(FIND_KEY, find);
+        FindCirclesFragment fragment = new FindCirclesFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Override
@@ -58,28 +72,173 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
 
     @Override
     public void onLoadMoreRequested() {
+        if (getArguments().getInt(FIND_KEY) == FIND_CIRCLES) {
+            loadCircles();
+        }
+
+        else {
+            loadCommunities();
+        }
+    }
+
+    /**
+     * Load circles the user can join
+     */
+    private void loadCircles() {
         HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("userId", ParseUser.getCurrentUser().getObjectId());
-        params.put("skip", getNextPage());
-        params.put("limit", getLimit());
 
         ParseCloud.callFunctionInBackground("getCirclesToJoin", params, new FunctionCallback<List<Circle>>() {
             @Override
             public void done(List<Circle> circles, ParseException e) {
                 if (e == null) {
-//                    if (!circles.isEmpty()) {
-//                        getItems().addAll(circles);
-//                        getAdapter().onDataReady(true);
-//                    }
-//
-//                    else {
-//                        getAdapter().onDataReady(false);
-//                    }
-//
-//                    nextPage();
-
                     getItems().addAll(circles);
                     getAdapter().onDataReady(false);
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Load communities the user can join
+     */
+    private void loadCommunities() {
+        ParseGeoPoint.getCurrentLocationInBackground(10000, new LocationCallback() {
+            @Override
+            public void done(ParseGeoPoint geoPoint, ParseException e) {
+                if (e == null) {
+                    HashMap<String, Object> params = new HashMap<String, Object>();
+                    params.put("userId", ParseUser.getCurrentUser().getObjectId());
+                    params.put("latitude", geoPoint.getLatitude());
+                    params.put("longitude", geoPoint.getLongitude());
+
+                    ParseCloud.callFunctionInBackground("getCommunitiesToJoin", params, new FunctionCallback<List<Circle>>() {
+                        @Override
+                        public void done(List<Circle> communities, ParseException e) {
+                            if (e == null) {
+                                getItems().addAll(communities);
+                                getAdapter().onDataReady(false);
+                            }
+
+                            else {
+                                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Display a dialog that allows the user to send a join request to a circle
+     *
+     * @param circle the community to display the dialog for
+     * @param position the index position of the community
+     */
+    private void showSendJoinRequestDialog(final Circle circle, final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Send join request to " + circle.getName() + "?")
+                .setCancelable(true)
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sendJoinRequest(circle, position);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                });
+        builder.create().show();
+    }
+
+    /**
+     * Display a dialog that allows the user to join a community
+     *
+     * @param community the community to display the dialog for
+     * @param position the index position of the community
+     */
+    private void showJoinDialog(final Circle community, final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Join " + community.getName() + "?")
+                .setCancelable(true)
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        joinCommunity(community, position);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                });
+        builder.create().show();
+    }
+
+    /**
+     * Create a request for the user to join the specified circle
+     *
+     * @param circle the circle to send the request to
+     * @param position the index position of the circle
+     */
+    private void sendJoinRequest(Circle circle, final int position) {
+        UserCircle uc = new UserCircle();
+        uc.setCircle(circle);
+        uc.setUser(ParseUser.getCurrentUser());
+        uc.setIsBroadcasting(false);
+        uc.setIsPending(true);
+        uc.setIsAccepted(false);
+        uc.setIsInvite(false);
+        uc.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    getItems().remove(position);
+                    getBaseAdapter().notifyItemRemoved(position);
+                    Toast.makeText(getContext(), "Sent request!", Toast.LENGTH_LONG).show();
+                }
+
+                else {
+                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    /**
+     * Add the user as a new member of the specified community
+     *
+     * @param community the community the user is joining
+     * @param position the index position of the community
+     */
+    private void joinCommunity(Circle community, final int position) {
+        UserCircle uc = new UserCircle();
+        uc.setCircle(community);
+        uc.setUser(ParseUser.getCurrentUser());
+        uc.setIsBroadcasting(false);
+        uc.setIsPending(false);
+        uc.setIsAccepted(true);
+        uc.setIsInvite(false);
+        uc.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    getItems().remove(position);
+                    getBaseAdapter().notifyItemRemoved(position);
+                    Toast.makeText(getContext(), "Joined community!", Toast.LENGTH_LONG).show();
                 }
 
                 else {
@@ -93,8 +252,21 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
     protected CircleAdapter buildAdapter() {
         return new CircleAdapter(getItems(), new CircleAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(int position) {
+            public void onItemClicked(int position) {
                 mListener.onCircleClicked(getItems().get(position));
+            }
+
+            @Override
+            public boolean onItemLongClicked(int position) {
+                if (getArguments().getInt(FIND_KEY) == FIND_CIRCLES) {
+                    showSendJoinRequestDialog(getItems().get(position), position);
+                }
+
+                else {
+                    showJoinDialog(getItems().get(position), position);
+                }
+
+                return true;
             }
         });
     }

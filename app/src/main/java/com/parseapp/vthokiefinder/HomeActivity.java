@@ -40,12 +40,18 @@ public class HomeActivity extends AppCompatActivity implements
         BroadcastFragment.Callbacks,
         GoogleApiManagerFragment.Callbacks {
 
+    private OnBackPressedListener mListener;
+
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
 
     private HomeFragment mHomeFragment;
     private BroadcastFragment mBroadcastFragment;
     private GoogleApiManagerFragment mGoogleApiManagerFragment;
+
+    public interface OnBackPressedListener {
+        boolean onBackPressed();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,17 +126,32 @@ public class HomeActivity extends AppCompatActivity implements
 
     @Override
     public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-            mDrawerLayout.closeDrawer(GravityCompat.START);
-        }
+        // Continue with normal back press if the listener does not handle the event
+        if (!mListener.onBackPressed()) {
 
-        else if (mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
-            mDrawerLayout.closeDrawer(GravityCompat.END);
-        }
+            // If any drawers are open, then close them
+            if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+                mDrawerLayout.closeDrawer(GravityCompat.START);
+            }
 
-        else {
-            super.onBackPressed();
+            else if (mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
+                mDrawerLayout.closeDrawer(GravityCompat.END);
+            }
+
+            // Otherwise, use the default implementation
+            else {
+                super.onBackPressed();
+            }
         }
+    }
+
+    /**
+     * Set the onBackPressedListener
+     *
+     * @param listener the object listening for back press events
+     */
+    public void setOnBackPressedListener(OnBackPressedListener listener) {
+        mListener = listener;
     }
 
     @Override

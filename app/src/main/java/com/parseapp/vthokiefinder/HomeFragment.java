@@ -162,8 +162,16 @@ public class HomeFragment extends Fragment implements
                 break;
 
             case MAP:
-                mFab.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_down));
-                mFab.setVisibility(View.INVISIBLE);
+                if (mFabMenu.getVisibility() != View.INVISIBLE) {
+                    mFabMenu.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_down));
+                    mFabMenu.setVisibility(View.INVISIBLE);
+                }
+
+                else {
+                    mFab.startAnimation(AnimationUtils.loadAnimation(getContext(), R.anim.fab_scale_down));
+                    mFab.setVisibility(View.INVISIBLE);
+                }
+
                 break;
         }
     }

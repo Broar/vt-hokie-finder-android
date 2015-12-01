@@ -126,22 +126,18 @@ public class HomeActivity extends AppCompatActivity implements
 
     @Override
     public void onBackPressed() {
+        // If any drawers are open, then close them
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        }
+
+        else if (mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
+            mDrawerLayout.closeDrawer(GravityCompat.END);
+        }
+
         // Continue with normal back press if the listener does not handle the event
-        if (!mListener.onBackPressed()) {
-
-            // If any drawers are open, then close them
-            if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-                mDrawerLayout.closeDrawer(GravityCompat.START);
-            }
-
-            else if (mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
-                mDrawerLayout.closeDrawer(GravityCompat.END);
-            }
-
-            // Otherwise, use the default implementation
-            else {
-                super.onBackPressed();
-            }
+        else if (!mListener.onBackPressed()) {
+            super.onBackPressed();
         }
     }
 

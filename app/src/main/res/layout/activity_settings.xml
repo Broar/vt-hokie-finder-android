@@ -35,33 +35,4 @@
 
     </LinearLayout>
 
-    <View
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="6dp"
-        style="@style/Divider" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:text="Twitter Account"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Link with Twitter to automatically find friends"/>
-
-    </LinearLayout>
-
-    <View
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="6dp"
-        style="@style/Divider" />
-
 </LinearLayout>

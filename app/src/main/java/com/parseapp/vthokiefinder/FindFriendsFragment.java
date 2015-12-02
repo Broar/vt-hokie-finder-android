@@ -19,6 +19,7 @@ import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseUser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,9 +29,12 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.11.02
  */
-public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter> {
+public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter> implements
+        SearchView.OnQueryTextListener{
 
     public static final String TAG = FindFriendsFragment.class.getSimpleName();
+
+    private List<ParseUser> mOriginal;
 
     /**
      * A factory method to return a new FindFriendsFragment that has been configured
@@ -43,8 +47,9 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        mOriginal = new ArrayList<ParseUser>();
         setHasOptionsMenu(true);
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -54,31 +59,46 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_find_friends, menu);
+        inflater.inflate(R.menu.menu_search, menu);
         MenuItem item = menu.findItem(R.id.action_search);
-        SearchView sv = new SearchView(((FindFriendsActivity) getActivity()).getSupportActionBar().getThemedContext());
-        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW |
-                MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
-        MenuItemCompat.setActionView(item, sv);
+        SearchView sv = (SearchView) MenuItemCompat.getActionView(item);
+        sv.setOnQueryTextListener(this);
+    }
 
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        getBaseAdapter().setUsers(filter(query));
+        return true;
+    }
 
-        ActionBar.LayoutParams params = new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT,
-                ActionBar.LayoutParams.MATCH_PARENT);
-        sv.setLayoutParams(params);
-        //MenuItemCompat.expandActionView(item);
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        getBaseAdapter().setUsers(filter(newText));
+        return true;
+    }
 
-        sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
+    /**
+     * Filter the list of users by the prefix
+     *
+     * @param prefix the prefix to filter by
+     * @return a filtered list of users
+     */
+    private List<ParseUser> filter(String prefix) {
+        List<ParseUser> filtered = new ArrayList<ParseUser>(getItems().size());
+
+        if (prefix.isEmpty()) {
+            filtered.addAll(mOriginal);
+        }
+
+        else {
+            for (ParseUser user : getItems()) {
+                if (user.getUsername().toLowerCase().startsWith(prefix.toLowerCase())) {
+                    filtered.add(user);
+                }
             }
+        }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                getBaseAdapter().getFilter().filter(newText);
-                return true;
-            }
-        });
+        return filtered;
     }
 
     @Override
@@ -93,8 +113,8 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
             public void done(List<ParseUser> users, ParseException e) {
                 if (e == null) {
                     if (!users.isEmpty()) {
+                        mOriginal.addAll(users);
                         getItems().addAll(users);
-                        getBaseAdapter().getOriginalList().addAll(users);
                         getAdapter().onDataReady(true);
                     } else {
                         getAdapter().onDataReady(false);
@@ -162,7 +182,7 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
             public void done(Boolean requestSent, ParseException e) {
                 if (e == null) {
                     if (requestSent) {
-                        getBaseAdapter().getOriginalList().remove(getItems().get(position));
+                        mOriginal.remove(getItems().get(position));
                         getItems().remove(position);
                         getBaseAdapter().notifyItemRemoved(position);
                         Toast.makeText(getContext(), "Request sent!", Toast.LENGTH_LONG).show();

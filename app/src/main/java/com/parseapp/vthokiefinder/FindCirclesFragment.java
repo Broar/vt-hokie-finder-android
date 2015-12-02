@@ -4,8 +4,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -18,6 +23,7 @@ import com.parse.ParseGeoPoint;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,7 +33,8 @@ import java.util.List;
  * @author Steven Briggs
  * @version 2015.12.01
  */
-public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter> {
+public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter> implements
+        SearchView.OnQueryTextListener {
 
     public static final String TAG = FindCirclesFragment.class.getSimpleName();
     public static final int FIND_CIRCLES = 0;
@@ -36,6 +43,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
     private static final String FIND_KEY = "find";
 
     private CirclesFragment.Callbacks mListener;
+    private List<Circle> mOriginal;
 
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
@@ -49,6 +57,13 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
         FindCirclesFragment fragment = new FindCirclesFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        mOriginal = new ArrayList<Circle>();
+        setHasOptionsMenu(true);
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -68,6 +83,51 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflateFragment(R.layout.fragment_circles_list, inflater, container);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.menu_search, menu);
+        MenuItem item = menu.findItem(R.id.action_search);
+        SearchView sv = (SearchView) MenuItemCompat.getActionView(item);
+        sv.setOnQueryTextListener(this);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        getBaseAdapter().setCircles(filter(query));
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        getBaseAdapter().setCircles(filter(newText));
+        return true;
+    }
+
+    /**
+     * Filter the list of circles by the prefix
+     *
+     * @param prefix the prefix to filter by
+     * @return a filtered list of circles
+     */
+    private List<Circle> filter(String prefix) {
+        List<Circle> filtered = new ArrayList<Circle>(getItems().size());
+
+        if (prefix.isEmpty()) {
+            filtered.addAll(mOriginal);
+        }
+
+        else {
+            for (Circle circle : getItems()) {
+                if (circle.getName().toLowerCase().startsWith(prefix.toLowerCase())) {
+                    filtered.add(circle);
+                }
+            }
+        }
+
+        return filtered;
     }
 
     @Override
@@ -92,11 +152,10 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
             @Override
             public void done(List<Circle> circles, ParseException e) {
                 if (e == null) {
+                    mOriginal.addAll(circles);
                     getItems().addAll(circles);
                     getAdapter().onDataReady(false);
-                }
-
-                else {
+                } else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
@@ -120,18 +179,15 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
                         @Override
                         public void done(List<Circle> communities, ParseException e) {
                             if (e == null) {
+                                mOriginal.addAll(communities);
                                 getItems().addAll(communities);
                                 getAdapter().onDataReady(false);
-                            }
-
-                            else {
+                            } else {
                                 Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                             }
                         }
                     });
-                }
-
-                else {
+                } else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
@@ -206,6 +262,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
             @Override
             public void done(ParseException e) {
                 if (e == null) {
+                    mOriginal.remove(getItems().remove(position));
                     getItems().remove(position);
                     getBaseAdapter().notifyItemRemoved(position);
                     Toast.makeText(getContext(), "Sent request!", Toast.LENGTH_LONG).show();
@@ -236,6 +293,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
             @Override
             public void done(ParseException e) {
                 if (e == null) {
+                    mOriginal.remove(getItems().remove(position));
                     getItems().remove(position);
                     getBaseAdapter().notifyItemRemoved(position);
                     Toast.makeText(getContext(), "Joined community!", Toast.LENGTH_LONG).show();

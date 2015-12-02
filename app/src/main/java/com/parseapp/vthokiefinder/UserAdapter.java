@@ -5,7 +5,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
@@ -14,7 +13,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.parse.ParseFile;
 import com.parse.ParseUser;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -25,10 +23,9 @@ import de.hdodenhof.circleimageview.CircleImageView;
  * @author Steven Briggs
  * @version 2015.10.31
  */
-public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> implements Filterable {
+public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
 
     private List<ParseUser> mUsers;
-    private List<ParseUser> mFilteredUsers;
     private OnItemClickedListener mListener;
 
     public interface OnItemClickedListener {
@@ -43,8 +40,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
      * @param listener the object listening to item click events
      */
     public UserAdapter(List<ParseUser> users, OnItemClickedListener listener) {
-        mUsers = new ArrayList<ParseUser>(users);
-        mFilteredUsers = users;
+        mUsers = users;
         mListener = listener;
     }
 
@@ -56,7 +52,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
 
     @Override
     public void onBindViewHolder(UserAdapter.ViewHolder holder, int position) {
-        ParseUser user = mFilteredUsers.get(position);
+        ParseUser user = mUsers.get(position);
 
         // Load the user's avatar if it exists
         ParseFile imageFile = user.getParseFile("avatar");
@@ -80,18 +76,21 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
 
     @Override
     public int getItemCount() {
-        return mFilteredUsers.size();
+        return mUsers.size();
     }
 
-    @Override
-    public Filter getFilter() {
-        return new UserFilter(this, mUsers);
+    public void setUsers(List<ParseUser> users) {
+        mUsers.clear();
+        mUsers.addAll(users);
+        notifyDataSetChanged();
     }
 
-    public List<ParseUser> getOriginalList() {
-        return mUsers;
-    }
-
+    /**
+     * A class to display information about a ParseUser
+     *
+     * @author Steven Briggs
+     * @version 2015.12.01
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder implements
         View.OnClickListener,
         View.OnLongClickListener {
@@ -125,51 +124,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> im
         @Override
         public boolean onLongClick(View v) {
             return mListener.onItemLongClicked(getLayoutPosition());
-        }
-    }
-
-
-    private static class UserFilter extends Filter {
-
-        private UserAdapter mAdapter;
-        private List<ParseUser> mOriginal;
-        private List<ParseUser> mFiltered;
-
-        public UserFilter(UserAdapter adapter, List<ParseUser> users) {
-            mAdapter = adapter;
-            mOriginal = new ArrayList<ParseUser>(users);
-            mFiltered = new ArrayList<ParseUser>();
-        }
-
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            mFiltered.clear();
-            FilterResults results = new FilterResults();
-
-            if (constraint.length() == 0) {
-                mFiltered.addAll(mOriginal);
-            }
-
-            else {
-                String filterPrefix = constraint.toString().toLowerCase().trim();
-
-                for (ParseUser user : mOriginal) {
-                    if (user.getUsername().toLowerCase().startsWith(filterPrefix)) {
-                        mFiltered.add(user);
-                    }
-                }
-            }
-
-            results.values = mFiltered;
-            results.count = mFiltered.size();
-            return results;
-        }
-
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            mAdapter.mFilteredUsers.clear();
-            mAdapter.mFilteredUsers.addAll((List<ParseUser>) results.values);
-            mAdapter.notifyDataSetChanged();
         }
     }
 }

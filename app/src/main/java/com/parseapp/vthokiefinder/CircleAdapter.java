@@ -5,12 +5,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.parse.ParseFile;
+import com.parse.ParseUser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -78,6 +82,18 @@ public class CircleAdapter extends RecyclerView.Adapter<CircleAdapter.ViewHolder
         return mCircles.size();
     }
 
+    public void setCircles(List<Circle> circles) {
+        mCircles.clear();
+        mCircles.addAll(circles);
+        notifyDataSetChanged();
+    }
+
+    /**
+     * A class to display information about circles
+     *
+     * @author Steven Briggs
+     * @version 2015.12.01
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder implements
             View.OnClickListener,
             View.OnLongClickListener {

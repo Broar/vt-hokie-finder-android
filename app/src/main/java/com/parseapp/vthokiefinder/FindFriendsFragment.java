@@ -65,7 +65,7 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
         ActionBar.LayoutParams params = new ActionBar.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT,
                 ActionBar.LayoutParams.MATCH_PARENT);
         sv.setLayoutParams(params);
-        MenuItemCompat.expandActionView(item);
+        //MenuItemCompat.expandActionView(item);
 
         sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -75,7 +75,8 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                return false;
+                getBaseAdapter().getFilter().filter(newText);
+                return true;
             }
         });
     }
@@ -93,6 +94,7 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
                 if (e == null) {
                     if (!users.isEmpty()) {
                         getItems().addAll(users);
+                        getBaseAdapter().getOriginalList().addAll(users);
                         getAdapter().onDataReady(true);
                     } else {
                         getAdapter().onDataReady(false);
@@ -160,6 +162,7 @@ public class FindFriendsFragment extends RecyclerFragment<ParseUser, UserAdapter
             public void done(Boolean requestSent, ParseException e) {
                 if (e == null) {
                     if (requestSent) {
+                        getBaseAdapter().getOriginalList().remove(getItems().get(position));
                         getItems().remove(position);
                         getBaseAdapter().notifyItemRemoved(position);
                         Toast.makeText(getContext(), "Request sent!", Toast.LENGTH_LONG).show();

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -58,12 +59,14 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
 
     private Menu mMenu;
 
+    private AppBarLayout mAppBar;
+    private Toolbar mToolbar;
+    private TextView mTitle;
     private CircleImageView mAvatar;
     private TextView mUsername;
     private TextView mEmail;
     private TabLayout mTabs;
     private ViewPager mPager;
-    private Toolbar mToolbar;
 
     public interface Callbacks {
         void onHomeClicked();
@@ -109,17 +112,32 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        mAppBar = (AppBarLayout) view.findViewById(R.id.appbar);
+        mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        mTitle = (TextView) view.findViewById(R.id.title);
         mAvatar = (CircleImageView) view.findViewById(R.id.avatar);
         mUsername = (TextView) view.findViewById(R.id.username);
         mEmail = (TextView) view.findViewById(R.id.email);
         mTabs = (TabLayout) view.findViewById(R.id.tabs);
         mPager = (ViewPager) view.findViewById(R.id.view_pager);
-        mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
 
         initializeToolbar();
         initializeTabs();
 
         getProfile();
+
+        mAppBar.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (verticalOffset == -appBarLayout.getTotalScrollRange()) {
+                    mTitle.setVisibility(View.VISIBLE);
+                }
+
+                else {
+                    mTitle.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
         return view;
     }
@@ -232,6 +250,7 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
                     .into(mAvatar);
         }
 
+        mTitle.setText(mUser.getUsername());
         mUsername.setText(mUser.getUsername());
         mEmail.setText(mUser.getEmail());
     }

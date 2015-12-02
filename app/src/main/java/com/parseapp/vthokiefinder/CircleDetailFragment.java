@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -52,7 +53,9 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
 
     private Menu mMenu;
 
+    private AppBarLayout mAppBar;
     private Toolbar mToolbar;
+    private TextView mTitle;
     private FloatingActionButton mFab;
     private CircleImageView mIcon;
     private TextView mName;
@@ -110,11 +113,25 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         bindFragment(view);
 
         // Set the initial values of the fields
+        mTitle.setText(mCircle.getName());
         mName.setText(mCircle.getName());
         mDescription.setText(mCircle.getDescription());
 
         loadIcon();
         setupToolbar();
+
+        mAppBar.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
+            @Override
+            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+                if (verticalOffset == -appBarLayout.getTotalScrollRange()) {
+                    mTitle.setVisibility(View.VISIBLE);
+                }
+
+                else {
+                    mTitle.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
         return view;
     }
@@ -252,7 +269,9 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         mName = (TextView) view.findViewById(R.id.circle_name);
         mDescription = (TextView) view.findViewById(R.id.circle_description);
         mFab = (FloatingActionButton) view.findViewById(R.id.fab);
+        mTitle = (TextView) view.findViewById(R.id.title);
         mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        mAppBar = (AppBarLayout) view.findViewById(R.id.appbar);
     }
 
     /**
@@ -275,6 +294,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         AppCompatActivity parent = (AppCompatActivity) getActivity();
         parent.setSupportActionBar(mToolbar);
         parent.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        parent.getSupportActionBar().setTitle(mCircle.getName());
         parent.getSupportActionBar().setDisplayShowTitleEnabled(false);
     }
 

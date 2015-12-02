@@ -35,5 +35,6 @@ public class FindFriendsActivity extends AppCompatActivity {
         }
 
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

@@ -262,7 +262,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
             @Override
             public void done(ParseException e) {
                 if (e == null) {
-                    mOriginal.remove(getItems().remove(position));
+                    mOriginal.remove(getItems().get(position));
                     getItems().remove(position);
                     getBaseAdapter().notifyItemRemoved(position);
                     Toast.makeText(getContext(), "Sent request!", Toast.LENGTH_LONG).show();
@@ -293,7 +293,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
             @Override
             public void done(ParseException e) {
                 if (e == null) {
-                    mOriginal.remove(getItems().remove(position));
+                    mOriginal.remove(getItems().get(position));
                     getItems().remove(position);
                     getBaseAdapter().notifyItemRemoved(position);
                     Toast.makeText(getContext(), "Joined community!", Toast.LENGTH_LONG).show();

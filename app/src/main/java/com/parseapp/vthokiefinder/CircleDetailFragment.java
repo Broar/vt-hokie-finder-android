@@ -125,9 +125,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
             public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
                 if (verticalOffset == -appBarLayout.getTotalScrollRange()) {
                     mTitle.setVisibility(View.VISIBLE);
-                }
-
-                else {
+                } else {
                     mTitle.setVisibility(View.INVISIBLE);
                 }
             }
@@ -232,6 +230,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     public void onLoadMoreRequested() {
         ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("circle", mCircle)
+                .whereNotEqualTo("user", ParseUser.getCurrentUser())
                 .include("user")
                 .setSkip(getNextPage())
                 .setLimit(getLimit());
@@ -326,21 +325,39 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         ParseObject userCircle = ParseObject.create(UserCircle.class);
         userCircle.put("user", ParseUser.getCurrentUser());
         userCircle.put("circle", mCircle);
-        userCircle.put("pending", true);
         userCircle.put("isBroadcasting", false);
         userCircle.put("isInvite", false);
+
+        // Communities are publicly available to join without a request
+        if (mCircle.isCommunity()) {
+            userCircle.put("pending", false);
+        }
+
+        // Circles are private and cannot be joined without a request or invitation
+        else {
+            userCircle.put("pending", true);
+        }
 
         // Save the UserCircle object to the Parse backend
         userCircle.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {
                 if (e == null) {
-                    mMemberStatus = Circle.PENDING;
-                    getActivity().invalidateOptionsMenu();
-                    Toast.makeText(getContext(), "Request sent!", Toast.LENGTH_LONG).show();
-                }
 
-                else {
+                    String message;
+                    if (mCircle.isCommunity()) {
+                        mMemberStatus = Circle.MEMBER;
+                        message = "Joined community!";
+                    }
+
+                    else {
+                        mMemberStatus = Circle.PENDING;
+                        message = "Sent request!";
+                    }
+
+                    getActivity().invalidateOptionsMenu();
+                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                } else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }
@@ -372,6 +389,14 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
                         Toast.makeText(getContext(), "Circle destroyed!", Toast.LENGTH_LONG).show();
                     }
 
+                    // Display a message to the user that they left the community
+                    else if (mCircle.isCommunity()) {
+                        getActivity().invalidateOptionsMenu();
+                        mFab.hide();
+                        Toast.makeText(getContext(), "Left community!", Toast.LENGTH_LONG).show();
+                    }
+
+                    // Display a message to the user that they left the circle
                     else {
                         getActivity().invalidateOptionsMenu();
                         mFab.hide();

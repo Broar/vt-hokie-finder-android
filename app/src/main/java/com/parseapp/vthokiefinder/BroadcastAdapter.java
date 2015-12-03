@@ -1,8 +1,9 @@
 package com.parseapp.vthokiefinder;
 
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,10 +22,14 @@ import eu.davidea.flipview.FlipView;
 public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.ViewHolder> {
 
     private List<UserCircle> mUserCircles;
-    private OnItemClickListener mListener;
+    private SparseBooleanArray mIsViewingStates;
+    private OnItemClickedListener mListener;
+    private FlipView mPrevious;
+    private int mPreviousPos;
 
-    public interface OnItemClickListener {
-        void onItemClick(View itemView, int position);
+    public interface OnItemClickedListener {
+        void onBroadcastClicked(int position);
+        void onIsViewingClicked(int position, boolean isViewing);
     }
 
     /**
@@ -33,8 +38,9 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
      * @param userCircles the dataset of UserCircles
      * @param listener the item listener
      */
-    public BroadcastAdapter(List<UserCircle> userCircles, OnItemClickListener listener) {
+    public BroadcastAdapter(List<UserCircle> userCircles, OnItemClickedListener listener) {
         mUserCircles = userCircles;
+        mIsViewingStates = new SparseBooleanArray(mUserCircles.size());
         mListener = listener;
     }
 
@@ -45,9 +51,33 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, final int position) {
         holder.mName.setText(mUserCircles.get(position).getCircle().getName());
         holder.mBroadcastStatus.flipSilently(mUserCircles.get(position).isBroadcasting());
+        holder.mIsViewing.flipSilently(mIsViewingStates.get(position));
+        holder.mIsViewing.setOnFlippingListener(new FlipView.OnFlippingListener() {
+            @Override
+            public void onFlipped(FlipView flipView, boolean checked) {
+                if (checked) {
+                    if (mPrevious != null) {
+                        mPrevious.flipSilently(false);
+                        mIsViewingStates.put(mPreviousPos, false);
+                    }
+
+                    mIsViewingStates.put(position, true);
+                    mPrevious = flipView;
+                    mPreviousPos = position;
+                }
+
+                else {
+                    mIsViewingStates.put(mPreviousPos, false);
+                    mPrevious = null;
+                    mPreviousPos = -1;
+                }
+
+                mListener.onIsViewingClicked(position, checked);
+            }
+        });
     }
 
     @Override
@@ -57,9 +87,10 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private OnItemClickListener mListener;
+        private OnItemClickedListener mListener;
         private TextView mName;
         private FlipView mBroadcastStatus;
+        private FlipView mIsViewing;
 
         /**
          * Create a new ViewHolder object.
@@ -67,20 +98,31 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
          * @param itemView the item view
          * @param listener listener to callback when this holder is clicked
          */
-        public ViewHolder(View itemView, OnItemClickListener listener) {
+        public ViewHolder(View itemView, OnItemClickedListener listener) {
             super(itemView);
             mListener = listener;
             mName = (TextView) itemView.findViewById(R.id.name);
             mBroadcastStatus = (FlipView) itemView.findViewById(R.id.broadcast_status);
+            mIsViewing = (FlipView) itemView.findViewById(R.id.is_viewing);
+
             mBroadcastStatus.setChildBackgroundColor(FlipView.REAR_VIEW_INDEX,
                     ContextCompat.getColor(itemView.getContext(), R.color.primary));
             mBroadcastStatus.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mBroadcastStatus.showNext();
-                    mListener.onItemClick(v, getLayoutPosition());
+                    mListener.onBroadcastClicked(getLayoutPosition());
                 }
             });
+
+            mIsViewing.setChildBackgroundColor(FlipView.REAR_VIEW_INDEX,
+                    ContextCompat.getColor(itemView.getContext(), R.color.primary));
+//            mIsViewing.setOnFlippingListener(new FlipView.OnFlippingListener() {
+//                @Override
+//                public void onFlipped(FlipView flipView, boolean checked) {
+//                    mListener.onIsViewingClicked(getLayoutPosition(), checked);
+//                }
+//            });
         }
     }
 

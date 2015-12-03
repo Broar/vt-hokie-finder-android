@@ -5,8 +5,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -15,11 +18,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.parse.ParseFile;
 import com.parse.ParseUser;
@@ -31,27 +37,35 @@ import de.hdodenhof.circleimageview.CircleImageView;
  * an interface to access the main features of HokieFinder.
  *
  * @author Steven Briggs
- * @version 2015.10.23
+ * @version 2015.12.03
  */
 public class HomeActivity extends AppCompatActivity implements
         CirclesFragment.Callbacks,
         FriendsFragment.Callbacks,
-        CircleMapFragment.Callbacks,
+        MapFragment.Callbacks,
         BroadcastFragment.Callbacks,
-        GoogleApiManagerFragment.Callbacks {
+        GoogleApiManagerFragment.Callbacks,
+        ViewPagerAdapter.Callbacks {
 
-    private OnBackPressedListener mListener;
+    private static final CharSequence[] TITLES = { "CIRCLES", "FRIENDS", "MAP" };
 
-    private Toolbar mToolbar;
-    private DrawerLayout mDrawerLayout;
+    private static final int CIRCLES = 0;
+    private static final int FRIENDS = 1;
+    private static final int MAP = 2;
 
-    private HomeFragment mHomeFragment;
+    private MapFragment mMapFragment;
     private BroadcastFragment mBroadcastFragment;
     private GoogleApiManagerFragment mGoogleApiManagerFragment;
 
-    public interface OnBackPressedListener {
-        boolean onBackPressed();
-    }
+    private int mPagePosition;
+    private Toolbar mToolbar;
+    private DrawerLayout mDrawerLayout;
+    private FloatingActionMenu mFabMenu;
+    private FloatingActionButton mFab;
+    private FloatingActionButton mFabCreateCircle;
+    private FloatingActionButton mFabAddCircles;
+    private ViewPager mViewPager;
+    private TabLayout mTabs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,11 +76,6 @@ public class HomeActivity extends AppCompatActivity implements
 
         // Create new Fragments for the Activity
         if (savedInstanceState == null) {
-            mHomeFragment = HomeFragment.newInstance();
-            fm.beginTransaction()
-                    .add(R.id.fragment_container, mHomeFragment, HomeFragment.TAG)
-                    .commit();
-
             mBroadcastFragment = BroadcastFragment.newInstance();
             fm.beginTransaction()
                     .add(R.id.broadcast_select, mBroadcastFragment, BroadcastFragment.TAG)
@@ -80,7 +89,6 @@ public class HomeActivity extends AppCompatActivity implements
 
         // Retrieve existing Fragments
         else {
-            mHomeFragment = (HomeFragment) fm.findFragmentByTag(HomeFragment.TAG);
             mBroadcastFragment =
                     (BroadcastFragment) fm.findFragmentByTag(BroadcastFragment.TAG);
             mGoogleApiManagerFragment =
@@ -88,9 +96,24 @@ public class HomeActivity extends AppCompatActivity implements
         }
 
         // Initialize all elements of the Activity
-        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        bindActivity();
         setSupportActionBar(mToolbar);
-        initializeDrawerLayout();
+        setupDrawerLayout();
+        setupPager();
+        setupFab();
+    }
+
+    /**
+     * Bind the activity to the views of its layout
+     */
+    private void bindActivity() {
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        mFabMenu = (FloatingActionMenu) findViewById(R.id.fab_menu);
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFabCreateCircle = (FloatingActionButton) findViewById(R.id.fab_create_circle);
+        mFabAddCircles = (FloatingActionButton) findViewById(R.id.fab_add_circles);
+        mViewPager = (ViewPager) findViewById(R.id.view_pager);
+        mTabs = (TabLayout) findViewById(R.id.tabs);
     }
 
     @Override
@@ -102,23 +125,13 @@ public class HomeActivity extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case android.R.id.home:
-                // Pop the backstack if there happens to be a fragment on it. This allows us
-                // to display the default home button as up in hosted fragments
-                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                    getSupportFragmentManager().popBackStack();
-                }
+        if (item.getItemId() == R.id.action_show_circles) {
+            if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+                mDrawerLayout.closeDrawer(GravityCompat.START);
+            }
 
-                return true;
-
-            case R.id.action_show_circles:
-                if (mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
-                    mDrawerLayout.closeDrawer(GravityCompat.START);
-                }
-
-                mDrawerLayout.openDrawer(GravityCompat.END);
-                return true;
+            mDrawerLayout.openDrawer(GravityCompat.END);
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -135,29 +148,15 @@ public class HomeActivity extends AppCompatActivity implements
             mDrawerLayout.closeDrawer(GravityCompat.END);
         }
 
+        // Close the floating action menu if it is visible and opened
+        else if (mPagePosition == CIRCLES && mFabMenu.isOpened()) {
+            mFabMenu.close(true);
+        }
+
         // Continue with normal back press if the listener does not handle the event
-        else if (!mListener.onBackPressed()) {
+        else {
             super.onBackPressed();
         }
-    }
-
-    /**
-     * Set the onBackPressedListener
-     *
-     * @param listener the object listening for back press events
-     */
-    public void setOnBackPressedListener(OnBackPressedListener listener) {
-        mListener = listener;
-    }
-
-    @Override
-    public GoogleApiClient requestGoogleApiClient() {
-        return mGoogleApiManagerFragment.getClient();
-    }
-
-    @Override
-    public void onClientConnected() {
-        // Space purposefully left empty
     }
 
     /**
@@ -175,7 +174,7 @@ public class HomeActivity extends AppCompatActivity implements
     /**
      * Setup the DrawerLayout for this screen
      */
-    private void initializeDrawerLayout() {
+    private void setupDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         ActionBarDrawerToggle mToogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar,
                 R.string.drawer_open, R.string.drawer_close) {
@@ -244,6 +243,101 @@ public class HomeActivity extends AppCompatActivity implements
         navigationView.addHeaderView(header);
     }
 
+    /**
+     * Setup the floating action buttons
+     */
+    private void setupFab() {
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPagePosition == FRIENDS) {
+                    startActivity(new Intent(HomeActivity.this, FindFriendsActivity.class));
+                } else {
+                    mMapFragment.refreshLocations(mBroadcastFragment.getViewedCircle());
+                }
+            }
+        });
+
+        mFabCreateCircle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(HomeActivity.this, CreateCircleActivity.class));
+            }
+        });
+
+        mFabAddCircles.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(HomeActivity.this, FindCirclesActivity.class));
+            }
+        });
+    }
+
+    /**
+     * Setup the view pager and tabs to display the primary fragments
+     */
+    private void setupPager() {
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                // Space purposefully left empty
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                mPagePosition = position;
+                updateVisibleFab();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+                // Space purposefully left empty
+            }
+        });
+
+        mViewPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(), TITLES, this));
+        mTabs.setupWithViewPager(mViewPager);
+    }
+
+    /**
+     * Update the floating action button that is visible based on the page displayed
+     */
+    private void updateVisibleFab() {
+        switch (mPagePosition) {
+            case CIRCLES:
+                if (mFab.getVisibility() != View.INVISIBLE) {
+                    mFab.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fab_scale_down));
+                    mFab.setVisibility(View.INVISIBLE);
+                }
+
+                mFabMenu.setVisibility(View.VISIBLE);
+                mFabMenu.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fab_scale_up));
+                break;
+
+            case FRIENDS:
+                if (mFabMenu.getVisibility() != View.INVISIBLE) {
+                    mFabMenu.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fab_scale_down));
+                    mFabMenu.setVisibility(View.INVISIBLE);
+                }
+
+                mFab.setImageResource(R.drawable.ic_person_add_white_24dp);
+                mFab.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fab_scale_up));
+                mFab.setVisibility(View.VISIBLE);
+                break;
+
+            case MAP:
+                if (mFabMenu.getVisibility() != View.INVISIBLE) {
+                    mFabMenu.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fab_scale_down));
+                    mFabMenu.setVisibility(View.INVISIBLE);
+                }
+
+                mFab.setImageResource(R.drawable.ic_refresh_white_24dp);
+                mFab.startAnimation(AnimationUtils.loadAnimation(this, R.anim.fab_scale_up));
+                mFab.setVisibility(View.VISIBLE);
+                break;
+        }
+    }
+
     @Override
     public void onCircleClicked(Circle circle) {
         Intent intent = new Intent(this, DetailActivity.class);
@@ -256,5 +350,44 @@ public class HomeActivity extends AppCompatActivity implements
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(DetailActivity.USER_ID_KEY, friend.getObjectId());
         startActivity(intent);
+    }
+
+    @Override
+    public GoogleApiClient requestGoogleApiClient() {
+        return mGoogleApiManagerFragment.getClient();
+    }
+
+    @Override
+    public Circle onViewedCircleRequested() {
+        return mBroadcastFragment.getViewedCircle();
+    }
+
+
+    @Override
+    public void onViewedCircleClicked(Circle circle) {
+        if (mMapFragment != null) {
+            mMapFragment.refreshLocations(circle);
+        }
+    }
+
+    @Override
+    public void onClientConnected() {
+        // Space purposefully left empty
+    }
+
+    @Override
+    public Fragment onItemRequested(int position) {
+        if (position == CIRCLES) {
+            return CirclesFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+        }
+
+        else if (position == FRIENDS) {
+            return FriendsFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+        }
+
+        else {
+            mMapFragment = MapFragment.newInstance();
+            return mMapFragment;
+        }
     }
 }

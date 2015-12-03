@@ -22,6 +22,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.parse.FindCallback;
 import com.parse.ParseException;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
@@ -38,17 +39,18 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
 
     public static final String TAG = BroadcastFragment.class.getSimpleName();
 
+    private static final String IS_VIEWING_KEY = "isViewing";
     private static final int BROADCAST_NOTIFICATION_ID = 0;
 
+    private Circle mViewedCircle;
     private PendingIntent mBroadcastIntent;
     private LocationRequest mLocationRequest;
-
     private Callbacks mListener;
-
     private SwitchCompat mMasterBroadcast;
 
     public interface Callbacks {
         GoogleApiClient requestGoogleApiClient();
+        void onViewedCircleClicked(Circle circle);
     }
 
     /**
@@ -59,7 +61,6 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
     public static BroadcastFragment newInstance() {
         return new BroadcastFragment();
     }
-
 
     @Override
     public void onAttach(Context context) {
@@ -78,6 +79,14 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            String circleId = savedInstanceState.getString(IS_VIEWING_KEY);
+
+            if (circleId != null) {
+                mViewedCircle = ParseObject.createWithoutData(Circle.class, circleId);
+            }
+        }
 
         // Initialize the location broadcasting service
         Intent intent = new Intent(getContext(), LocationPushService.class);
@@ -119,11 +128,37 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mViewedCircle != null) {
+            outState.putString(IS_VIEWING_KEY, mViewedCircle.getObjectId());
+        }
+    }
+
+    @Override
     protected BroadcastAdapter buildAdapter() {
-        return new BroadcastAdapter(getItems(), new BroadcastAdapter.OnItemClickListener() {
+        return new BroadcastAdapter(getItems(), new BroadcastAdapter.OnItemClickedListener() {
             @Override
-            public void onItemClick(View itemView, int position) {
+            public void onBroadcastClicked(int position) {
                 switchBroadcastForUser(getItems().get(position));
+            }
+
+            @Override
+            public void onIsViewingClicked(int position, boolean isViewing) {
+
+                // If there is a circle being viewed, then determine if the clicked circle is the same.
+                // If it is, set the viewed circle to null; otherwise, just update it
+                if (mViewedCircle != null) {
+                    Circle clickedCircle = getItems().get(position).getCircle();
+                    mViewedCircle = mViewedCircle.equals(clickedCircle) ? null : clickedCircle;
+                }
+
+                // Otherwise, just grab a reference to the viewed circle
+                else {
+                    mViewedCircle = getItems().get(position).getCircle();
+                }
+
+                mListener.onViewedCircleClicked(mViewedCircle);
             }
         });
     }
@@ -161,6 +196,14 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
         });
     }
 
+    /**
+     * Get the circle that the user is viewing on the map
+     *
+     * @return the circle the user is viewing, or null if one is not being viewed
+     */
+    public Circle getViewedCircle() {
+        return mViewedCircle;
+    }
 
     /**
      * Switch whether or not the current ParseUser is broadcasting to the specified Circle

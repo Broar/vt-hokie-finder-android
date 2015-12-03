@@ -2,27 +2,33 @@ package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.parse.FindCallback;
 import com.parse.FunctionCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseGeoPoint;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
@@ -30,42 +36,39 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * A fragment that displays a Google Map to user that indicates the location of
  * members in a circle who are broadcasting their location.
  *
  * @author Steven Briggs
- * @version 2015.11.29
+ * @version 2015.12.02
  */
-public class CircleMapFragment extends Fragment {
+public class MapFragment extends Fragment {
 
-    public static final String TAG = CircleMapFragment.class.getSimpleName();
+    public static final String TAG = MapFragment.class.getSimpleName();
 
     private Callbacks mListener;
     private List<Circle> mCircles;
-    private Map<ParseUser, Marker> mUserMarkers;
-
-    private ScheduledThreadPoolExecutor mScheduler;
-    private ScheduledFuture mFuture;
+    private Map<Marker, ParseUser> mUserMarkers;
 
     private MapView mMapView;
     private GoogleMap mMap;
 
     public interface Callbacks {
         GoogleApiClient requestGoogleApiClient();
+        Circle onViewedCircleRequested();
     }
 
     /**
-     * A factory method to return a new CircleMapFragment that has been configured
+     * A factory method to return a new MapFragment that has been configured
      *
-     * @return a new CircleMapFragment that has been configured
+     * @return a new MapFragment that has been configured
      */
-    public static CircleMapFragment newInstance() {
-        return new CircleMapFragment();
+    public static MapFragment newInstance() {
+        return new MapFragment();
     }
 
     @Override
@@ -86,8 +89,7 @@ public class CircleMapFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mCircles = new ArrayList<Circle>();
-        mUserMarkers = new HashMap<ParseUser, Marker>();
-        mScheduler =  new ScheduledThreadPoolExecutor(1);
+        mUserMarkers = new HashMap<Marker, ParseUser>();
     }
 
     @Override
@@ -122,19 +124,12 @@ public class CircleMapFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mMapView.onResume();
-
-        // Reschedule the location pull tasks upon return to this Fragment
-        if (mFuture == null) {
-            mFuture = scheduleLocationPull();
-        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
         mMapView.onPause();
-        mFuture.cancel(false);
-        mFuture = null;
     }
 
 
@@ -158,16 +153,42 @@ public class CircleMapFragment extends Fragment {
             @Override
             public void onMapReady(GoogleMap googleMap) {
                 mMap = googleMap;
-                mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                mMap.setMyLocationEnabled(true);
+                mMap.getUiSettings().setMapToolbarEnabled(false);
+
+                mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
                     @Override
-                    public boolean onMarkerClick(Marker marker) {
-                        return false;
+                    public View getInfoWindow(Marker marker) {
+                        return null;
+                    }
+
+                    @Override
+                    public View getInfoContents(Marker marker) {
+                        ParseUser user = mUserMarkers.get(marker);
+
+                        View contents = View.inflate(getContext(), R.layout.item_map_user_info, null);
+                        ((TextView) contents.findViewById(R.id.username)).setText(user.getUsername());
+                        ((TextView) contents.findViewById(R.id.email)).setText(user.getEmail());
+
+                        CircleImageView avatar = (CircleImageView) contents.findViewById(R.id.avatar);
+                        ParseFile file = user.getParseFile("avatar");
+                        if (file != null) {
+                            Glide.with(getContext())
+                                    .load(Uri.parse(file.getUrl()))
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .into(avatar);
+                        } else {
+                            Glide.with(getContext())
+                                    .fromResource()
+                                    .load(R.drawable.fighting_gobblers_medium)
+                                    .into(avatar);
+                        }
+
+                        return contents;
                     }
                 });
 
-                if (mFuture == null) {
-                    mFuture = scheduleLocationPull();
-                }
+                refreshLocations(mListener.onViewedCircleRequested());
             }
         });
     }
@@ -196,42 +217,46 @@ public class CircleMapFragment extends Fragment {
     }
 
     /**
-     * Pull the lat/long locations of each user. Add these to the GoogleMaps as Markers
+     * Refresh the markers to be the broadcasting users in circle
+     *
+     * @param circle the circle to pull and display the locations for, null if the map is to be cleared
      */
-    private void pullLocations() {
-        // Prepare the list of circle ids
-        List<String> circleIds = new ArrayList<String>(mCircles.size());
-        for (Circle circle : mCircles) {
-            circleIds.add(circle.getObjectId());
+    public void refreshLocations(@Nullable Circle circle) {
+
+        // Clear all the markers off the map and any model entries
+        if (circle == null || mMap == null) {
+            if (mMap != null) {
+                mMap.clear();
+            }
+
+            mUserMarkers.clear();
+            return;
         }
 
-        // Request the broadcasting user of the circles contained in circleIds
+        // Pull all the locations of the broadcasting users in circle
+        // Display them on the map
         Map<String, Object> params = new HashMap<String, Object>();
+        params.put("circleId", circle.getObjectId());
         params.put("userId", ParseUser.getCurrentUser().getObjectId());
-        params.put("circleIds", circleIds);
-        ParseCloud.callFunctionInBackground("getBroadcastingUsersOfCircles", params, new FunctionCallback<Map<String, List<ParseUser>>>() {
+        ParseCloud.callFunctionInBackground("getBroadcastingUsers", params, new FunctionCallback<List<ParseUser>>() {
             @Override
-            public void done(Map<String, List<ParseUser>> broadcasters, ParseException e) {
+            public void done(List<ParseUser> users, ParseException e) {
                 if (e == null) {
-                    for (String circleId : broadcasters.keySet()) {
-                        for (ParseUser user : broadcasters.get(circleId)) {
-                            ParseGeoPoint loc = user.getParseGeoPoint("location");
+                    mMap.clear();
+                    mUserMarkers.clear();
 
-                            // Create a new marker for this user if it doesn't yet exist
-                            if (loc != null && !mUserMarkers.containsKey(user)) {
-                                MarkerOptions options = new MarkerOptions()
-                                        .position(new LatLng(loc.getLatitude(), loc.getLongitude()))
-                                        .title(user.getUsername());
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
-                                Marker marker = mMap.addMarker(options);
-                                mUserMarkers.put(user, marker);
-                            }
+                    for (ParseUser user : users) {
+                        ParseGeoPoint gp = user.getParseGeoPoint("location");
+                        LatLng latLng = new LatLng(gp.getLatitude(), gp.getLongitude());
+                        Marker marker = mMap.addMarker(new MarkerOptions().position(latLng));
+                        mUserMarkers.put(marker, user);
+                        builder.include(latLng);
+                    }
 
-                            // Otherwise, just update the marker we already have
-                            else if (loc != null && mUserMarkers.containsKey(user)) {
-                                mUserMarkers.get(user).setPosition(new LatLng(loc.getLatitude(), loc.getLongitude()));
-                            }
-                        }
+                    if (!users.isEmpty()) {
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 200));
                     }
                 }
 
@@ -240,19 +265,5 @@ public class CircleMapFragment extends Fragment {
                 }
             }
         });
-    }
-
-    /**
-     * Schedule a location pull to occur at a delayed rate of 10s
-     *
-     * @return a future for the tasks to be completed by the thread pool
-     */
-    private ScheduledFuture scheduleLocationPull() {
-        return mScheduler.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                pullLocations();
-            }
-        }, 5000L, 30000L, TimeUnit.MILLISECONDS);
     }
 }

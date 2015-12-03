@@ -49,7 +49,6 @@ public class DetailActivity extends AppCompatActivity implements
                 mProfileFragment = ProfileFragment.newInstance(userId);
                 fm.beginTransaction()
                         .add(R.id.fragment_container, mProfileFragment, ProfileFragment.TAG)
-                        .addToBackStack(null)
                         .commit();
             }
 
@@ -57,7 +56,6 @@ public class DetailActivity extends AppCompatActivity implements
                 mCircleDetailFragment = CircleDetailFragment.newInstance(circleId);
                 fm.beginTransaction()
                         .add(R.id.fragment_container, mCircleDetailFragment, CircleDetailFragment.TAG)
-                        .addToBackStack(null)
                         .commit();
             }
 
@@ -81,7 +79,7 @@ public class DetailActivity extends AppCompatActivity implements
     public void onBackPressed() {
         FragmentManager fm = getSupportFragmentManager();
 
-        if (fm.getBackStackEntryCount() > 1) {
+        if (fm.getBackStackEntryCount() > 0) {
 
             // Clear whatever URI the retained fragment is holding
             if (mEditCircleFragment != null && mEditCircleFragment.isVisible()) {

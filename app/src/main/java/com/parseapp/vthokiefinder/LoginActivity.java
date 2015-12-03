@@ -59,6 +59,7 @@ public class LoginActivity extends AppCompatActivity implements GraphRequest.Gra
 
             // Handle normal users
             else {
+                startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                 finish();
             }
         }

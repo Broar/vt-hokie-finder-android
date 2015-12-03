@@ -6,7 +6,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 
-import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 /**
@@ -29,7 +28,6 @@ public class DetailActivity extends AppCompatActivity implements
     private ProfileFragment mProfileFragment;
     private CircleDetailFragment mCircleDetailFragment;
     private EditCircleFragment mEditCircleFragment;
-
     private RetainedFragment<Uri> mImageUriHolder;
 
     @Override
@@ -37,12 +35,13 @@ public class DetailActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        final FragmentManager fm = getSupportFragmentManager();
+        FragmentManager fm = getSupportFragmentManager();
 
-        // Create a new instance of the initial fragment to display
+        // Create the initial state of the activity
         if (savedInstanceState == null) {
-            final String circleId = getIntent().getStringExtra(CIRCLE_ID_KEY);
-            final String userId = getIntent().getStringExtra(USER_ID_KEY);
+
+            String circleId = getIntent().getStringExtra(CIRCLE_ID_KEY);
+            String userId = getIntent().getStringExtra(USER_ID_KEY);
 
             // Determine which detail view to display (circle or user)
             if (circleId == null) {
@@ -66,7 +65,7 @@ public class DetailActivity extends AppCompatActivity implements
                     .commit();
         }
 
-        // Retrieve any existing fragments
+        // Restore the state of the activity
         else {
             mProfileFragment = (ProfileFragment) fm.findFragmentByTag(ProfileFragment.TAG);
             mCircleDetailFragment = (CircleDetailFragment) fm.findFragmentByTag(CircleDetailFragment.TAG);
@@ -90,6 +89,7 @@ public class DetailActivity extends AppCompatActivity implements
         }
 
         else {
+            setResult(RESULT_OK);
             super.onBackPressed();
         }
     }
@@ -127,6 +127,7 @@ public class DetailActivity extends AppCompatActivity implements
     public void onHomeClicked() {
         // Clean up the backstack before finishing the activity to avoid memory leaks
         getSupportFragmentManager().popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        setResult(RESULT_OK);
         finish();
     }
 

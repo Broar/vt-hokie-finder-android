@@ -331,11 +331,13 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         // Communities are publicly available to join without a request
         if (mCircle.isCommunity()) {
             userCircle.put("pending", false);
+            userCircle.put("accepted", true);
         }
 
         // Circles are private and cannot be joined without a request or invitation
         else {
             userCircle.put("pending", true);
+            userCircle.put("accepted", false);
         }
 
         // Save the UserCircle object to the Parse backend
@@ -348,6 +350,7 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
                     if (mCircle.isCommunity()) {
                         mMemberStatus = Circle.MEMBER;
                         message = "Joined community!";
+                        mFab.show();
                     }
 
                     else {

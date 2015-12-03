@@ -47,12 +47,17 @@ public class HomeActivity extends AppCompatActivity implements
         GoogleApiManagerFragment.Callbacks,
         ViewPagerAdapter.Callbacks {
 
+    public static final int REQUEST_DETAIL_VIEWS = 1;
+    public static final int REQUEST_PROFILE_UPDATE = 2;
+
     private static final CharSequence[] TITLES = { "CIRCLES", "FRIENDS", "MAP" };
 
     private static final int CIRCLES = 0;
     private static final int FRIENDS = 1;
     private static final int MAP = 2;
 
+    private CirclesFragment mCirclesFragment;
+    private FriendsFragment mFriendsFragment;
     private MapFragment mMapFragment;
     private BroadcastFragment mBroadcastFragment;
     private GoogleApiManagerFragment mGoogleApiManagerFragment;
@@ -60,6 +65,9 @@ public class HomeActivity extends AppCompatActivity implements
     private int mPagePosition;
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
+    private CircleImageView mAvatar;
+    private TextView mUsername;
+    private TextView mEmail;
     private FloatingActionMenu mFabMenu;
     private FloatingActionButton mFab;
     private FloatingActionButton mFabCreateCircle;
@@ -159,6 +167,25 @@ public class HomeActivity extends AppCompatActivity implements
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_DETAIL_VIEWS) {
+                if (mCirclesFragment != null) {
+                    mCirclesFragment.onRefresh();
+                }
+
+                if (mFriendsFragment != null) {
+                    mFriendsFragment.onRefresh();
+                }
+
+                if (mBroadcastFragment != null) {
+                    mBroadcastFragment.onRefresh();
+                }
+            }
+        }
+    }
+
     /**
      * Log the current user out of the application
      */
@@ -208,11 +235,11 @@ public class HomeActivity extends AppCompatActivity implements
                         return true;
 
                     case R.id.drawer_invites:
-                        startActivity(new Intent(HomeActivity.this, InvitesActivity.class));
+                        startActivityForResult(new Intent(HomeActivity.this, InvitesActivity.class), REQUEST_DETAIL_VIEWS);
                         return true;
 
                     case R.id.drawer_settings:
-                        startActivity(new Intent(HomeActivity.this, SettingsActivity.class));
+                        startActivityForResult(new Intent(HomeActivity.this, SettingsActivity.class), REQUEST_DETAIL_VIEWS);
                         return true;
 
                     case R.id.drawer_logout:
@@ -227,7 +254,7 @@ public class HomeActivity extends AppCompatActivity implements
         // Inflate the header and attach it to the drawer. The header displays user information
         // similar to several other Google applications
         RelativeLayout header = (RelativeLayout) getLayoutInflater().inflate(R.layout.header, navigationView, false);
-        CircleImageView avatar = (CircleImageView) header.findViewById(R.id.avatar);
+        mAvatar = (CircleImageView) header.findViewById(R.id.avatar);
 
         // Attempt to load the user's avatar. If there isn't one, then use the default image
         ParseFile imageFile = ParseUser.getCurrentUser().getParseFile("avatar");
@@ -235,11 +262,13 @@ public class HomeActivity extends AppCompatActivity implements
             Glide.with(this)
                     .load(Uri.parse(imageFile.getUrl()))
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(avatar);
+                    .into(mAvatar);
         }
 
-        ((TextView) header.findViewById(R.id.username)).setText(ParseUser.getCurrentUser().getUsername());
-        ((TextView) header.findViewById(R.id.email)).setText(ParseUser.getCurrentUser().getEmail());
+        mUsername = (TextView) header.findViewById(R.id.username);
+        mUsername.setText(ParseUser.getCurrentUser().getUsername());
+        mEmail = (TextView) header.findViewById(R.id.email);
+        mEmail.setText(ParseUser.getCurrentUser().getEmail());
         navigationView.addHeaderView(header);
     }
 
@@ -342,14 +371,14 @@ public class HomeActivity extends AppCompatActivity implements
     public void onCircleClicked(Circle circle) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(DetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_DETAIL_VIEWS);
     }
 
     @Override
     public void onFriendClicked(ParseUser friend) {
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra(DetailActivity.USER_ID_KEY, friend.getObjectId());
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_DETAIL_VIEWS);
     }
 
     @Override
@@ -378,11 +407,13 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     public Fragment onItemRequested(int position) {
         if (position == CIRCLES) {
-            return CirclesFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+            mCirclesFragment = CirclesFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+            return mCirclesFragment;
         }
 
         else if (position == FRIENDS) {
-            return FriendsFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+            mFriendsFragment = FriendsFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
+            return mFriendsFragment;
         }
 
         else {

@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +28,7 @@ import java.util.Map;
  * can be either incoming or outgoing but only one type can displayed per fragment instance
  *
  * @author Steven Briggs
- * @version 2015.11.24
+ * @version 2015.12.03
  */
 public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCircleAdapter> {
 
@@ -43,6 +44,8 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
     private static final int DECLINE_INVITE = 1;
     private static final int APPROVE_REQUEST = 0;
     private static final int DENY_REQUEST = 1;
+
+    private SwipeRefreshLayout mSwipeLayout;
 
     /**
      * A factory method to return a new FriendInvitesFragment that has been configured
@@ -61,7 +64,17 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflateFragment(R.layout.fragment_circle_invites, inflater, container);
+        View view = inflateFragment(R.layout.fragment_circle_invites, inflater, container);
+        mSwipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_layout);
+        mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getItems().clear();
+                setPage(0);
+                getAdapter().onDataReady(true);
+            }
+        });
+        return view;
     }
 
     @Override
@@ -119,6 +132,7 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
                         getItems().addAll(circleInvites);
                         getAdapter().onDataReady(true);
                     } else {
+                        mSwipeLayout.setRefreshing(false);
                         getAdapter().onDataReady(false);
                     }
 
@@ -151,6 +165,7 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
                         getItems().addAll(circleInvites);
                         getAdapter().onDataReady(true);
                     } else {
+                        mSwipeLayout.setRefreshing(false);
                         getAdapter().onDataReady(false);
                     }
 
@@ -177,6 +192,7 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
                         getItems().addAll(membershipRequests);
                         getAdapter().onDataReady(true);
                     } else {
+                        mSwipeLayout.setRefreshing(false);
                         getAdapter().onDataReady(false);
                     }
 
@@ -261,6 +277,7 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
      */
     private void acceptCircleInvite(final int position) {
         UserCircle uc = getItems().get(position);
+        uc.setIsAccepted(false);
         uc.setIsPending(false);
 
         uc.saveInBackground(new SaveCallback() {
@@ -319,6 +336,7 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
 
     private void approveMembershipRequest(final int position) {
         UserCircle uc = getItems().get(position);
+        uc.setIsAccepted(true);
         uc.setIsPending(false);
 
         uc.saveInBackground(new SaveCallback() {

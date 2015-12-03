@@ -58,6 +58,12 @@ public class InvitesActivity extends AppCompatActivity implements ViewPagerAdapt
     }
 
     @Override
+    public void onBackPressed() {
+        setResult(RESULT_OK);
+        super.onBackPressed();
+    }
+
+    @Override
     public Fragment onItemRequested(int position) {
         switch (position) {
             case CIRCLE_INCOMING:

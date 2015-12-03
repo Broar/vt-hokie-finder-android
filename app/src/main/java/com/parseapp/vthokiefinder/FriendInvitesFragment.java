@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +40,8 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, UserAdapt
     private static final int DECLINE_INVITE = 1;
     private static final int CANCEL_INVITE = 0;
 
+    private SwipeRefreshLayout mSwipeLayout;
+
     /**
      * A factory method to return a new FriendInvitesFragment that has been configured
      *
@@ -56,7 +59,17 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, UserAdapt
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflateFragment(R.layout.fragment_friend_invites, inflater, container);
+        View view = inflateFragment(R.layout.fragment_friend_invites, inflater, container);
+        mSwipeLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_layout);
+        mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getItems().clear();
+                setPage(0);
+                getAdapter().onDataReady(true);
+            }
+        });
+        return view;
     }
 
     @Override
@@ -107,6 +120,7 @@ public class FriendInvitesFragment extends RecyclerFragment<ParseUser, UserAdapt
                     }
 
                     else {
+                        mSwipeLayout.setRefreshing(false);
                         getAdapter().onDataReady(false);
                     }
 

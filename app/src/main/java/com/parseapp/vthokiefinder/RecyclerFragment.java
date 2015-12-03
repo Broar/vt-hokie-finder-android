@@ -66,6 +66,15 @@ public abstract class RecyclerFragment<T, A extends RecyclerView.Adapter<? exten
     }
 
     /**
+     * Refresh the items of the RecyclerView
+     */
+    public void onRefresh() {
+        getItems().clear();
+        setPage(0);
+        getAdapter().onDataReady(true);
+    }
+
+    /**
      * Construct a new base adapter for the RecyclerView
      *
      * @return the newly constructed base adapter

@@ -1,12 +1,14 @@
 package com.parseapp.vthokiefinder;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -32,7 +34,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
  * @author Steven Briggs
  * @version 2015.11.17
  */
-public class EditProfileActivity extends AppCompatActivity implements ConfirmDialog.Callbacks {
+public class EditProfileActivity extends AppCompatActivity {
 
     private RetainedFragment<Uri> mAvatarUriHolder;
 
@@ -133,23 +135,32 @@ public class EditProfileActivity extends AppCompatActivity implements ConfirmDia
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        showDiscardChangesDialog();
+    }
+
     /**
      * Present a confirmation dialog to the user to determine if they want discard any changes
      * to their profile
      */
     private void showDiscardChangesDialog() {
-        ConfirmDialog dialog = ConfirmDialog.newInstance("Discard any changes?", "Confirm", "Cancel");
-        dialog.show(getSupportFragmentManager(), ConfirmDialog.TAG);
-    }
-
-    @Override
-    public void onPositiveButtonClicked() {
-        NavUtils.navigateUpFromSameTask(this);
-    }
-
-    @Override
-    public void onNegativeButtonClicked() {
-        // Do nothing
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Discard any changes?")
+                .setCancelable(true)
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        NavUtils.navigateUpFromSameTask(EditProfileActivity.this);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                });
+        builder.create().show();
     }
 
     /**

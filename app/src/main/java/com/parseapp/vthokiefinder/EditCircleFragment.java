@@ -98,6 +98,8 @@ public class EditCircleFragment extends Fragment {
         bindFragment(view);
         setupToolbar();
         loadIcon();
+        mName.setText(mCircle.getName());
+        mDescription.setText(mCircle.getDescription());
         return view;
     }
 

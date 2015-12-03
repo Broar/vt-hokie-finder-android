@@ -51,7 +51,16 @@ public class LoginActivity extends AppCompatActivity implements GraphRequest.Gra
 
         // If the user successfully logged in, then transition to main screen
         if (resultCode == RESULT_OK) {
-            handleNewFacebookUser();
+
+            // Handle users that just signed up through Facebook
+            if (ParseUser.getCurrentUser().isNew() && ParseFacebookUtils.isLinked(ParseUser.getCurrentUser())) {
+                handleNewFacebookUser();
+            }
+
+            // Handle normal users
+            else {
+                finish();
+            }
         }
     }
 
@@ -59,14 +68,11 @@ public class LoginActivity extends AppCompatActivity implements GraphRequest.Gra
      * Handle the case when a new user signs up through their Facebook account
      */
     private void handleNewFacebookUser() {
-        // Determine if the current user just signed up through Facebook
-        if (ParseUser.getCurrentUser().isNew() && ParseFacebookUtils.isLinked(ParseUser.getCurrentUser())) {
-            GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), this);
-            Bundle parameters = new Bundle();
-            parameters.putString("fields", "id,name,email");
-            request.setParameters(parameters);
-            request.executeAsync();
-        }
+        GraphRequest request = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), this);
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,email");
+        request.setParameters(parameters);
+        request.executeAsync();
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
@@ -16,10 +17,8 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.parse.FunctionCallback;
-import com.parse.LocationCallback;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
-import com.parse.ParseGeoPoint;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -41,9 +40,15 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
     public static final int FIND_COMMUNITIES = 1;
 
     private static final String FIND_KEY = "find";
+    private static final String CURRENT_LOCATION_ERROR = "Couldn't fetch current location. Please try again later";
 
-    private CirclesFragment.Callbacks mListener;
+    private Callbacks mListener;
     private List<Circle> mOriginal;
+
+    public interface Callbacks {
+        void onCircleClicked(Circle circle);
+        void onCurrentLocationRequested(GoogleApiManagerFragment.OnLocationFoundListener listener);
+    }
 
     /**
      * A factory method to return a new FindCirclesFragment that has been configured
@@ -72,7 +77,7 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
         Activity activity = (Activity) context;
 
         try {
-            mListener = (CirclesFragment.Callbacks) activity;
+            mListener = (Callbacks) activity;
         }
 
         catch (ClassCastException e) {
@@ -166,30 +171,33 @@ public class FindCirclesFragment extends RecyclerFragment<Circle, CircleAdapter>
      * Load communities the user can join
      */
     private void loadCommunities() {
-        ParseGeoPoint.getCurrentLocationInBackground(10000, new LocationCallback() {
+        mListener.onCurrentLocationRequested(new GoogleApiManagerFragment.OnLocationFoundListener() {
             @Override
-            public void done(ParseGeoPoint geoPoint, ParseException e) {
-                if (e == null) {
-                    HashMap<String, Object> params = new HashMap<String, Object>();
-                    params.put("userId", ParseUser.getCurrentUser().getObjectId());
-                    params.put("latitude", geoPoint.getLatitude());
-                    params.put("longitude", geoPoint.getLongitude());
+            public void onLocationFound(Location location) {
+                HashMap<String, Object> params = new HashMap<String, Object>();
+                params.put("userId", ParseUser.getCurrentUser().getObjectId());
+                params.put("latitude", location.getLatitude());
+                params.put("longitude", location.getLongitude());
 
-                    ParseCloud.callFunctionInBackground("getCommunitiesToJoin", params, new FunctionCallback<List<Circle>>() {
-                        @Override
-                        public void done(List<Circle> communities, ParseException e) {
-                            if (e == null) {
-                                mOriginal.addAll(communities);
-                                getItems().addAll(communities);
-                                getAdapter().onDataReady(false);
-                            } else {
-                                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                            }
+                ParseCloud.callFunctionInBackground("getCommunitiesToJoin", params, new FunctionCallback<List<Circle>>() {
+                    @Override
+                    public void done(List<Circle> communities, ParseException e) {
+                        if (e == null) {
+                            mOriginal.addAll(communities);
+                            getItems().addAll(communities);
+                            getAdapter().onDataReady(false);
                         }
-                    });
-                } else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+
+                        else {
+                            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onLocationNotFound() {
+                Toast.makeText(getContext(), CURRENT_LOCATION_ERROR, Toast.LENGTH_LONG).show();
             }
         });
     }

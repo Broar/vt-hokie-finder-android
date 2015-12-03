@@ -3,6 +3,7 @@ package com.parseapp.vthokiefinder;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -14,34 +15,55 @@ import android.support.v7.widget.Toolbar;
  * @version 2015.12.01
  */
 public class FindCirclesActivity extends AppCompatActivity implements
-        CirclesFragment.Callbacks,
+        FindCirclesFragment.Callbacks,
+        GoogleApiManagerFragment.Callbacks,
         ViewPagerAdapter.Callbacks {
 
     private static final CharSequence[] TITLES = { "CIRCLES", "COMMUNITIES" };
     private static final int CIRCLES = 0;
     private static final int COMMUNITEIS = 1;
 
-    private FindCirclesFragment mFindCirclesFragment;
-    private FindCirclesFragment mFindCommuntiesFragment;
+    private FindCirclesFragment mFindCommunitiesFragment;
+    private GoogleApiManagerFragment mGoogleApiManagerFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        FragmentManager fm = getSupportFragmentManager();
+
+        if (savedInstanceState == null) {
+            mGoogleApiManagerFragment = GoogleApiManagerFragment.newInstance();
+            fm.beginTransaction()
+                    .add(mGoogleApiManagerFragment, GoogleApiManagerFragment.TAG)
+                    .commit();
+        }
+
+        else {
+            mGoogleApiManagerFragment = (GoogleApiManagerFragment) fm.findFragmentByTag(GoogleApiManagerFragment.TAG);
+        }
+
         // Setup the action bar
         setContentView(R.layout.activity_find_circles);
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        // Setup the tab layout
-        ViewPager pager = (ViewPager) findViewById(R.id.view_pager);
-        pager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(), TITLES, this));
-        ((TabLayout) findViewById(R.id.tabs)).setupWithViewPager(pager);
     }
 
     @Override
     public void onCircleClicked(Circle circle) {
         // Do nothing for now
+    }
+
+    @Override
+    public void onCurrentLocationRequested(GoogleApiManagerFragment.OnLocationFoundListener listener) {
+        mGoogleApiManagerFragment.getCurrentLocation(listener);
+    }
+
+    @Override
+    public void onClientConnected() {
+        ViewPager pager = (ViewPager) findViewById(R.id.view_pager);
+        pager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(), TITLES, this));
+        ((TabLayout) findViewById(R.id.tabs)).setupWithViewPager(pager);
     }
 
     @Override
@@ -51,7 +73,8 @@ public class FindCirclesActivity extends AppCompatActivity implements
         }
 
         else {
-            return FindCirclesFragment.newInstance(FindCirclesFragment.FIND_COMMUNITIES);
+            mFindCommunitiesFragment = FindCirclesFragment.newInstance(FindCirclesFragment.FIND_COMMUNITIES);
+            return mFindCommunitiesFragment;
         }
     }
 }

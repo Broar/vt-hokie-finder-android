@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.location.Address;
-import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
@@ -17,7 +16,6 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,22 +24,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CheckedTextView;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.google.maps.GeoApiContext;
-import com.google.maps.GeocodingApi;
-import com.google.maps.GeocodingApiRequest;
-import com.google.maps.PendingResult;
-import com.google.maps.model.AddressType;
-import com.google.maps.model.GeocodingResult;
-import com.google.maps.model.LatLng;
-import com.parse.LocationCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseGeoPoint;
@@ -67,7 +55,7 @@ public class CreateCircleFragment extends Fragment {
     public static final String TAG = CreateCircleFragment.class.getSimpleName();
 
     private static final int MAXIMUM_GEOCODER_RESULTS = 10;
-    private static final String CURRENT_LOCATION_ERRORR = "Couldn't get your location. Please try again later";
+    private static final String CURRENT_LOCATION_ERRORR = "Couldn't fetch your location. Please try again later";
     private static final String NO_GEOCODER_WARNING = "Your device cannot perform address lookups. Do you still want to create a community?";
     private static final String ADDRESS_LOOKUP_ERROR = "Couldn't determine your address. Please try again later";
 
@@ -85,6 +73,7 @@ public class CreateCircleFragment extends Fragment {
         Uri onImageUriRequested();
         void onInviteFriendsClicked();
         void onSaveSuccessful(Circle circle);
+        void onCurrentLocationRequested(GoogleApiManagerFragment.OnLocationFoundListener listener);
     }
 
     /**
@@ -247,17 +236,18 @@ public class CreateCircleFragment extends Fragment {
 
         // If this is a community, then retrieve the user's current location and address
         if (mIsCommunity.isChecked()) {
-            ParseGeoPoint.getCurrentLocationInBackground(10000, new LocationCallback() {
+            mListener.onCurrentLocationRequested(new GoogleApiManagerFragment.OnLocationFoundListener() {
                 @Override
-                public void done(ParseGeoPoint geoPoint, ParseException e) {
-                    if (e == null) {
-                        newCircle.setLocation(geoPoint);
-                        handleReverseGeocode(newCircle, geoPoint);
-                    }
+                public void onLocationFound(Location location) {
+                    ParseGeoPoint geoPoint = new ParseGeoPoint(location.getLatitude(),
+                            location.getLongitude());
+                    newCircle.setLocation(geoPoint);
+                    handleReverseGeocode(newCircle, geoPoint);
+                }
 
-                    else {
-                        Toast.makeText(getContext(), CURRENT_LOCATION_ERRORR, Toast.LENGTH_LONG).show();
-                    }
+                @Override
+                public void onLocationNotFound() {
+                    Toast.makeText(getContext(), CURRENT_LOCATION_ERRORR, Toast.LENGTH_LONG).show();
                 }
             });
         }

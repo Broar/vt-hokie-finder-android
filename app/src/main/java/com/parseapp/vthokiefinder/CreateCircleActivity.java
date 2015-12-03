@@ -1,20 +1,13 @@
 package com.parseapp.vthokiefinder;
 
 import android.content.Intent;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.google.maps.model.LatLng;
 import com.parse.ParseException;
-import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -30,12 +23,14 @@ import java.util.List;
  */
 public class CreateCircleActivity extends AppCompatActivity implements
         CreateCircleFragment.Callbacks,
+        GoogleApiManagerFragment.Callbacks,
         InviteFriendsFragment.Callbacks {
 
     private static final String URI_TAG = "uri";
     private static final String INVITED_FRIENDS_TAG = "invitedFriends";
 
     private CreateCircleFragment mCreateCircleFragment;
+    private GoogleApiManagerFragment mGoogleApiManagerFragment;
     private InviteFriendsFragment mInviteFriendsFragment;
     private RetainedFragment<Uri> mImageUriHolder;
     private RetainedFragment<HashMap<ParseUser, Boolean>> mInvitedFriendsHolder;
@@ -54,6 +49,11 @@ public class CreateCircleActivity extends AppCompatActivity implements
                     .add(R.id.fragment_container, mCreateCircleFragment, CreateCircleFragment.TAG)
                     .commit();
 
+            mGoogleApiManagerFragment = GoogleApiManagerFragment.newInstance();
+            fm.beginTransaction()
+                    .add(mGoogleApiManagerFragment, GoogleApiManagerFragment.TAG)
+                    .commit();
+
             mImageUriHolder = new RetainedFragment<Uri>();
             fm.beginTransaction()
                     .add(mImageUriHolder, URI_TAG)
@@ -70,6 +70,7 @@ public class CreateCircleActivity extends AppCompatActivity implements
         // Retrieve the existing fragment instances
         else {
             mCreateCircleFragment = (CreateCircleFragment) fm.findFragmentByTag(CreateCircleFragment.TAG);
+            mGoogleApiManagerFragment = (GoogleApiManagerFragment) fm.findFragmentByTag(GoogleApiManagerFragment.TAG);
             mImageUriHolder = (RetainedFragment<Uri>) fm.findFragmentByTag(URI_TAG);
             mInvitedFriendsHolder = (RetainedFragment<HashMap<ParseUser, Boolean>>) fm.findFragmentByTag(INVITED_FRIENDS_TAG);
             mInviteFriendsFragment = (InviteFriendsFragment) fm.findFragmentByTag(InviteFriendsFragment.TAG);
@@ -101,6 +102,16 @@ public class CreateCircleActivity extends AppCompatActivity implements
     @Override
     public void onSaveSuccessful(Circle circle) {
         sendInvites(circle);
+    }
+
+    @Override
+    public void onCurrentLocationRequested(GoogleApiManagerFragment.OnLocationFoundListener listener) {
+        mGoogleApiManagerFragment.getCurrentLocation(listener);
+    }
+
+    @Override
+    public void onClientConnected() {
+        // Do nothing
     }
 
     @Override

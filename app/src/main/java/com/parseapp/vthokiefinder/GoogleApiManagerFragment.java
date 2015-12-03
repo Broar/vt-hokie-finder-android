@@ -14,11 +14,7 @@ import android.support.v4.app.Fragment;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.FusedLocationProviderApi;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.internal.FusedLocationProviderResult;
-import com.google.maps.model.LatLng;
 
 /**
  * A retained fragment that manages a connection to the GoogleApiClient
@@ -42,6 +38,11 @@ public class GoogleApiManagerFragment extends Fragment implements
 
     public interface Callbacks {
         void onClientConnected();
+    }
+
+    public interface OnLocationFoundListener {
+        void onLocationFound(Location location);
+        void onLocationNotFound();
     }
 
     /**
@@ -181,21 +182,30 @@ public class GoogleApiManagerFragment extends Fragment implements
     /**
      * Retrieve the last known location of the user
      *
-     * @return the last known location of the user if it exists; otherwise, null
+     * @param listener object listening for the current location
      */
-    public Location getCurrentLocation() {
+    public void getCurrentLocation(OnLocationFoundListener listener) {
         if (isClientConnected())  {
+
             Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            return location;
+            if (location == null) {
+                listener.onLocationNotFound();
+            }
+
+            else {
+                listener.onLocationFound(location);
+            }
         }
 
-        return null;
+        else {
+            listener.onLocationNotFound();
+        }
     }
 
     /**
      * Determine if the GoogleApiClient is resolving an error
      *
-     * @return true if the GoogleApiClietn is resolving an error, false if not
+     * @return true if the GoogleApiClient is resolving an error, false if not
      */
     public boolean isResolvingError() {
         return mIsResolvingError;

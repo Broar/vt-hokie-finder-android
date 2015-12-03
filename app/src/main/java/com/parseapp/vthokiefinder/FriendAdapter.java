@@ -41,8 +41,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
 
     public interface OnItemClickListener {
         void onItemClick(int position);
-        void onAddFriendClicked(int position);
-        void onRemoveFriendClicked(int position);
     }
 
     /**
@@ -111,9 +109,7 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         return mFriends.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements
-            View.OnClickListener,
-            View.OnLongClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private static final int ADD = 0;
         private static final int REMOVE = 0;
@@ -132,7 +128,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
         public ViewHolder(View view, OnItemClickListener listener) {
             super(view);
             view.setOnClickListener(this);
-            view.setOnLongClickListener(this);
             mListener = listener;
             mUsername = (TextView) view.findViewById(R.id.username);
             mAvatar = (CircleImageView) view.findViewById(R.id.avatar);
@@ -143,42 +138,6 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.ViewHolder
             if (mListener != null) {
                 mListener.onItemClick(getLayoutPosition());
             }
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-            builder.setTitle(mUsername.getText().toString());
-
-            if (isFriendsWithCurrentUser) {
-                builder.setItems(R.array.actions_friends, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case REMOVE:
-                                mListener.onRemoveFriendClicked(getLayoutPosition());
-                                break;
-                        }
-                    }
-                });
-            }
-
-            else {
-                builder.setItems(R.array.actions_nonfriends, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case ADD:
-                                mListener.onAddFriendClicked(getLayoutPosition());
-                                break;
-                        }
-                    }
-                });
-            }
-
-            builder.create().show();
-
-            return true;
         }
     }
 }

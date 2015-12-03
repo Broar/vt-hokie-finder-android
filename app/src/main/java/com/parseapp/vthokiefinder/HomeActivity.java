@@ -365,7 +365,7 @@ public class HomeActivity extends AppCompatActivity implements
 
     @Override
     public void onViewedCircleClicked(Circle circle) {
-        if (mMapFragment != null) {
+        if (mMapFragment != null && mPagePosition == MAP) {
             mMapFragment.refreshLocations(circle);
         }
     }

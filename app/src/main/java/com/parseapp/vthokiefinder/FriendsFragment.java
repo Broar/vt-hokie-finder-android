@@ -171,16 +171,6 @@ public class FriendsFragment extends RecyclerFragment<Friend, FriendAdapter> {
             public void onItemClick(int position) {
                 mListener.onFriendClicked(getItems().get(position).getFriend());
             }
-
-            @Override
-            public void onAddFriendClicked(int position) {
-                addFriend(getArguments().getString(USER_ID_KEY), position);
-            }
-
-            @Override
-            public void onRemoveFriendClicked(int position) {
-                removeFriend(position);
-            }
         });
     }
 }

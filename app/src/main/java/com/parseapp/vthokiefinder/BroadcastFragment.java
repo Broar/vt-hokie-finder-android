@@ -202,10 +202,12 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
      * Stop all location broadcasting for the user
      */
     public void stopBroadcast() {
+        // Cancel the location updates and the broadcast intent
         if (mMasterBroadcast.isChecked()) {
             GoogleApiClient googleApiClient = mListener.requestGoogleApiClient();
             LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, mBroadcastIntent);
             NotificationManagerCompat.from(getContext()).cancel(BROADCAST_NOTIFICATION_ID);
+            mBroadcastIntent.cancel();
         }
     }
 

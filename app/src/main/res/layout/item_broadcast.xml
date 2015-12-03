@@ -21,8 +21,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@+id/icon"
-            android:layout_toEndOf="@+id/icon"
             android:ellipsize="end"
             android:maxLines="1"
             android:scrollHorizontally="true"

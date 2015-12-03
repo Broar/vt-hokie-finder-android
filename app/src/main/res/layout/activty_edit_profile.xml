@@ -24,9 +24,7 @@
                 android:layout_height="160dp"
                 android:layout_marginBottom="24dp"
                 android:layout_gravity="center_horizontal"
-                android:src="@drawable/fighting_gobblers_medium"
-                app:civ_border_color="#FFFFFFFF"
-                app:civ_border_width="2dp"/>
+                android:src="@drawable/fighting_gobblers_medium" />
 
         </android.support.design.widget.AppBarLayout>
 

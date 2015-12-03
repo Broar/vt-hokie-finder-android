@@ -4,12 +4,15 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.parse.ParseException;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseUser;
+import com.parse.SaveCallback;
 import com.parse.ui.ParseLoginBuilder;
 
 import org.json.JSONObject;
@@ -49,10 +52,7 @@ public class LoginActivity extends AppCompatActivity implements GraphRequest.Gra
         // If the user successfully logged in, then transition to main screen
         if (resultCode == RESULT_OK) {
             handleNewFacebookUser();
-            startActivity(new Intent(this, HomeActivity.class));
         }
-
-        finish();
     }
 
     /**
@@ -79,6 +79,22 @@ public class LoginActivity extends AppCompatActivity implements GraphRequest.Gra
             ParseUser.getCurrentUser().setEmail(jsonObject.optString("email"));
         }
 
-        ParseUser.getCurrentUser().saveInBackground();
+        if (jsonObject.has("id")) {
+            ParseUser.getCurrentUser().put("facebookId", jsonObject.optString("id"));
+        }
+
+        ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    startActivity(new Intent(LoginActivity.this, HomeActivity.class));
+                    finish();
+                }
+
+                else {
+                    Toast.makeText(LoginActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        });
     }
 }

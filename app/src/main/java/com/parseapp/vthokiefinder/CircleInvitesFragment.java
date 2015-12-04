@@ -188,16 +188,12 @@ public class CircleInvitesFragment extends RecyclerFragment<UserCircle, UserCirc
             @Override
             public void done(List<UserCircle> membershipRequests, ParseException e) {
                 if (e == null) {
-                    if (!membershipRequests.isEmpty()) {
-                        getItems().addAll(membershipRequests);
-                        getAdapter().onDataReady(true);
-                    } else {
-                        mSwipeLayout.setRefreshing(false);
-                        getAdapter().onDataReady(false);
-                    }
+                    getItems().addAll(membershipRequests);
+                    getAdapter().onDataReady(false);
+                    mSwipeLayout.setRefreshing(false);
+                }
 
-                    nextPage();
-                } else {
+                else {
                     Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
             }

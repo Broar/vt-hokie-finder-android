@@ -1,9 +1,12 @@
 package com.parseapp.vthokiefinder;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -75,6 +78,11 @@ public class CreateCircleActivity extends AppCompatActivity implements
             mInvitedFriendsHolder = (RetainedFragment<HashMap<ParseUser, Boolean>>) fm.findFragmentByTag(INVITED_FRIENDS_TAG);
             mInviteFriendsFragment = (InviteFriendsFragment) fm.findFragmentByTag(InviteFriendsFragment.TAG);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        showDiscardDialog();
     }
 
     @Override
@@ -167,5 +175,36 @@ public class CreateCircleActivity extends AppCompatActivity implements
                 }
             });
         }
+
+        else {
+            // Open the detail view of the newly created circle
+            finish();
+            Intent intent = new Intent(CreateCircleActivity.this, DetailActivity.class);
+            intent.putExtra(DetailActivity.CIRCLE_ID_KEY, circle.getObjectId());
+            startActivity(intent);
+        }
+    }
+
+    /**
+     * Display a dialog prompting users to confirm they want exit and discard all changes
+     */
+    private void showDiscardDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Discard new circle?")
+                .setCancelable(true)
+                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        NavUtils.navigateUpFromSameTask(CreateCircleActivity.this);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Do nothing
+                    }
+                });
+
+        builder.create().show();
     }
 }

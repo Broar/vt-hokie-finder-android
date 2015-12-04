@@ -50,6 +50,12 @@ public class FindCirclesActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onBackPressed() {
+        setResult(RESULT_OK);
+        super.onBackPressed();
+    }
+
+    @Override
     public void onCircleClicked(Circle circle) {
         // Do nothing for now
     }

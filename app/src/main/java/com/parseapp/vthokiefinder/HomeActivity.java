@@ -297,7 +297,7 @@ public class HomeActivity extends AppCompatActivity implements
         mFabAddCircles.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(HomeActivity.this, FindCirclesActivity.class));
+                startActivityForResult(new Intent(HomeActivity.this, FindCirclesActivity.class), REQUEST_DETAIL_VIEWS);
             }
         });
     }
@@ -395,6 +395,11 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     public void onViewedCircleClicked(Circle circle) {
         if (mMapFragment != null && mPagePosition == MAP) {
+            if (mDrawerLayout.isDrawerOpen(GravityCompat.START)
+                    || mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
+                mDrawerLayout.closeDrawers();
+            }
+
             mMapFragment.refreshLocations(circle);
         }
     }

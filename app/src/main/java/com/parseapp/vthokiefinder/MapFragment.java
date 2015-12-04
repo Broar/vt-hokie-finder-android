@@ -53,6 +53,7 @@ public class MapFragment extends Fragment {
     private Callbacks mListener;
     private List<Circle> mCircles;
     private Map<Marker, ParseUser> mUserMarkers;
+    private boolean mIsRefreshing;
 
     private MapView mMapView;
     private GoogleMap mMap;
@@ -90,6 +91,7 @@ public class MapFragment extends Fragment {
         super.onCreate(savedInstanceState);
         mCircles = new ArrayList<Circle>();
         mUserMarkers = new HashMap<Marker, ParseUser>();
+        mIsRefreshing = false;
     }
 
     @Override
@@ -177,7 +179,9 @@ public class MapFragment extends Fragment {
                                     .load(Uri.parse(file.getUrl()))
                                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                                     .into(avatar);
-                        } else {
+                        }
+
+                        else {
                             Glide.with(getContext())
                                     .fromResource()
                                     .load(R.drawable.fighting_gobblers_medium)
@@ -223,47 +227,55 @@ public class MapFragment extends Fragment {
      */
     public void refreshLocations(@Nullable Circle circle) {
 
-        // Clear all the markers off the map and any model entries
-        if (circle == null || mMap == null) {
-            if (mMap != null) {
-                mMap.clear();
-            }
+        // Do not refresh if we are already refreshing the markers
+        if (!mIsRefreshing) {
+            mIsRefreshing = true;
 
-            mUserMarkers.clear();
-            return;
-        }
-
-        // Pull all the locations of the broadcasting users in circle
-        // Display them on the map
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put("circleId", circle.getObjectId());
-        params.put("userId", ParseUser.getCurrentUser().getObjectId());
-        ParseCloud.callFunctionInBackground("getBroadcastingUsers", params, new FunctionCallback<List<ParseUser>>() {
-            @Override
-            public void done(List<ParseUser> users, ParseException e) {
-                if (e == null) {
+            // Clear all the markers off the map and any model entries
+            if (circle == null || mMap == null) {
+                if (mMap != null) {
                     mMap.clear();
-                    mUserMarkers.clear();
-
-                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
-
-                    for (ParseUser user : users) {
-                        ParseGeoPoint gp = user.getParseGeoPoint("location");
-                        LatLng latLng = new LatLng(gp.getLatitude(), gp.getLongitude());
-                        Marker marker = mMap.addMarker(new MarkerOptions().position(latLng));
-                        mUserMarkers.put(marker, user);
-                        builder.include(latLng);
-                    }
-
-                    if (!users.isEmpty()) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 200));
-                    }
                 }
 
-                else {
-                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+                mUserMarkers.clear();
+                mIsRefreshing = false;
+                return;
             }
-        });
+
+            // Pull all the locations of the broadcasting users in circle
+            // Display them on the map
+            Map<String, Object> params = new HashMap<String, Object>();
+            params.put("circleId", circle.getObjectId());
+            params.put("userId", ParseUser.getCurrentUser().getObjectId());
+            ParseCloud.callFunctionInBackground("getBroadcastingUsers", params, new FunctionCallback<List<ParseUser>>() {
+                @Override
+                public void done(List<ParseUser> users, ParseException e) {
+                    if (e == null) {
+                        mMap.clear();
+                        mUserMarkers.clear();
+
+                        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+                        for (ParseUser user : users) {
+                            ParseGeoPoint gp = user.getParseGeoPoint("location");
+                            LatLng latLng = new LatLng(gp.getLatitude(), gp.getLongitude());
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(latLng));
+                            mUserMarkers.put(marker, user);
+                            builder.include(latLng);
+                        }
+
+                        if (!users.isEmpty()) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 200));
+                        }
+                    }
+
+                    else {
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+
+                    mIsRefreshing = false;
+                }
+            });
+        }
     }
 }

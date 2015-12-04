@@ -51,6 +51,7 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
     public static final String USER_ID_KEY = "userId";
 
     private static final CharSequence[] TITLES = { "CIRCLES", "FRIENDS" };
+    private static final int FRIENDSHIP_UNKNOWN = -1;
 
     private Callbacks mListener;
 
@@ -103,8 +104,9 @@ public class ProfileFragment extends Fragment implements ViewPagerAdapter.Callba
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+        mFriendStatus = FRIENDSHIP_UNKNOWN;
         mUser = ParseObject.createWithoutData(ParseUser.class, getArguments().getString(USER_ID_KEY));
+        setHasOptionsMenu(true);
     }
 
     @Nullable

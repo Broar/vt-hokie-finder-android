@@ -33,11 +33,11 @@ import com.parse.ParseUser;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
- * An activity that acts as the applications "homepage". Provides the user with
+ * An activity that acts as the application's "homepage". Provides the user with
  * an interface to access the main features of HokieFinder.
  *
  * @author Steven Briggs
- * @version 2015.12.03
+ * @version 2015.12.04
  */
 public class HomeActivity extends AppCompatActivity implements
         CirclesFragment.Callbacks,
@@ -56,18 +56,13 @@ public class HomeActivity extends AppCompatActivity implements
     private static final int FRIENDS = 1;
     private static final int MAP = 2;
 
-    private CirclesFragment mCirclesFragment;
-    private FriendsFragment mFriendsFragment;
-    private MapFragment mMapFragment;
     private BroadcastFragment mBroadcastFragment;
     private GoogleApiManagerFragment mGoogleApiManagerFragment;
 
     private int mPagePosition;
+    private ViewPagerAdapter mAdapter;
     private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
-    private CircleImageView mAvatar;
-    private TextView mUsername;
-    private TextView mEmail;
     private FloatingActionMenu mFabMenu;
     private FloatingActionButton mFab;
     private FloatingActionButton mFabCreateCircle;
@@ -161,7 +156,7 @@ public class HomeActivity extends AppCompatActivity implements
             mFabMenu.close(true);
         }
 
-        // Continue with normal back press if the listener does not handle the event
+        // Continue with normal back press
         else {
             super.onBackPressed();
         }
@@ -170,13 +165,18 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
+
+            // Update the lists of items maintained on the main screen
             if (requestCode == REQUEST_DETAIL_VIEWS) {
-                if (mCirclesFragment != null) {
-                    mCirclesFragment.onRefresh();
+                CirclesFragment circlesFragment = (CirclesFragment) mAdapter.getFragment(CIRCLES);
+                FriendsFragment friendsFragment = (FriendsFragment) mAdapter.getFragment(FRIENDS);
+
+                if (circlesFragment != null) {
+                    circlesFragment.onRefresh();
                 }
 
-                if (mFriendsFragment != null) {
-                    mFriendsFragment.onRefresh();
+                if (friendsFragment != null) {
+                    friendsFragment.onRefresh();
                 }
 
                 if (mBroadcastFragment != null) {
@@ -203,7 +203,7 @@ public class HomeActivity extends AppCompatActivity implements
      */
     private void setupDrawerLayout() {
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
-        ActionBarDrawerToggle mToogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar,
+        ActionBarDrawerToggle toogle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar,
                 R.string.drawer_open, R.string.drawer_close) {
             @Override
             public void onDrawerOpened(View drawerView) {
@@ -219,8 +219,8 @@ public class HomeActivity extends AppCompatActivity implements
             }
         };
 
-        mDrawerLayout.setDrawerListener(mToogle);
-        mToogle.syncState();
+        mDrawerLayout.setDrawerListener(toogle);
+        toogle.syncState();
 
         // Create a listener to handle clicks on the drawer's menu
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -254,7 +254,7 @@ public class HomeActivity extends AppCompatActivity implements
         // Inflate the header and attach it to the drawer. The header displays user information
         // similar to several other Google applications
         RelativeLayout header = (RelativeLayout) getLayoutInflater().inflate(R.layout.header, navigationView, false);
-        mAvatar = (CircleImageView) header.findViewById(R.id.avatar);
+        CircleImageView mAvatar = (CircleImageView) header.findViewById(R.id.avatar);
 
         // Attempt to load the user's avatar. If there isn't one, then use the default image
         ParseFile imageFile = ParseUser.getCurrentUser().getParseFile("avatar");
@@ -265,10 +265,8 @@ public class HomeActivity extends AppCompatActivity implements
                     .into(mAvatar);
         }
 
-        mUsername = (TextView) header.findViewById(R.id.username);
-        mUsername.setText(ParseUser.getCurrentUser().getUsername());
-        mEmail = (TextView) header.findViewById(R.id.email);
-        mEmail.setText(ParseUser.getCurrentUser().getEmail());
+        ((TextView) header.findViewById(R.id.username)).setText(ParseUser.getCurrentUser().getUsername());
+        ((TextView) header.findViewById(R.id.email)).setText(ParseUser.getCurrentUser().getEmail());
         navigationView.addHeaderView(header);
     }
 
@@ -281,8 +279,13 @@ public class HomeActivity extends AppCompatActivity implements
             public void onClick(View v) {
                 if (mPagePosition == FRIENDS) {
                     startActivity(new Intent(HomeActivity.this, FindFriendsActivity.class));
-                } else {
-                    mMapFragment.refreshLocations(mBroadcastFragment.getViewedCircle());
+                }
+
+                else if (mPagePosition == MAP) {
+                    MapFragment mapFragment = (MapFragment) mAdapter.getFragment(MAP);
+                    if (mapFragment != null) {
+                        mapFragment.refreshLocations(mBroadcastFragment.getViewedCircle());
+                    }
                 }
             }
         });
@@ -324,7 +327,8 @@ public class HomeActivity extends AppCompatActivity implements
             }
         });
 
-        mViewPager.setAdapter(new ViewPagerAdapter(getSupportFragmentManager(), TITLES, this));
+        mAdapter = new ViewPagerAdapter(getSupportFragmentManager(), TITLES, this);
+        mViewPager.setAdapter(mAdapter);
         mTabs.setupWithViewPager(mViewPager);
     }
 
@@ -394,13 +398,14 @@ public class HomeActivity extends AppCompatActivity implements
 
     @Override
     public void onViewedCircleClicked(Circle circle) {
-        if (mMapFragment != null && mPagePosition == MAP) {
-            if (mDrawerLayout.isDrawerOpen(GravityCompat.START)
-                    || mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
+        MapFragment mapFragment = (MapFragment) mAdapter.getFragment(MAP);
+
+        if (mapFragment != null && mPagePosition == MAP) {
+            if (mDrawerLayout.isDrawerOpen(GravityCompat.START) || mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
                 mDrawerLayout.closeDrawers();
             }
 
-            mMapFragment.refreshLocations(circle);
+            mapFragment.refreshLocations(circle);
         }
     }
 
@@ -412,18 +417,15 @@ public class HomeActivity extends AppCompatActivity implements
     @Override
     public Fragment onItemRequested(int position) {
         if (position == CIRCLES) {
-            mCirclesFragment = CirclesFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
-            return mCirclesFragment;
+            return CirclesFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
         }
 
         else if (position == FRIENDS) {
-            mFriendsFragment = FriendsFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
-            return mFriendsFragment;
+            return FriendsFragment.newInstance(ParseUser.getCurrentUser().getObjectId());
         }
 
         else {
-            mMapFragment = MapFragment.newInstance();
-            return mMapFragment;
+            return MapFragment.newInstance();
         }
     }
 }

@@ -22,7 +22,7 @@ import java.util.List;
  * An activity allowing the user to create a new circle
  *
  * @author Steven Briggs
- * @version 2015.11.13
+ * @version 2015.12.04
  */
 public class CreateCircleActivity extends AppCompatActivity implements
         CreateCircleFragment.Callbacks,
@@ -31,6 +31,9 @@ public class CreateCircleActivity extends AppCompatActivity implements
 
     private static final String URI_TAG = "uri";
     private static final String INVITED_FRIENDS_TAG = "invitedFriends";
+    private static final String IS_INVITING_KEY = "isInviting";
+
+    private boolean mIsInviting;
 
     private CreateCircleFragment mCreateCircleFragment;
     private GoogleApiManagerFragment mGoogleApiManagerFragment;
@@ -70,8 +73,9 @@ public class CreateCircleActivity extends AppCompatActivity implements
             mInvitedFriendsHolder.setData(new HashMap<ParseUser, Boolean>());
         }
 
-        // Retrieve the existing fragment instances
+        // Restore the existing fragment instances and activity state
         else {
+            mIsInviting = savedInstanceState.getBoolean(IS_INVITING_KEY);
             mCreateCircleFragment = (CreateCircleFragment) fm.findFragmentByTag(CreateCircleFragment.TAG);
             mGoogleApiManagerFragment = (GoogleApiManagerFragment) fm.findFragmentByTag(GoogleApiManagerFragment.TAG);
             mImageUriHolder = (RetainedFragment<Uri>) fm.findFragmentByTag(URI_TAG);
@@ -81,8 +85,21 @@ public class CreateCircleActivity extends AppCompatActivity implements
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(IS_INVITING_KEY, mIsInviting);
+    }
+
+    @Override
     public void onBackPressed() {
-        showDiscardDialog();
+        if (mIsInviting) {
+            mIsInviting = false;
+            super.onBackPressed();
+        }
+
+        else {
+            showDiscardDialog();
+        }
     }
 
     @Override
@@ -97,6 +114,8 @@ public class CreateCircleActivity extends AppCompatActivity implements
 
     @Override
     public void onInviteFriendsClicked() {
+        mIsInviting = true;
+
         if (mInviteFriendsFragment == null) {
             mInviteFriendsFragment = InviteFriendsFragment.newInstance();
         }
@@ -189,22 +208,24 @@ public class CreateCircleActivity extends AppCompatActivity implements
      * Display a dialog prompting users to confirm they want exit and discard all changes
      */
     private void showDiscardDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Discard new circle?")
-                .setCancelable(true)
-                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        NavUtils.navigateUpFromSameTask(CreateCircleActivity.this);
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // Do nothing
-                    }
-                });
+        if (!mIsInviting) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Discard new circle?")
+                    .setCancelable(true)
+                    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            NavUtils.navigateUpFromSameTask(CreateCircleActivity.this);
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Do nothing
+                        }
+                    });
 
-        builder.create().show();
+            builder.create().show();
+        }
     }
 }

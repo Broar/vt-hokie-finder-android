@@ -80,14 +80,6 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (savedInstanceState != null) {
-            String circleId = savedInstanceState.getString(IS_VIEWING_KEY);
-
-            if (circleId != null) {
-                mViewedCircle = ParseObject.createWithoutData(Circle.class, circleId);
-            }
-        }
-
         // Initialize the location broadcasting service
         Intent intent = new Intent(getContext(), LocationPushService.class);
         mBroadcastIntent = PendingIntent.getService(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -125,14 +117,6 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
         });
 
         return view;
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mViewedCircle != null) {
-            outState.putString(IS_VIEWING_KEY, mViewedCircle.getObjectId());
-        }
     }
 
     @Override

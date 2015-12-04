@@ -47,6 +47,8 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     public static final String TAG = CircleDetailFragment.class.getSimpleName();
     public static final String CIRCLE_ID_KEY = "circleId";
 
+    private static final int MEMBERSHIP_UNKNOWN = -1;
+
     private Callbacks mListener;
     private Circle mCircle;
     private int mMemberStatus;
@@ -101,8 +103,9 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+        mMemberStatus = MEMBERSHIP_UNKNOWN;
         mCircle = ParseObject.createWithoutData(Circle.class, getArguments().getString(CIRCLE_ID_KEY));
+        setHasOptionsMenu(true);
     }
 
     @Nullable

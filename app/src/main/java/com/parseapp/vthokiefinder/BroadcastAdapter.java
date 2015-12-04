@@ -55,6 +55,8 @@ public class BroadcastAdapter extends RecyclerView.Adapter<BroadcastAdapter.View
         holder.mName.setText(mUserCircles.get(position).getCircle().getName());
         holder.mBroadcastStatus.flipSilently(mUserCircles.get(position).isBroadcasting());
         holder.mIsViewing.flipSilently(mIsViewingStates.get(position));
+
+        // Handle logic to ensure only a single checkbox is flipped at a time
         holder.mIsViewing.setOnFlippingListener(new FlipView.OnFlippingListener() {
             @Override
             public void onFlipped(FlipView flipView, boolean checked) {

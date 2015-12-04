@@ -234,6 +234,8 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
         ParseQuery<UserCircle> query = UserCircle.getQuery();
         query.whereEqualTo("circle", mCircle)
                 .whereNotEqualTo("user", ParseUser.getCurrentUser())
+                .whereEqualTo("pending", false)
+                .whereEqualTo("accepted", true)
                 .include("user")
                 .setSkip(getNextPage())
                 .setLimit(getLimit());
@@ -382,8 +384,6 @@ public class CircleDetailFragment extends RecyclerFragment<ParseUser, UserAdapte
             @Override
             public void done(Boolean isCircleDestroyed, ParseException e) {
                 if (e == null) {
-                    getItems().remove(ParseUser.getCurrentUser());
-                    getBaseAdapter().notifyDataSetChanged();
                     mMemberStatus = Circle.NOT_MEMBER;
 
                     // If the user was the last remaining member of the circle, then it will no

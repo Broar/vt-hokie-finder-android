@@ -1,15 +1,19 @@
 package com.parseapp.vthokiefinder;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.SwitchCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +26,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.parse.FindCallback;
 import com.parse.ParseException;
-import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
@@ -39,7 +42,11 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
 
     public static final String TAG = BroadcastFragment.class.getSimpleName();
 
-    private static final String IS_VIEWING_KEY = "isViewing";
+    private static final int PERMISSION_REQUEST_FINE_LOCATION = 0;
+    private static final String REQUEST_FINE_LOCATION_REASON =
+            "GPS permissions allow us to share your location with your circles";
+    private static final String REQUEST_FINE_LOCATION_DENIED =
+            "Permission denied. Unable to access your location";
     private static final int BROADCAST_NOTIFICATION_ID = 0;
 
     private Circle mViewedCircle;
@@ -96,11 +103,26 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
 
         // Initialize the master broadcast switch
         mMasterBroadcast = (SwitchCompat) view.findViewById(R.id.master_broadcast);
+
+        if (checkLocationPermission()) {
+            setupMasterBroadcast();
+        }
+
+        else {
+            requestLocationPermission();
+        }
+
+        return view;
+    }
+
+    /**
+     * Setup the master broadcast switch to handle location broadcasting
+     */
+    private void setupMasterBroadcast() {
         mMasterBroadcast.setChecked(ParseUser.getCurrentUser().getBoolean("masterBroadcast"));
         mMasterBroadcast.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
                 // Save the user's current broadcast preference to the backend
                 ParseUser.getCurrentUser().put("masterBroadcast", isChecked);
                 ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
@@ -115,8 +137,6 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
                 });
             }
         });
-
-        return view;
     }
 
     @Override
@@ -260,5 +280,44 @@ public class BroadcastFragment extends RecyclerFragment<UserCircle, BroadcastAda
                 .build();
 
         NotificationManagerCompat.from(getContext()).notify(BROADCAST_NOTIFICATION_ID, notification);
+    }
+
+    /**
+     * Check if the specified permission is granted
+     *
+     * @return true if the permission
+     */
+    private boolean checkLocationPermission() {
+        return ContextCompat.checkSelfPermission(getContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * Request the ACCESS_FINE_LOCATION permission from the user
+     */
+    private void requestLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Toast.makeText(getContext(), REQUEST_FINE_LOCATION_REASON, Toast.LENGTH_LONG).show();
+        }
+
+        else {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+                    PERMISSION_REQUEST_FINE_LOCATION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_FINE_LOCATION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                setupMasterBroadcast();
+            }
+
+            else {
+                Toast.makeText(getContext(), REQUEST_FINE_LOCATION_DENIED, Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

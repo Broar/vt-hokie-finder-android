@@ -239,8 +239,7 @@ public class CreateCircleFragment extends Fragment {
             mListener.onCurrentLocationRequested(new GoogleApiManagerFragment.OnLocationFoundListener() {
                 @Override
                 public void onLocationFound(Location location) {
-                    ParseGeoPoint geoPoint = new ParseGeoPoint(location.getLatitude(),
-                            location.getLongitude());
+                    ParseGeoPoint geoPoint = new ParseGeoPoint(location.getLatitude(), location.getLongitude());
                     newCircle.setLocation(geoPoint);
                     handleReverseGeocode(newCircle, geoPoint);
                 }

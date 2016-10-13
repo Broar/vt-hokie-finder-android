@@ -6,6 +6,9 @@ import com.facebook.FacebookSdk;
 import com.parse.Parse;
 import com.parse.ParseFacebookUtils;
 import com.parse.ParseObject;
+import com.parseapp.vthokiefinder.model.Circle;
+import com.parseapp.vthokiefinder.model.UserCircle;
+import com.parseapp.vthokiefinder.model.Friend;
 
 /**
  * Application subclass required by Parse framework to initialize global state

@@ -29,6 +29,21 @@ import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.parse.ParseFile;
 import com.parse.ParseUser;
+import com.parseapp.vthokiefinder.broadcast.BroadcastFragment;
+import com.parseapp.vthokiefinder.model.Circle;
+import com.parseapp.vthokiefinder.circles.CirclesFragment;
+import com.parseapp.vthokiefinder.circles.CreateCircleActivity;
+import com.parseapp.vthokiefinder.circles.DetailActivity;
+import com.parseapp.vthokiefinder.circles.FindCirclesActivity;
+import com.parseapp.vthokiefinder.common.ViewPagerAdapter;
+import com.parseapp.vthokiefinder.friends.FindFriendsActivity;
+import com.parseapp.vthokiefinder.friends.FriendsFragment;
+import com.parseapp.vthokiefinder.invites.InvitesActivity;
+import com.parseapp.vthokiefinder.login.LoginActivity;
+import com.parseapp.vthokiefinder.map.MapFragment;
+import com.parseapp.vthokiefinder.settings.SettingsActivity;
+import com.parseapp.vthokiefinder.user.EditProfileActivity;
+import com.parseapp.vthokiefinder.utils.GoogleApiManagerFragment;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 

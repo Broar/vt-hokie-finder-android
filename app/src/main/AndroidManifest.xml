@@ -14,7 +14,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".LoginActivity"
+            android:name=".login.LoginActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -51,56 +51,56 @@
             android:label="@string/app_name" >
         </activity>
         <activity
-            android:name=".CreateCircleActivity"
+            android:name=".circles.CreateCircleActivity"
             android:label="@string/create_circle" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".FindFriendsActivity"
+            android:name=".friends.FindFriendsActivity"
             android:label="@string/find_friends" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".FindCirclesActivity"
+            android:name=".circles.FindCirclesActivity"
             android:label="@string/find_circles" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".DetailActivity"
+            android:name=".circles.DetailActivity"
             android:label="@string/details">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".EditProfileActivity"
+            android:name=".user.EditProfileActivity"
             android:label="@string/profile">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".InvitesActivity"
+            android:name=".invites.InvitesActivity"
             android:label="@string/invites">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="@string/settings">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HomeActivity" />
         </activity>
         <service
-            android:name=".LocationPushService"
+            android:name=".broadcast.LocationPushService"
             android:exported="false" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
